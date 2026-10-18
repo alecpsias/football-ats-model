@@ -6,6 +6,8 @@ on:
     paths:
       - '.github/workflows/nflverse-free-data.yml'
       - 'ingest.py'
+      - 'collect_extra_metrics.py'
+      - 'test_collect_extra_metrics.py'
   workflow_dispatch:
   schedule:
     - cron: '15 11 * * 0'
@@ -35,6 +37,30 @@ jobs:
         run: |
           python nflverse_connector.py verify --snapshot snapshots/2026/run-${{ github.run_id }} > run-metadata/hashes.json
           python check_snapshots.py --snapshot snapshots/2026/run-${{ github.run_id }} --cutoff '2026-10-18T12:30:00Z' --out run-metadata/pregame-eligibility.json
+      - name: Collect PFR weekly advanced stats and derive penalty/kicking metrics
+        run: |
+          python collect_extra_metrics.py \
+            --snapshot snapshots/2026/run-${{ github.run_id }} \
+            --out derived-metrics/run-${{ github.run_id }}
+      - name: Summarize advanced-stat coverage and source timestamp
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PYCODE'
+          import json, os
+          from pathlib import Path
+          p=Path('derived-metrics/run-${{ github.run_id }}/metrics_manifest.json')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
+              f.write('\n## Supplementary 2026 metrics\n')
+              if p.exists():
+                  x=json.loads(p.read_text())
+                  f.write('\n**Collection status:** '+x['status']+'\n')
+                  f.write('\n**Eligible games:** '+str(x['eligible_schedule_games'])+'\n')
+                  f.write('\n**PFR feed status:** '+', '.join(k+': '+v['status'] for k,v in x['pfr'].items())+'\n')
+                  f.write('\n**Timestamp rule:** '+x['asof_policy']+'\n')
+              else:
+                  f.write('\nNo extra metrics manifest generated. Inspect prior job logs.\n')
+          PYCODE
       - name: Replay Texans-Jaguars, without guessing missing data
         shell: bash
         run: |
@@ -59,5 +85,6 @@ jobs:
             snapshots/
             run-metadata/
             replay-results/
+            derived-metrics/
           if-no-files-found: warn
           retention-days: 30
