@@ -1,0 +1,5 @@
+# Free-only nflverse collector. Compressed-CSV snapshots do not require pyarrow.
+-r requirements.txt
+pandas>=2.0,<4
+nflreadpy>=0.1
+polars>=1.0

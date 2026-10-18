@@ -1,0 +1,40 @@
+test_chronological_replay (test_backtest.HistoricalChecks.test_chronological_replay) ... ok
+test_failed_calibrator_cannot_be_used (test_backtest.HistoricalChecks.test_failed_calibrator_cannot_be_used) ... ok
+test_first_half_price_required (test_backtest.HistoricalChecks.test_first_half_price_required) ... ok
+test_home_spread_monotonicity (test_backtest.HistoricalChecks.test_home_spread_monotonicity) ... ok
+test_stale_personnel_check_fails (test_backtest.HistoricalChecks.test_stale_personnel_check_fails) ... ok
+test_synthetic_history_cannot_claim_real_validation (test_backtest.HistoricalChecks.test_synthetic_history_cannot_claim_real_validation) ... ok
+test_bad_market_time_blocks (test_ingest.TestIngest.test_bad_market_time_blocks) ... ok
+test_future_participation_blocks (test_ingest.TestIngest.test_future_participation_blocks) ... ok
+test_future_source_blocks (test_ingest.TestIngest.test_future_source_blocks) ... ok
+test_known_target_game_not_used (test_ingest.TestIngest.test_known_target_game_not_used) ... ok
+test_missing_column_rejected (test_ingest.TestIngest.test_missing_column_rejected) ... ok
+test_no_asof_provenance_blocks (test_ingest.TestIngest.test_no_asof_provenance_blocks) ... ok
+test_pressure_not_made_up (test_ingest.TestIngest.test_pressure_not_made_up) ... ok
+test_qb_rush_not_made_up (test_ingest.TestIngest.test_qb_rush_not_made_up) ... ok
+test_ready_complete_synthetic_snapshot (test_ingest.TestIngest.test_ready_complete_synthetic_snapshot) ... ok
+test_schedule_time_localization (test_ingest.TestIngest.test_schedule_time_localization) ... ok
+test_deterministic_and_audit (test_model.ModelChecks.test_deterministic_and_audit) ... ok
+test_first_half_optional (test_model.ModelChecks.test_first_half_optional) ... ok
+test_full_stress_is_not_blank (test_model.ModelChecks.test_full_stress_is_not_blank) ... ok
+test_missing_required_stat_fails_hard (test_model.ModelChecks.test_missing_required_stat_fails_hard) ... ok
+test_no_future_information (test_model.ModelChecks.test_no_future_information) ... ok
+test_personnel_changes_need_evidence (test_model.ModelChecks.test_personnel_changes_need_evidence) ... ok
+test_probability_conservation (test_model.ModelChecks.test_probability_conservation) ... ok
+test_qb_rushing_sensitivity (test_model.ModelChecks.test_qb_rushing_sensitivity) ... ok
+test_sos_affects_projections (test_model.ModelChecks.test_sos_affects_projections) ... ok
+test_wrong_units_fails (test_model.ModelChecks.test_wrong_units_fails) ... ok
+test_bridge_cannot_fake_historical_pregame (test_nflverse_connector.TestNflverseConnector.test_bridge_cannot_fake_historical_pregame) ... ok
+test_bridge_with_free_data_reports_missing_pressure (test_nflverse_connector.TestNflverseConnector.test_bridge_with_free_data_reports_missing_pressure) ... ok
+test_capture_after_cutoff_cannot_count_as_pregame (test_nflverse_connector.TestNflverseConnector.test_capture_after_cutoff_cannot_count_as_pregame) ... ok
+test_file_tampering_is_detected (test_nflverse_connector.TestNflverseConnector.test_file_tampering_is_detected) ... ok
+test_free_mode_does_not_create_runnable_prediction (test_nflverse_connector.TestNflverseConnector.test_free_mode_does_not_create_runnable_prediction) ... ok
+test_incomplete_snapshot_refuses_run (test_nflverse_connector.TestNflverseConnector.test_incomplete_snapshot_refuses_run) ... ok
+test_missing_metric_rejected_not_imputed (test_nflverse_connector.TestNflverseConnector.test_missing_metric_rejected_not_imputed) ... ok
+test_nflreadpy_calls_methods_with_season_filter (test_nflverse_connector.TestNflverseConnector.test_nflreadpy_calls_methods_with_season_filter) ... ok
+test_no_overwrite (test_nflverse_connector.TestNflverseConnector.test_no_overwrite) ... ok
+
+----------------------------------------------------------------------
+Ran 35 tests in 1.098s
+
+OK
