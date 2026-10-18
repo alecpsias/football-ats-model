@@ -51,9 +51,17 @@ jobs:
           python --version > run-metadata/python.txt
           python -m pip freeze > run-metadata/pip-freeze.txt
 
+      - name: Restore legacy test fixture location
+        # GitHub's web upload flattened the original examples/ directory.
+        # Two original tests resolve the fixture one directory above repo root.
+        run: |
+          test -s synthetic_matchup.json
+          mkdir -p ../examples
+          cp synthetic_matchup.json ../examples/synthetic_matchup.json
+
       - name: Run the code's existing unit tests
         run: python -m unittest discover -s . -p "test_*.py" -v
-
+       
       - name: Resolve season and unique snapshot path
         env:
           INPUT_SEASON: ${{ inputs.season }}
@@ -62,7 +70,7 @@ jobs:
           if [ -n "$INPUT_SEASON" ]; then
             SEASON="$INPUT_SEASON"
           else
-                      YEAR=$(date -u +%Y)
+            YEAR=$(date -u +%Y)
             MONTH=$(date -u +%m)
             if [ "$MONTH" -le 2 ]; then SEASON=$((YEAR-1)); else SEASON=$YEAR; fi
           fi
@@ -118,9 +126,3 @@ jobs:
         with:
           name: nflverse-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            snapshots/
-            replay-results/
-            run-metadata/
-          if-no-files-found: warn
-          compression-level: 0
-          retention-days: 30
