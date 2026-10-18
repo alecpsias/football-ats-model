@@ -1,3 +1,71 @@
+name: Free nflverse collection and replay
+
+# This workflow uses public/open NFL data only; no API keys or paid services.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/nflverse-free-data.yml'
+  workflow_dispatch:
+    inputs:
+      season:
+        description: 'NFL season (YYYY); blank = auto-select current NFL season'
+        required: false
+        type: string
+      replay_texans_jaguars:
+        description: 'Generate the retrospective Texans–Jaguars missing-data audit'
+        required: false
+        type: boolean
+        default: true
+  schedule:
+    # Sunday 11:15 UTC is before typical Sunday kickoff, including early London games.
+    # GitHub scheduled jobs can be delayed; the manifest records ACTUAL retrieval time.
+    - cron: '15 11 * * 0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: free-nflverse-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install open-source dependencies
+        run: python -m pip install --requirement requirements-nflverse.txt
+
+      - name: Freeze actual environment
+        run: |
+          mkdir -p run-metadata
+          python --version > run-metadata/python.txt
+          python -m pip freeze > run-metadata/pip-freeze.txt
+
+      - name: Run the code's existing unit tests
+        run: python -m unittest discover -s . -p "test_*.py" -v
+
+      - name: Resolve season and unique snapshot path
+        env:
+          INPUT_SEASON: ${{ inputs.season }}
+        shell: bash
+        run: |
+          if [ -n "$INPUT_SEASON" ]; then
+            SEASON="$INPUT_SEASON"
+          else
+                      YEAR=$(date -u +%Y)
+            MONTH=$(date -u +%m)
+            if [ "$MONTH" -le 2 ]; then SEASON=$((YEAR-1)); else SEASON=$YEAR; fi
+          fi
           if ! [[ "$SEASON" =~ ^20[0-9][0-9]$ ]]; then echo 'Season must be YYYY'; exit 1; fi
           echo "SEASON=$SEASON" >> "$GITHUB_ENV"
           echo "SNAPSHOT_PATH=snapshots/$SEASON/run-$GITHUB_RUN_ID-attempt-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
@@ -15,7 +83,7 @@
 
       - name: Replay Texans–Jaguars without invented data
         id: replay
-        if: steps.collect.outcome == 'success' && inputs.replay_texans_jaguars == true
+        if: steps.collect.outcome == 'success' && (github.event_name != 'workflow_dispatch' || inputs.replay_texans_jaguars == true)
         shell: bash
         run: |
           mkdir -p replay-results
