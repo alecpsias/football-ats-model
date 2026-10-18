@@ -1,0 +1,251 @@
+{
+  "version": "0.1.0",
+  "game_id": "SYNTHETIC-DEMO-DO-NOT-BET",
+  "league": "NFL",
+  "teams": {
+    "home": "Synthetic Home",
+    "away": "Synthetic Away"
+  },
+  "snapshot_utc": "2026-10-18T19:00:00Z",
+  "kickoff_utc": "2026-10-18T20:25:00Z",
+  "input_sha256": "167752c77b67065ef96c598290c0cdc8707b7cb9d2c7ac6c658443a5fd684ccb",
+  "model_status": "SYNTHETIC_EXAMPLE_UNCALIBRATED",
+  "grade": "UNRATED",
+  "wager_decision": "PASS_UNTIL_BACKTESTED",
+  "market": {
+    "spread_home": -3.5,
+    "home_odds_american": -110,
+    "away_odds_american": -110,
+    "total": 45.5,
+    "as_of_utc": "2026-10-18T18:55:00Z",
+    "source": "SYNTHETIC - invented odds for software testing"
+  },
+  "projection_home": {
+    "team": "Synthetic Home",
+    "side": "home",
+    "pass_rate": 0.57,
+    "plays_per_drive": 5.85,
+    "expected_drives": 10.95,
+    "sos_adjusted_pass_epa_offense": 0.0251,
+    "sos_adjusted_pass_epa_defense_allowed": 0.006,
+    "sos_adjusted_rush_epa_offense": -0.0019,
+    "sos_adjusted_rush_epa_defense_allowed": -0.0027,
+    "matched_pass_epa": 0.0142,
+    "matched_rush_epa": -0.0035,
+    "pressure_rate": 0.3239,
+    "pressure_residual_epa": -0.0002,
+    "pass_success_residual_epa": 0.0002,
+    "rush_success_residual_epa": -0.0002,
+    "expected_sack_rate_per_dropback": 0.0692,
+    "expected_sacks_per_game": 2.526,
+    "qb_rushes_per_game": 3.314,
+    "qb_rushing_epa_adjustment": 0.0001,
+    "pass_success_rate": 0.4435,
+    "rush_success_rate": 0.4373,
+    "explosive_pass_rate": 0.1029,
+    "explosive_rush_rate": 0.1024,
+    "third_down_conversion": 0.395,
+    "redzone_td_rate": 0.5703,
+    "touchdown_share_of_scoring_drives": 0.5862,
+    "interception_rate_per_dropback": 0.0255,
+    "fumble_lost_rate_per_play": 0.00663,
+    "turnover_drive_probability": 0.1164,
+    "pressure_related_interception_rate_adjustment": 0.00011,
+    "epa_points_per_drive_adjustment": 0.0384,
+    "redzone_residual_ppd": -0.0018,
+    "third_down_residual_ppd": -0.0,
+    "field_position_ppd": 0.044,
+    "net_penalties_ppg_component": 0.0,
+    "net_special_teams_ppg_component": 0.0,
+    "home_adv_ppg_component": 0.75,
+    "raw_points_per_drive": 2.2291,
+    "redzone_sample_off_def": [
+      18,
+      19
+    ],
+    "personnel_adjustment_source": "SYNTHETIC: news checked for demo only",
+    "personnel_news_checked_at_utc": "2026-10-18T19:00:00Z",
+    "personnel_notes": "No personnel override applied"
+  },
+  "projection_away": {
+    "team": "Synthetic Away",
+    "side": "away",
+    "pass_rate": 0.57,
+    "plays_per_drive": 5.85,
+    "expected_drives": 10.95,
+    "sos_adjusted_pass_epa_offense": 0.0162,
+    "sos_adjusted_pass_epa_defense_allowed": -0.003,
+    "sos_adjusted_rush_epa_offense": -0.0055,
+    "sos_adjusted_rush_epa_defense_allowed": -0.0064,
+    "matched_pass_epa": 0.0052,
+    "matched_rush_epa": -0.0072,
+    "pressure_rate": 0.3239,
+    "pressure_residual_epa": -0.0002,
+    "pass_success_residual_epa": 0.0002,
+    "rush_success_residual_epa": -0.0002,
+    "expected_sack_rate_per_dropback": 0.0692,
+    "expected_sacks_per_game": 2.526,
+    "qb_rushes_per_game": 3.314,
+    "qb_rushing_epa_adjustment": 0.0001,
+    "pass_success_rate": 0.4423,
+    "rush_success_rate": 0.4365,
+    "explosive_pass_rate": 0.1029,
+    "explosive_rush_rate": 0.1024,
+    "third_down_conversion": 0.395,
+    "redzone_td_rate": 0.5703,
+    "touchdown_share_of_scoring_drives": 0.5862,
+    "interception_rate_per_dropback": 0.0255,
+    "fumble_lost_rate_per_play": 0.00663,
+    "turnover_drive_probability": 0.1164,
+    "pressure_related_interception_rate_adjustment": 0.00011,
+    "epa_points_per_drive_adjustment": -0.0009,
+    "redzone_residual_ppd": -0.0018,
+    "third_down_residual_ppd": -0.0,
+    "field_position_ppd": 0.044,
+    "net_penalties_ppg_component": 0.0,
+    "net_special_teams_ppg_component": 0.0,
+    "home_adv_ppg_component": -0.75,
+    "raw_points_per_drive": 2.0528,
+    "redzone_sample_off_def": [
+      18,
+      19
+    ],
+    "personnel_adjustment_source": "SYNTHETIC: news checked for demo only",
+    "personnel_news_checked_at_utc": "2026-10-18T19:00:00Z",
+    "personnel_notes": "No personnel override applied"
+  },
+  "simulation": {
+    "mean_score_home": 24.48,
+    "mean_score_away": 22.56,
+    "median_score_home": 24.0,
+    "median_score_away": 23.0,
+    "mean_margin_home": 1.92,
+    "median_margin_home": 3.0,
+    "margin_p10_p50_p90": [
+      -16.0,
+      3.0,
+      20.0
+    ],
+    "margin_standard_deviation": 13.87,
+    "home_cover_probability_raw": 0.46396,
+    "away_cover_probability_raw": 0.53604,
+    "push_probability": 0.0,
+    "home_win_probability_raw": 0.55409,
+    "over_probability_raw": 0.52962,
+    "under_probability_raw": 0.47038,
+    "total_push_probability": 0.0,
+    "mean_total": 47.04,
+    "home_cover_monte_carlo_se": 0.00223,
+    "simulations": 50000,
+    "seed": 20261018,
+    "simulation_note": "Approximate possession model with provisional priors; simplified overtime. Probabilities NOT empirically calibrated. MC uncertainty omits model error."
+  },
+  "first_half": null,
+  "stress_tests": {
+    "simulations_per_case": 10000,
+    "scenario_results": {
+      "baseline_resampled": {
+        "home_cover_raw": 0.4718,
+        "away_cover_raw": 0.5282,
+        "mean_margin_home": 2.06,
+        "mean_total": 46.99
+      },
+      "turnover_rates_regress_to_league": {
+        "home_cover_raw": 0.4708,
+        "away_cover_raw": 0.5292,
+        "mean_margin_home": 2.07,
+        "mean_total": 47.05
+      },
+      "red_zone_reversion": {
+        "home_cover_raw": 0.4717,
+        "away_cover_raw": 0.5283,
+        "mean_margin_home": 2.05,
+        "mean_total": 47.02
+      },
+      "home_adverse_offensive_script": {
+        "home_cover_raw": 0.3056,
+        "away_cover_raw": 0.6944,
+        "mean_margin_home": -3.96,
+        "mean_total": 44.22
+      },
+      "away_adverse_offensive_script": {
+        "home_cover_raw": 0.6373,
+        "away_cover_raw": 0.3627,
+        "mean_margin_home": 8.14,
+        "mean_total": 44.18
+      },
+      "pass_matchup_swings_toward_away": {
+        "home_cover_raw": 0.3229,
+        "away_cover_raw": 0.6771,
+        "mean_margin_home": -3.4,
+        "mean_total": 46.94
+      },
+      "pass_matchup_swings_toward_home": {
+        "home_cover_raw": 0.6213,
+        "away_cover_raw": 0.3787,
+        "mean_margin_home": 7.59,
+        "mean_total": 46.92
+      }
+    },
+    "spread_home_sensitivity": {
+      "-5": {
+        "home_cover_raw": 0.4184,
+        "away_cover_raw": 0.5657,
+        "push": 0.0159
+      },
+      "-4": {
+        "home_cover_raw": 0.4343,
+        "away_cover_raw": 0.5282,
+        "push": 0.0375
+      },
+      "-3.5": {
+        "home_cover_raw": 0.4718,
+        "away_cover_raw": 0.5282,
+        "push": 0.0
+      },
+      "-3": {
+        "home_cover_raw": 0.4718,
+        "away_cover_raw": 0.4827,
+        "push": 0.0455
+      },
+      "-2": {
+        "home_cover_raw": 0.5173,
+        "away_cover_raw": 0.4663,
+        "push": 0.0164
+      }
+    },
+    "limitations": "Hypothetical perturbations, not measured scenario frequencies; they cannot establish calibrated probabilities."
+  },
+  "calibration": null,
+  "market_comparison_exploratory": {
+    "market_implied_margin_home": 3.5,
+    "model_minus_market_margin": -1.58,
+    "home_cover_break_even_excluding_push": 0.52381,
+    "away_cover_break_even_excluding_push": 0.52381,
+    "home_ev_per_unit_staked_RAW_UNCALIBRATED": -0.1143,
+    "away_ev_per_unit_staked_RAW_UNCALIBRATED": 0.0233
+  },
+  "audit": {
+    "schema_complete": true,
+    "strict_source_dates_checked": true,
+    "opponent_strength_adjusted": true,
+    "small_sample_shrinkage": true,
+    "pass_and_rush_marginal_models": true,
+    "qb_rush_volume_adjusted": true,
+    "pass_pressure_sack_interaction": true,
+    "success_and_explosives_checked": true,
+    "turnover_interaction": true,
+    "redzone_regression": true,
+    "third_down_situations": true,
+    "special_teams_and_penalties": true,
+    "field_position_and_pace": true,
+    "personnel_adjustments_traced": true,
+    "drive_level_score_distribution": true,
+    "spread_and_vig_checked": true,
+    "first_half_market_evaluated": false,
+    "stress_tests": true,
+    "historical_out_of_sample_validation": false,
+    "probabilities_empirically_calibrated": false
+  },
+  "required_followup": "Out-of-sample backtest, probability calibration and sensitivity runs are prerequisites to interpreting raw cover probability as a betting edge."
+}

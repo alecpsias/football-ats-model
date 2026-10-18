@@ -1,0 +1,147 @@
+{
+  "id": "REPLACE-WITH-REAL-GAME-ID",
+  "league": "NFL",
+  "kickoff_utc": "2026-10-18T20:25:00Z",
+  "data_as_of_utc": "2026-10-18T19:00:00Z",
+  "neutral_site": false,
+  "home": {
+    "name": "REPLACE_WITH_HOME_TEAM",
+    "stat_source": "REQUIRED: actual source citation or URL + data definitions",
+    "stat_as_of_utc": "2026-10-17T23:00:00Z",
+    "offense": {
+      "games": null,
+      "plays": null,
+      "epa_pass": null,
+      "epa_rush": null,
+      "pass_rate": null,
+      "success_pass": null,
+      "success_rush": null,
+      "explosive_pass_rate": null,
+      "explosive_rush_rate": null,
+      "pressure_allowed": null,
+      "sack_allowed": null,
+      "interception_rate": null,
+      "fumble_lost_rate": null,
+      "redzone_td_rate": null,
+      "redzone_trips": null,
+      "third_down_rate": null,
+      "drives_per_game": null,
+      "plays_per_drive": null,
+      "qb_rushes_per_game": null,
+      "qb_rush_epa": null
+    },
+    "defense": {
+      "plays": null,
+      "epa_pass_allowed": null,
+      "epa_rush_allowed": null,
+      "success_pass_allowed": null,
+      "success_rush_allowed": null,
+      "explosive_pass_allowed": null,
+      "explosive_rush_allowed": null,
+      "pressure_generated": null,
+      "sack_generated": null,
+      "interception_rate_forced": null,
+      "fumble_recovery_rate": null,
+      "redzone_td_allowed": null,
+      "redzone_trips_faced": null,
+      "third_down_allowed": null,
+      "drives_faced_per_game": null,
+      "plays_per_drive_allowed": null
+    },
+    "schedule": {
+      "opp_def_pass_epa_allowed_avg": null,
+      "opp_def_rush_epa_allowed_avg": null,
+      "opp_off_pass_epa_avg": null,
+      "opp_off_rush_epa_avg": null
+    },
+    "context": {
+      "avg_start_yardline": null,
+      "penalty_epa_per_game": null,
+      "special_teams_epa_per_game": null
+    },
+    "personnel": {
+      "pass_epa_shift": 0,
+      "rush_epa_shift": 0,
+      "pressure_allowed_shift": 0,
+      "qb_rush_multiplier": 1,
+      "pace_multiplier": 1,
+      "notes": "No personnel override applied",
+      "source": "REPLACE: verified up-to-date injury/lineup news, even with neutral shifts",
+      "checked_at_utc": "2026-10-18T19:00:00Z"
+    }
+  },
+  "away": {
+    "name": "REPLACE_WITH_AWAY_TEAM",
+    "stat_source": "REQUIRED: actual source citation or URL + data definitions",
+    "stat_as_of_utc": "2026-10-17T23:00:00Z",
+    "offense": {
+      "games": null,
+      "plays": null,
+      "epa_pass": null,
+      "epa_rush": null,
+      "pass_rate": null,
+      "success_pass": null,
+      "success_rush": null,
+      "explosive_pass_rate": null,
+      "explosive_rush_rate": null,
+      "pressure_allowed": null,
+      "sack_allowed": null,
+      "interception_rate": null,
+      "fumble_lost_rate": null,
+      "redzone_td_rate": null,
+      "redzone_trips": null,
+      "third_down_rate": null,
+      "drives_per_game": null,
+      "plays_per_drive": null,
+      "qb_rushes_per_game": null,
+      "qb_rush_epa": null
+    },
+    "defense": {
+      "plays": null,
+      "epa_pass_allowed": null,
+      "epa_rush_allowed": null,
+      "success_pass_allowed": null,
+      "success_rush_allowed": null,
+      "explosive_pass_allowed": null,
+      "explosive_rush_allowed": null,
+      "pressure_generated": null,
+      "sack_generated": null,
+      "interception_rate_forced": null,
+      "fumble_recovery_rate": null,
+      "redzone_td_allowed": null,
+      "redzone_trips_faced": null,
+      "third_down_allowed": null,
+      "drives_faced_per_game": null,
+      "plays_per_drive_allowed": null
+    },
+    "schedule": {
+      "opp_def_pass_epa_allowed_avg": null,
+      "opp_def_rush_epa_allowed_avg": null,
+      "opp_off_pass_epa_avg": null,
+      "opp_off_rush_epa_avg": null
+    },
+    "context": {
+      "avg_start_yardline": null,
+      "penalty_epa_per_game": null,
+      "special_teams_epa_per_game": null
+    },
+    "personnel": {
+      "pass_epa_shift": 0,
+      "rush_epa_shift": 0,
+      "pressure_allowed_shift": 0,
+      "qb_rush_multiplier": 1,
+      "pace_multiplier": 1,
+      "notes": "No personnel override applied",
+      "source": "REPLACE: verified up-to-date injury/lineup news, even with neutral shifts",
+      "checked_at_utc": "2026-10-18T19:00:00Z"
+    }
+  },
+  "market": {
+    "spread_home": -3.5,
+    "home_odds_american": -110,
+    "away_odds_american": -110,
+    "total": 45.5,
+    "as_of_utc": "2026-10-18T18:55:00Z",
+    "source": "REPLACE: sportsbook and timestamp"
+  }
+}

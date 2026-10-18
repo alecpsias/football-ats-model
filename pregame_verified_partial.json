@@ -1,0 +1,41 @@
+{
+  "game_id": "2026-wk6-HOU-JAX",
+  "replay_type": "PARTIAL_VERIFIED_NO_FULL_MODEL_RUN",
+  "kickoff_utc": "2026-10-18T13:30:00Z",
+  "neutral_site": true,
+  "stat_window": "2026 regular season weeks 1-5 only; archived matchup snapshot marked pre-kickoff by source; capture timestamp not specified",
+  "source": "https://gridironandwine.com/predictions/nfl/2026-10-18-houston-texans-vs-jacksonville-jaguars.html",
+  "market_source": "https://edraft.com/nfl/games/2026-week-6-hou-at-jax?scoring=ppr",
+  "market": {"spread_home": -2.5, "total": 42.5, "recorded_at_et": "2026-10-18 07:18", "home":"Jacksonville Jaguars", "away":"Houston Texans"},
+  "Houston Texans": {
+    "games": 5, "points_for_per_game":22.0, "points_allowed_per_game":22.4,
+    "off_pass_epa":0.110, "off_rush_epa":-0.193,
+    "def_pass_epa_allowed":0.011, "def_rush_epa_allowed":-0.141,
+    "pass_rate":0.653, "plays_per_game":62.2,
+    "off_total_success_rate":0.424, "def_total_success_rate_allowed":0.391,
+    "off_third_down_conversion":0.385, "def_third_down_allowed":0.375,
+    "off_redzone_td_rate":0.526, "def_redzone_td_allowed":0.643,
+    "off_explosive_pass_rate":0.196, "off_explosive_rush_rate":0.065,
+    "def_explosive_pass_allowed":0.203, "def_explosive_rush_allowed":0.073,
+    "off_sack_rate":0.069, "def_sack_rate":0.090,
+    "off_turnovers_per_play":0.0064, "def_takeaways_per_play":0.0160,
+    "pre_kickoff_personnel_notes": ["Jalen Pitre inactive", "David Montgomery inactive", "Marvin Harrison Jr. making Texans debut after trade"]
+  },
+  "Jacksonville Jaguars": {
+    "games": 5, "points_for_per_game":24.6, "points_allowed_per_game":14.0,
+    "off_pass_epa":0.269, "off_rush_epa":0.008,
+    "def_pass_epa_allowed":-0.024, "def_rush_epa_allowed":-0.217,
+    "pass_rate":0.549, "plays_per_game":57.4,
+    "off_total_success_rate":0.469, "def_total_success_rate_allowed":0.417,
+    "off_third_down_conversion":0.467, "def_third_down_allowed":0.351,
+    "off_redzone_td_rate":0.643, "def_redzone_td_allowed":0.333,
+    "off_explosive_pass_rate":0.203, "off_explosive_rush_rate":0.116,
+    "def_explosive_pass_allowed":0.193, "def_explosive_rush_allowed":0.052,
+    "off_sack_rate":0.063, "def_sack_rate":0.056,
+    "off_turnovers_per_play":0.0104, "def_takeaways_per_play":0.0271,
+    "pre_kickoff_personnel_notes": ["Anton Harrison injured; Walker Little replacing at tackle", "Montaric Brown out"]
+  },
+  "mandatory_fields_not_yet_verified": [
+    "offense plays exact and defense plays exact", "offensive passing/rushing success separately", "defensive passing/rushing success separately", "pressure allowed and generated rate (not QB hits)", "interception/fumble split on consistent per-dropback/play denominator", "red-zone visit counts", "offensive and defensive actual drives/plays per drive", "QB rushing attempts per game and EPA per rush", "opponent offense/defense EPA faced weighted by plays", "average starting yardline", "penalty EPA/game", "special teams EPA/game", "numeric pregame personnel shifts with documented methodology", "exact pregame statistical capture timestamp"
+  ]
+}

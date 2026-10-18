@@ -1,0 +1,147 @@
+{
+  "id": "2026-wk6-HOU-JAX",
+  "league": "NFL",
+  "kickoff_utc": "2026-10-18T13:30:00Z",
+  "data_as_of_utc": null,
+  "neutral_site": true,
+  "home": {
+    "name": "Jacksonville Jaguars",
+    "stat_source": "https://gridironandwine.com/predictions/nfl/2026-10-18-houston-texans-vs-jacksonville-jaguars.html",
+    "stat_as_of_utc": null,
+    "offense": {
+      "games": 5,
+      "plays": null,
+      "epa_pass": 0.269,
+      "epa_rush": 0.008,
+      "pass_rate": 0.549,
+      "success_pass": null,
+      "success_rush": null,
+      "explosive_pass_rate": 0.203,
+      "explosive_rush_rate": 0.116,
+      "pressure_allowed": null,
+      "sack_allowed": 0.063,
+      "interception_rate": null,
+      "fumble_lost_rate": null,
+      "redzone_td_rate": 0.643,
+      "redzone_trips": null,
+      "third_down_rate": 0.467,
+      "drives_per_game": null,
+      "plays_per_drive": null,
+      "qb_rushes_per_game": null,
+      "qb_rush_epa": null
+    },
+    "defense": {
+      "plays": null,
+      "epa_pass_allowed": -0.024,
+      "epa_rush_allowed": -0.217,
+      "success_pass_allowed": null,
+      "success_rush_allowed": null,
+      "explosive_pass_allowed": 0.193,
+      "explosive_rush_allowed": 0.052,
+      "pressure_generated": null,
+      "sack_generated": 0.056,
+      "interception_rate_forced": null,
+      "fumble_recovery_rate": null,
+      "redzone_td_allowed": 0.333,
+      "redzone_trips_faced": null,
+      "third_down_allowed": 0.351,
+      "drives_faced_per_game": null,
+      "plays_per_drive_allowed": null
+    },
+    "schedule": {
+      "opp_def_pass_epa_allowed_avg": null,
+      "opp_def_rush_epa_allowed_avg": null,
+      "opp_off_pass_epa_avg": null,
+      "opp_off_rush_epa_avg": null
+    },
+    "context": {
+      "avg_start_yardline": null,
+      "penalty_epa_per_game": null,
+      "special_teams_epa_per_game": null
+    },
+    "personnel": {
+      "pass_epa_shift": 0,
+      "rush_epa_shift": 0,
+      "pressure_allowed_shift": 0,
+      "qb_rush_multiplier": 1,
+      "pace_multiplier": 1,
+      "notes": "Anton Harrison injured; Walker Little replacing at tackle; Montaric Brown out; numeric impacts deliberately not estimated",
+      "source": "https://gridironandwine.com/predictions/nfl/2026-10-18-houston-texans-vs-jacksonville-jaguars.html",
+      "checked_at_utc": null
+    }
+  },
+  "away": {
+    "name": "Houston Texans",
+    "stat_source": "https://gridironandwine.com/predictions/nfl/2026-10-18-houston-texans-vs-jacksonville-jaguars.html",
+    "stat_as_of_utc": null,
+    "offense": {
+      "games": 5,
+      "plays": null,
+      "epa_pass": 0.11,
+      "epa_rush": -0.193,
+      "pass_rate": 0.653,
+      "success_pass": null,
+      "success_rush": null,
+      "explosive_pass_rate": 0.196,
+      "explosive_rush_rate": 0.065,
+      "pressure_allowed": null,
+      "sack_allowed": 0.069,
+      "interception_rate": null,
+      "fumble_lost_rate": null,
+      "redzone_td_rate": 0.526,
+      "redzone_trips": null,
+      "third_down_rate": 0.385,
+      "drives_per_game": null,
+      "plays_per_drive": null,
+      "qb_rushes_per_game": null,
+      "qb_rush_epa": null
+    },
+    "defense": {
+      "plays": null,
+      "epa_pass_allowed": 0.011,
+      "epa_rush_allowed": -0.141,
+      "success_pass_allowed": null,
+      "success_rush_allowed": null,
+      "explosive_pass_allowed": 0.203,
+      "explosive_rush_allowed": 0.073,
+      "pressure_generated": null,
+      "sack_generated": 0.09,
+      "interception_rate_forced": null,
+      "fumble_recovery_rate": null,
+      "redzone_td_allowed": 0.643,
+      "redzone_trips_faced": null,
+      "third_down_allowed": 0.375,
+      "drives_faced_per_game": null,
+      "plays_per_drive_allowed": null
+    },
+    "schedule": {
+      "opp_def_pass_epa_allowed_avg": null,
+      "opp_def_rush_epa_allowed_avg": null,
+      "opp_off_pass_epa_avg": null,
+      "opp_off_rush_epa_avg": null
+    },
+    "context": {
+      "avg_start_yardline": null,
+      "penalty_epa_per_game": null,
+      "special_teams_epa_per_game": null
+    },
+    "personnel": {
+      "pass_epa_shift": 0,
+      "rush_epa_shift": 0,
+      "pressure_allowed_shift": 0,
+      "qb_rush_multiplier": 1,
+      "pace_multiplier": 1,
+      "notes": "Jalen Pitre inactive; David Montgomery inactive; Marvin Harrison Jr. making Texans debut after trade; numeric impacts deliberately not estimated",
+      "source": "https://gridironandwine.com/predictions/nfl/2026-10-18-houston-texans-vs-jacksonville-jaguars.html",
+      "checked_at_utc": null
+    }
+  },
+  "market": {
+    "spread_home": -2.5,
+    "home_odds_american": -112,
+    "away_odds_american": -105,
+    "total": 42.5,
+    "as_of_utc": null,
+    "source": "https://sports.betmgm.com/en/blog/nfl/texans-jaguars-prediction-odds-player-prop-bets-picks-week-6-jaa/ (Oct 14)"
+  }
+}

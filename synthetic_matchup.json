@@ -1,0 +1,147 @@
+{
+  "id": "SYNTHETIC-DEMO-DO-NOT-BET",
+  "league": "NFL",
+  "kickoff_utc": "2026-10-18T20:25:00Z",
+  "data_as_of_utc": "2026-10-18T19:00:00Z",
+  "neutral_site": false,
+  "home": {
+    "name": "Synthetic Home",
+    "stat_source": "SYNTHETIC EXAMPLE - NO REAL GAME STATS",
+    "stat_as_of_utc": "2026-10-17T23:00:00Z",
+    "offense": {
+      "games": 5,
+      "plays": 330,
+      "epa_pass": 0.07,
+      "epa_rush": -0.018,
+      "pass_rate": 0.57,
+      "success_pass": 0.4515,
+      "success_rush": 0.42119999999999996,
+      "explosive_pass_rate": 0.105,
+      "explosive_rush_rate": 0.11,
+      "pressure_allowed": 0.32,
+      "sack_allowed": 0.068,
+      "interception_rate": 0.027,
+      "fumble_lost_rate": 0.006,
+      "redzone_td_rate": 0.6,
+      "redzone_trips": 18,
+      "third_down_rate": 0.4,
+      "drives_per_game": 11.0,
+      "plays_per_drive": 5.9,
+      "qb_rushes_per_game": 3.3,
+      "qb_rush_epa": 0.12
+    },
+    "defense": {
+      "plays": 340,
+      "epa_pass_allowed": 0.005,
+      "epa_rush_allowed": -0.022,
+      "success_pass_allowed": 0.4435,
+      "success_rush_allowed": 0.4385,
+      "explosive_pass_allowed": 0.11,
+      "explosive_rush_allowed": 0.105,
+      "pressure_generated": 0.34,
+      "sack_generated": 0.073,
+      "interception_rate_forced": 0.025,
+      "fumble_recovery_rate": 0.007,
+      "redzone_td_allowed": 0.58,
+      "redzone_trips_faced": 19,
+      "third_down_allowed": 0.39,
+      "drives_faced_per_game": 10.9,
+      "plays_per_drive_allowed": 5.8
+    },
+    "schedule": {
+      "opp_def_pass_epa_allowed_avg": -0.015,
+      "opp_def_rush_epa_allowed_avg": -0.01,
+      "opp_off_pass_epa_avg": 0.015,
+      "opp_off_rush_epa_avg": 0.004
+    },
+    "context": {
+      "avg_start_yardline": 30,
+      "penalty_epa_per_game": -0.6,
+      "special_teams_epa_per_game": 0.25
+    },
+    "personnel": {
+      "pass_epa_shift": 0,
+      "rush_epa_shift": 0,
+      "pressure_allowed_shift": 0,
+      "qb_rush_multiplier": 1,
+      "pace_multiplier": 1,
+      "notes": "No personnel override applied",
+      "source": "SYNTHETIC: news checked for demo only",
+      "checked_at_utc": "2026-10-18T19:00:00Z"
+    }
+  },
+  "away": {
+    "name": "Synthetic Away",
+    "stat_source": "SYNTHETIC EXAMPLE - NO REAL GAME STATS",
+    "stat_as_of_utc": "2026-10-17T23:00:00Z",
+    "offense": {
+      "games": 5,
+      "plays": 330,
+      "epa_pass": 0.04,
+      "epa_rush": -0.033,
+      "pass_rate": 0.57,
+      "success_pass": 0.4485,
+      "success_rush": 0.4188,
+      "explosive_pass_rate": 0.105,
+      "explosive_rush_rate": 0.11,
+      "pressure_allowed": 0.32,
+      "sack_allowed": 0.068,
+      "interception_rate": 0.027,
+      "fumble_lost_rate": 0.006,
+      "redzone_td_rate": 0.6,
+      "redzone_trips": 18,
+      "third_down_rate": 0.4,
+      "drives_per_game": 11.0,
+      "plays_per_drive": 5.9,
+      "qb_rushes_per_game": 3.3,
+      "qb_rush_epa": 0.12
+    },
+    "defense": {
+      "plays": 340,
+      "epa_pass_allowed": 0.035,
+      "epa_rush_allowed": -0.007,
+      "success_pass_allowed": 0.4465,
+      "success_rush_allowed": 0.4415,
+      "explosive_pass_allowed": 0.11,
+      "explosive_rush_allowed": 0.105,
+      "pressure_generated": 0.34,
+      "sack_generated": 0.073,
+      "interception_rate_forced": 0.025,
+      "fumble_recovery_rate": 0.007,
+      "redzone_td_allowed": 0.58,
+      "redzone_trips_faced": 19,
+      "third_down_allowed": 0.39,
+      "drives_faced_per_game": 10.9,
+      "plays_per_drive_allowed": 5.8
+    },
+    "schedule": {
+      "opp_def_pass_epa_allowed_avg": -0.015,
+      "opp_def_rush_epa_allowed_avg": -0.01,
+      "opp_off_pass_epa_avg": 0.015,
+      "opp_off_rush_epa_avg": 0.004
+    },
+    "context": {
+      "avg_start_yardline": 30,
+      "penalty_epa_per_game": -0.6,
+      "special_teams_epa_per_game": 0.25
+    },
+    "personnel": {
+      "pass_epa_shift": 0,
+      "rush_epa_shift": 0,
+      "pressure_allowed_shift": 0,
+      "qb_rush_multiplier": 1,
+      "pace_multiplier": 1,
+      "notes": "No personnel override applied",
+      "source": "SYNTHETIC: news checked for demo only",
+      "checked_at_utc": "2026-10-18T19:00:00Z"
+    }
+  },
+  "market": {
+    "spread_home": -3.5,
+    "home_odds_american": -110,
+    "away_odds_american": -110,
+    "total": 45.5,
+    "as_of_utc": "2026-10-18T18:55:00Z",
+    "source": "SYNTHETIC - invented odds for software testing"
+  }
+}

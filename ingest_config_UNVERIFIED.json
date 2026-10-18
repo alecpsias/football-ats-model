@@ -1,0 +1,50 @@
+{
+  "id": "2026-wk6-HOU-JAX",
+  "kickoff_utc": "2026-10-18T13:30:00Z",
+  "data_as_of_utc": "2026-10-18T12:30:00Z",
+  "home_code": "JAX",
+  "away_code": "HOU",
+  "home_name": "Jacksonville Jaguars",
+  "away_name": "Houston Texans",
+  "neutral_site": true,
+  "pbp_source": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.parquet",
+  "pbp_source_available_at_utc": null,
+  "participation_source_available_at_utc": null,
+  "roster_source_available_at_utc": null,
+  "market": {
+    "spread_home": -2.5,
+    "home_odds_american": null,
+    "away_odds_american": null,
+    "total": 42.5,
+    "as_of_utc": null,
+    "source": "Pregame reports: spread and total, but same-time price needs archived quote"
+  },
+  "teams": {
+    "HOU": {
+      "context": {},
+      "personnel": {
+        "pass_epa_shift": 0,
+        "rush_epa_shift": 0,
+        "pressure_allowed_shift": 0,
+        "qb_rush_multiplier": 1,
+        "pace_multiplier": 1,
+        "notes": "Potential missing defenders/lineup changes documented in earlier partial replay; impacts not quantified",
+        "source": "https://www.houstontexans.com/news/texans-inactives-week-6-at-jacksonville-jaguars",
+        "checked_at_utc": null
+      }
+    },
+    "JAX": {
+      "context": {},
+      "personnel": {
+        "pass_epa_shift": 0,
+        "rush_epa_shift": 0,
+        "pressure_allowed_shift": 0,
+        "qb_rush_multiplier": 1,
+        "pace_multiplier": 1,
+        "notes": "Offensive tackle and cornerback availability documented in earlier partial replay; impacts not quantified",
+        "source": "https://www.reuters.com/sports/reports-jaguars-lt-anton-harrison-knee-undergo-surgery--flm-2026-10-13/",
+        "checked_at_utc": null
+      }
+    }
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "attempt_type": "ACTUAL_2026_NFLVERSE_DOWNLOAD_NO_MOCK",
+  "game_id": "2026_06_HOU_JAX",
+  "kickoff_utc": "2026-10-18T13:30:00Z",
+  "forecast_cutoff_utc": "2026-10-18T12:30:00Z",
+  "source_authoritative_releases": {
+    "pbp": "https://github.com/nflverse/nflverse-data/releases/tag/pbp",
+    "schedule": "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv",
+    "weekly_rosters": "https://github.com/nflverse/nflverse-data/releases/tag/weekly_rosters"
+  },
+  "source_metadata_verified_via_browser": {
+    "season_2026_pbp_release_exists": true,
+    "schedule_contains_game": true,
+    "game_in_public_schedule": {
+      "home": "JAX",
+      "away": "HOU",
+      "location": "Neutral",
+      "result": "HOU 34 JAX 31",
+      "spread_line_jax_favored": 2.5,
+      "total_line": 42.5
+    },
+    "caution": "Game result and market column are drawn from a now-postgame schedule file, not a demonstrated pre-cutoff raw snapshot."
+  },
+  "actual_nflreadpy_loaded": false,
+  "actual_raw_2026_pbp_downloaded": false,
+  "actual_raw_2026_pbp_play_rows_verified": 0,
+  "attempts": [
+    {"action": "Python connector import", "result": "FAIL - nflreadpy not installed"},
+    {"action": "Install nflreadpy", "result": "FAIL - package index name resolution blocked"},
+    {"action": "curl official nflverse GitHub release", "result": "FAIL - github.com DNS resolution blocked"},
+    {"action": "container managed download of nflverse asset", "result": "FAIL - web retrieval restricted"},
+    {"action": "container managed download of open nflverse schedule CSV", "result": "FAIL - download failed"}
+  ],
+  "forecast_replay_status": "BLOCKED_NO_2026_PBP",
+  "last_provisional_partial_replay": {
+    "model_type": "EPA-only diagnostic, NOT full model",
+    "predicted_jax": 25.4,
+    "predicted_hou": 19.77,
+    "predicted_margin_jax": 5.63,
+    "actual_margin_jax": -3,
+    "interpretation": "Carried forward from prior run; not a new real-data model result"
+  },
+  "workaround_implemented": "import_local_nflverse.py accepts official CSV/CSV.GZ files and archives SHA256 + row counts without nflreadpy",
+  "cost": 0,
+  "paid_services_used": false
+}

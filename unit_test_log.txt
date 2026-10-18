@@ -1,0 +1,21 @@
+test_chronological_replay (test_backtest.HistoricalChecks.test_chronological_replay) ... ok
+test_failed_calibrator_cannot_be_used (test_backtest.HistoricalChecks.test_failed_calibrator_cannot_be_used) ... ok
+test_first_half_price_required (test_backtest.HistoricalChecks.test_first_half_price_required) ... ok
+test_home_spread_monotonicity (test_backtest.HistoricalChecks.test_home_spread_monotonicity) ... ok
+test_stale_personnel_check_fails (test_backtest.HistoricalChecks.test_stale_personnel_check_fails) ... ok
+test_synthetic_history_cannot_claim_real_validation (test_backtest.HistoricalChecks.test_synthetic_history_cannot_claim_real_validation) ... ok
+test_deterministic_and_audit (test_model.ModelChecks.test_deterministic_and_audit) ... ok
+test_first_half_optional (test_model.ModelChecks.test_first_half_optional) ... ok
+test_full_stress_is_not_blank (test_model.ModelChecks.test_full_stress_is_not_blank) ... ok
+test_missing_required_stat_fails_hard (test_model.ModelChecks.test_missing_required_stat_fails_hard) ... ok
+test_no_future_information (test_model.ModelChecks.test_no_future_information) ... ok
+test_personnel_changes_need_evidence (test_model.ModelChecks.test_personnel_changes_need_evidence) ... ok
+test_probability_conservation (test_model.ModelChecks.test_probability_conservation) ... ok
+test_qb_rushing_sensitivity (test_model.ModelChecks.test_qb_rushing_sensitivity) ... ok
+test_sos_affects_projections (test_model.ModelChecks.test_sos_affects_projections) ... ok
+test_wrong_units_fails (test_model.ModelChecks.test_wrong_units_fails) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.264s
+
+OK
