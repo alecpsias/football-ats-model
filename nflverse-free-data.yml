@@ -1,122 +1,63 @@
 name: Free nflverse collection and replay
 
-# This workflow uses public/open NFL data only; no API keys or paid services.
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/nflverse-free-data.yml'
+      - 'ingest.py'
   workflow_dispatch:
-    inputs:
-      season:
-        description: 'NFL season (YYYY); blank = auto-select current NFL season'
-        required: false
-        type: string
-      replay_texans_jaguars:
-        description: 'Generate the retrospective Texans–Jaguars missing-data audit'
-        required: false
-        type: boolean
-        default: true
   schedule:
-    # Sunday 11:15 UTC is before typical Sunday kickoff, including early London games.
-    # GitHub scheduled jobs can be delayed; the manifest records ACTUAL retrieval time.
     - cron: '15 11 * * 0'
 
 permissions:
   contents: read
-
-concurrency:
-  group: free-nflverse-${{ github.ref }}-${{ github.run_id }}
-  cancel-in-progress: false
 
 jobs:
   collect:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: Install open-source dependencies
-        run: python -m pip install --requirement requirements-nflverse.txt
-
-      - name: Freeze actual environment
+      - name: Install free dependencies
+        run: pip install -r requirements-nflverse.txt
+      - name: Run tests (accommodate flattened web upload)
         run: |
-          mkdir -p run-metadata
-          python --version > run-metadata/python.txt
-          python -m pip freeze > run-metadata/pip-freeze.txt
-
-      - name: Run the code's existing unit tests
-        run: python -m unittest discover -s tests -v
-
-      - name: Resolve season and unique snapshot path
-        env:
-          INPUT_SEASON: ${{ inputs.season }}
-        shell: bash
+          mkdir -p ../examples run-metadata
+          cp synthetic_matchup.json ../examples/synthetic_matchup.json
+          python -m unittest discover -s . -p 'test_*.py' -v
+      - name: Download 2026 nflverse data
+        run: python nflverse_connector.py collect --season 2026 --out snapshots/2026/run-${{ github.run_id }}
+      - name: Check source hashes and replay cutoff
         run: |
-          if [ -n "$INPUT_SEASON" ]; then
-            SEASON="$INPUT_SEASON"
-          else
-            YEAR=$(date -u +%Y)
-            MONTH=$(date -u +%m)
-            if [ "$MONTH" -le 2 ]; then SEASON=$((YEAR-1)); else SEASON=$YEAR; fi
-          fi
-          if ! [[ "$SEASON" =~ ^20[0-9][0-9]$ ]]; then echo 'Season must be YYYY'; exit 1; fi
-          echo "SEASON=$SEASON" >> "$GITHUB_ENV"
-          echo "SNAPSHOT_PATH=snapshots/$SEASON/run-$GITHUB_RUN_ID-attempt-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
-
-      - name: Collect actual nflverse source files
-        id: collect
-        run: |
-          python nflverse_connector.py collect --season "$SEASON" --out "$SNAPSHOT_PATH"
-
-      - name: Verify stored source hashes
-        if: steps.collect.outcome == 'success'
-        run: |
-          python nflverse_connector.py verify --snapshot "$SNAPSHOT_PATH" > run-metadata/checksum-verification.json
-          python scripts/check_snapshots.py --snapshot "$SNAPSHOT_PATH" --cutoff '2026-10-18T12:30:00Z' --out run-metadata/texans-jaguars-asof-check.json
-
-      - name: Replay Texans–Jaguars without invented data
-        id: replay
-        if: steps.collect.outcome == 'success' && inputs.replay_texans_jaguars == true
+          python nflverse_connector.py verify --snapshot snapshots/2026/run-${{ github.run_id }} > run-metadata/hashes.json
+          python check_snapshots.py --snapshot snapshots/2026/run-${{ github.run_id }} --cutoff '2026-10-18T12:30:00Z' --out run-metadata/pregame-eligibility.json
+      - name: Replay Texans-Jaguars, without guessing missing data
         shell: bash
         run: |
           mkdir -p replay-results
           set +e
-          python run_snapshot_ingest.py \
-            --snapshot "$SNAPSHOT_PATH" \
-            --config replays/hou_jax_2026_10_18/ingest_config_UNVERIFIED.json \
-            --output-prefix replay-results/texans-jaguars
-          RESULT=$?
+          python run_snapshot_ingest.py --snapshot snapshots/2026/run-${{ github.run_id }} --config ingest_config_UNVERIFIED.json --output-prefix replay-results/texans-jaguars
+          rc=$?
           set -e
-          echo "$RESULT" > replay-results/exit-code.txt
-          # Expected strict validation block is not a forecasting success.
-          # Preserve the audit for examination and let GitHub Actions upload it.
-          if [ "$RESULT" -eq 2 ]; then
-            echo 'Replay BLOCKED by missing or historically unverifiable inputs; no model prediction emitted.' >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          exit "$RESULT"
-
-      - name: Summarize the collection and replay
+          echo "$rc" > replay-results/exit-code.txt
+          if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then exit "$rc"; fi
+          if [ "$rc" -eq 2 ]; then echo 'Full model blocked by missing or late inputs, as intended.' >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Report
         if: always()
         run: |
-          python scripts/write_run_summary.py \
-            --snapshot "${SNAPSHOT_PATH:-not-created}" \
-            --replay-audit replay-results/texans-jaguars.audit.json \
-            --output run-metadata/run-summary.md \
-            --github-summary "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload datasets and audit as a free workflow artifact
+          python write_run_summary.py --snapshot snapshots/2026/run-${{ github.run_id }} --replay-audit replay-results/texans-jaguars.audit.json --output run-metadata/run-summary.md --github-summary "$GITHUB_STEP_SUMMARY"
+      - name: Upload source data and audits
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nflverse-${{ github.run_id }}-${{ github.run_attempt }}
+          name: nflverse-${{ github.run_id }}
           path: |
             snapshots/
-            replay-results/
             run-metadata/
+            replay-results/
           if-no-files-found: warn
-          compression-level: 0
           retention-days: 30

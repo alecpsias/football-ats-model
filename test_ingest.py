@@ -118,3 +118,24 @@ class TestIngest(unittest.TestCase):
         self.assertEqual(str(normalize_schedule(s).iloc[0].kickoff_utc),'2026-10-18 13:30:00+00:00')
 
 if __name__=='__main__': unittest.main()
+
+class TestCurrentNflverseSchema(unittest.TestCase):
+    def test_canonical_play_type_replaces_absent_no_play_column(self):
+        pbp, schedule, part, roster, config = fake_data()
+        pbp['play_type'] = pbp['pass'].map({1: 'pass', 0: 'run'})
+        pbp = pbp.drop(columns=['no_play'])
+        original, audit0 = build(pbp, schedule, config, part, roster)
+        self.assertEqual(audit0['status'], 'READY_FOR_MODEL_UNCALIBRATED')
+        # An explicit play_type=no_play should be excluded, not counted as a pass.
+        row = pbp[(pbp.game_id.eq('p1')) & (pbp.posteam.eq('HOU'))].index[0]
+        pbp.loc[row, 'play_type'] = 'no_play'
+        _, audit1 = build(pbp, schedule, config, part, roster)
+        self.assertEqual(audit1['status'], 'READY_FOR_MODEL_UNCALIBRATED')
+        self.assertEqual(audit1['coverage']['eligible_scrimmage_plays'],
+                         audit0['coverage']['eligible_scrimmage_plays'] - 1)
+
+    def test_missing_no_play_and_source_classification_rejected(self):
+        pbp, schedule, part, roster, config = fake_data()
+        pbp = pbp.drop(columns=['no_play'])
+        with self.assertRaisesRegex(InputError, 'play_type source classification'):
+            build(pbp, schedule, config, part, roster)

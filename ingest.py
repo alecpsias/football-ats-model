@@ -203,13 +203,26 @@ def _team_stats(pbp: pd.DataFrame, team: str, is_offense: bool) -> dict:
 
 
 def _prepare_pbp(pbp: pd.DataFrame, schedule: pd.DataFrame, cutoff: pd.Timestamp) -> tuple[pd.DataFrame,dict]:
-    need = {"game_id","posteam","defteam","epa","pass","rush","qb_dropback","sack","interception","success","yards_gained","no_play","qb_kneel","qb_spike","fumble_lost","play_id"}
+    need = {"game_id","posteam","defteam","epa","pass","rush","qb_dropback","sack","interception","success","yards_gained","qb_kneel","qb_spike","fumble_lost","play_id"}
     missing = sorted(need - set(pbp))
     if missing:
         raise InputError(f"PBP missing indispensable columns: {missing}")
     if pbp["game_id"].isna().any():
         raise InputError("PBP contains rows without game_id")
     pbp = pbp.copy()
+    if "no_play" not in pbp.columns:
+        # Current nflfastR / nflverse releases encode nullified plays as
+        # play_type == 'no_play'; they do not necessarily ship a no_play flag.
+        # Reconstruct ONLY that explicit source label, never assume that
+        # missing labels mean genuine plays. Preserve raw snapshots unchanged.
+        if "play_type" not in pbp.columns:
+            raise InputError("PBP missing no_play flag and play_type source classification")
+        eligible = (pbp.posteam.notna() & pbp.defteam.notna() &
+                    (norm_flag(pbp.qb_dropback) | norm_flag(pbp["pass"]) | norm_flag(pbp["rush"])))
+        labels = pbp["play_type"].astype("string").str.strip().str.lower()
+        if labels.loc[eligible].isna().any():
+            raise InputError("PBP cannot classify null play_type among offensive candidate plays")
+        pbp["no_play"] = labels.eq("no_play").fillna(False).astype("int8")
     pbp["game_id"] = pbp["game_id"].astype(str)
     # Require a conservative six-hour completion buffer. Merely kicking off
     # before the cutoff does not establish that a game was finished.
