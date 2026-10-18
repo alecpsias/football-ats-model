@@ -1,0 +1,58 @@
+          if ! [[ "$SEASON" =~ ^20[0-9][0-9]$ ]]; then echo 'Season must be YYYY'; exit 1; fi
+          echo "SEASON=$SEASON" >> "$GITHUB_ENV"
+          echo "SNAPSHOT_PATH=snapshots/$SEASON/run-$GITHUB_RUN_ID-attempt-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+
+      - name: Collect actual nflverse source files
+        id: collect
+        run: |
+          python nflverse_connector.py collect --season "$SEASON" --out "$SNAPSHOT_PATH"
+
+      - name: Verify stored source hashes
+        if: steps.collect.outcome == 'success'
+        run: |
+          python nflverse_connector.py verify --snapshot "$SNAPSHOT_PATH" > run-metadata/checksum-verification.json
+          python check_snapshots.py --snapshot "$SNAPSHOT_PATH" --cutoff '2026-10-18T12:30:00Z' --out run-metadata/texans-jaguars-asof-check.json
+
+      - name: Replay Texans–Jaguars without invented data
+        id: replay
+        if: steps.collect.outcome == 'success' && inputs.replay_texans_jaguars == true
+        shell: bash
+        run: |
+          mkdir -p replay-results
+          set +e
+          python run_snapshot_ingest.py \
+            --snapshot "$SNAPSHOT_PATH" \
+            --config ingest_config_UNVERIFIED.json \
+            --output-prefix replay-results/texans-jaguars
+          RESULT=$?
+          set -e
+          echo "$RESULT" > replay-results/exit-code.txt
+          # Expected strict validation block is not a forecasting success.
+          # Preserve the audit for examination and let GitHub Actions upload it.
+          if [ "$RESULT" -eq 2 ]; then
+            echo 'Replay BLOCKED by missing or historically unverifiable inputs; no model prediction emitted.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          exit "$RESULT"
+
+      - name: Summarize the collection and replay
+        if: always()
+        run: |
+          python write_run_summary.py \
+            --snapshot "${SNAPSHOT_PATH:-not-created}" \
+            --replay-audit replay-results/texans-jaguars.audit.json \
+            --output run-metadata/run-summary.md \
+            --github-summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload datasets and audit as a free workflow artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nflverse-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            snapshots/
+            replay-results/
+            run-metadata/
+          if-no-files-found: warn
+          compression-level: 0
+          retention-days: 30
