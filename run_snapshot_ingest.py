@@ -15,7 +15,7 @@ from ingest import build, load_table
 from nflverse_connector import verify
 
 
-def run(snapshot: Path, config_path: Path, output_prefix: Path) -> tuple[dict,dict]:
+def run(snapshot: Path, config_path: Path, output_prefix: Path, extra_dir: Path | None=None) -> tuple[dict,dict]:
     validated=verify(snapshot)
     if validated['status'] != 'VERIFIED':
         raise ValueError('Snapshot checksum verification failed: '+str(validated['problems']))
@@ -33,6 +33,20 @@ def run(snapshot: Path, config_path: Path, output_prefix: Path) -> tuple[dict,di
     roster_path=snapshot/manifest['datasets']['roster']['local_file']
     game,audit=build(load_table(pbp_path),load_table(schedule_path),config,
                      participation=None,roster=load_table(roster_path))
+    if extra_dir is not None:
+        # Only use supplementary features when their manifest, PFR capture,
+        # and the base source hashes are verified as-of this target's cutoff.
+        from integrate_advanced_features import build_overlay,attach_overlay
+        try:
+            overlay=build_overlay(snapshot,extra_dir,config['data_as_of_utc'],
+                                  (config['home_code'],config['away_code']))
+            game,audit=attach_overlay(game,audit,overlay,
+                {'home':config['home_code'],'away':config['away_code']})
+        except (ValueError,KeyError,OSError) as exc:
+            audit['supplementary_integration_error']=str(exc)
+            # Fail closed for a requested supplemental collection; do not
+            # claim it was consumed or silently run an unaugmented model.
+            audit['status']='BLOCKED_SUPPLEMENTARY_VALIDATION'
     audit['source_manifest']=str(snapshot/'manifest.json')
     audit['source_manifest_checksums']={k:v['sha256'] for k,v in manifest['datasets'].items() if v['status']=='SUCCESS'}
     audit['free_only']=True
@@ -49,8 +63,9 @@ def main():
     p.add_argument('--snapshot',type=Path,required=True)
     p.add_argument('--config',type=Path,required=True)
     p.add_argument('--output-prefix',type=Path,required=True)
+    p.add_argument('--extra-dir',type=Path,help='Verified run-matched derived-metrics folder')
     args=p.parse_args()
-    game,audit=run(args.snapshot,args.config,args.output_prefix)
+    game,audit=run(args.snapshot,args.config,args.output_prefix,args.extra_dir)
     print(json.dumps({'status':audit['status'],'missing_count':audit['missing_count'],
                       'asof_issues':audit['asof_issues'],'audit':str(args.output_prefix)+'.audit.json'},indent=2))
     if audit['status']!='READY_FOR_MODEL_UNCALIBRATED':

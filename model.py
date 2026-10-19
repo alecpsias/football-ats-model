@@ -16,7 +16,7 @@ from typing import Any
 
 import numpy as np
 
-VERSION = "0.1.0"
+VERSION = "0.6.0"
 MODEL_RULES = {
     "NFL": {
         "league_ppd": 2.08, "plays_per_drive": 5.8, "drives_per_team": 10.8,
@@ -27,6 +27,7 @@ MODEL_RULES = {
         "home_advantage_points": 1.5, "play_shrink": 450,
         "rz_shrink": 35, "drive_noise_sd": .15, "shortfield_bonus_ppd": .9,
         "ref_start_yardline": 29.0, "field_position_points_per_yard": .044,
+        "penalty_yards_points_per_yard": .005, "fg_proxy_points_scale": 2.25,
     },
     "CFB": {
         "league_ppd": 2.35, "plays_per_drive": 6.1, "drives_per_team": 11.5,
@@ -100,7 +101,7 @@ def validate_team(t: dict, label: str) -> None:
         raise InputError(f"{label}.name required")
     if not isinstance(t["stat_source"], str) or not t["stat_source"].strip():
         raise InputError(f"{label}.stat_source required")
-    for section, keys in (("offense", OFF_KEYS), ("defense", DEF_KEYS), ("schedule", SOS_KEYS), ("context", CONTEXT_KEYS), ("personnel", PERSONNEL_KEYS)):
+    for section, keys in (("offense", OFF_KEYS), ("defense", DEF_KEYS), ("schedule", SOS_KEYS), ("context", ("avg_start_yardline",)), ("personnel", PERSONNEL_KEYS)):
         if not isinstance(t[section], dict):
             raise InputError(f"{label}.{section} must be an object")
         need(t[section], keys, f"{label}.{section}")
@@ -109,8 +110,11 @@ def validate_team(t: dict, label: str) -> None:
         number(o[k], f"{label}.offense.{k}", 1 if k != "redzone_trips" else 0, 100000)
     for k in ("plays", "redzone_trips_faced"):
         number(d[k], f"{label}.defense.{k}", 1 if k == "plays" else 0, 100000)
-    for k in ("epa_pass", "epa_rush", "qb_rush_epa"):
+    for k in ("epa_pass", "epa_rush"):
         number(o[k], f"{label}.offense.{k}", -1.5, 1.5)
+    # Tiny QB rushing samples can have valid extreme per-play EPA. Validate
+    # finite, then shrink the DIFFERENCE toward team rushing EPA below.
+    number(o["qb_rush_epa"], f"{label}.offense.qb_rush_epa", -7, 7)
     for k in ("epa_pass_allowed", "epa_rush_allowed"):
         number(d[k], f"{label}.defense.{k}", -1.5, 1.5)
     for k in SOS_KEYS:
@@ -129,8 +133,25 @@ def validate_team(t: dict, label: str) -> None:
     for k in ("drives_faced_per_game", "plays_per_drive_allowed"):
         number(d[k], f"{label}.defense.{k}", 2.5 if k == "plays_per_drive_allowed" else 6, 20)
     number(c["avg_start_yardline"], f"{label}.context.avg_start_yardline", 15, 45)
+    # True penalty-isolated EPA / causal special-teams EPA are OPTIONAL and may
+    # remain null. Null disables that contribution; it is never imputed as a
+    # measured zero or replaced by unrelated penalty yards / kicking event EPA.
     for k in ("penalty_epa_per_game", "special_teams_epa_per_game"):
-        number(c[k], f"{label}.context.{k}", -15, 15)
+        if c.get(k) is not None: number(c[k], f"{label}.context.{k}", -15, 15)
+    if t.get("advanced") is not None:
+        v=t["advanced"]
+        if not isinstance(v,dict):raise InputError(f"{label}.advanced must be an object")
+        need(v,("penalty_yards_per_game","penalty_games","field_goals_made","field_goals_attempted", "source","as_of_utc","status"),f"{label}.advanced")
+        number(v["penalty_yards_per_game"],f"{label}.advanced.penalty_yards_per_game",0,300)
+        number(v["penalty_games"],f"{label}.advanced.penalty_games",3,30)
+        made=number(v["field_goals_made"],f"{label}.advanced.field_goals_made",0,100)
+        tried=number(v["field_goals_attempted"],f"{label}.advanced.field_goals_attempted",0,100)
+        if made>tried:raise InputError(f"{label}.advanced.field_goals_made exceeds attempts")
+        if v.get("punt_gross_yards") is not None:
+            number(v["punt_gross_yards"],f"{label}.advanced.punt_gross_yards",20,80)
+        if v["status"]!="DESCRIPTIVE_UNCALIBRATED" or not isinstance(v["source"],str) or not v["source"].strip():
+            raise InputError(f"{label}.advanced source/status not verified")
+        utc(v["as_of_utc"],f"{label}.advanced.as_of_utc")
     for k in ("pass_epa_shift", "rush_epa_shift"):
         number(p[k], f"{label}.personnel.{k}", -.4, .4)
     number(p["pressure_allowed_shift"], f"{label}.personnel.pressure_allowed_shift", -.25, .25)
@@ -165,6 +186,8 @@ def validate_game(g: dict) -> dict:
         a = utc(g[k]["stat_as_of_utc"], f"{k}.stat_as_of_utc")
         if a > cutoff:
             raise InputError(f"{k} stats dated later than game.data_as_of_utc")
+        if g[k].get("advanced") is not None and utc(g[k]["advanced"]["as_of_utc"],f"{k}.advanced.as_of_utc")>cutoff:
+            raise InputError(f"{k} advanced features dated later than data cutoff")
         person_checked = utc(g[k]["personnel"]["checked_at_utc"], f"{k}.personnel.checked_at_utc")
         if person_checked > cutoff or (cutoff-person_checked).total_seconds() > 24*3600:
             raise InputError(f"{k} personnel check must occur within 24 hours before data_as_of_utc")
@@ -254,7 +277,9 @@ def projection(attack: dict, defend: dict, r: dict, side: str, home_adv_ppg: flo
     base_team_rush_attempts = max(1, a["drives_per_game"]*a["plays_per_drive"]*(1-pass_rate))
     pressure_ratio = clip(1+.35*(pressure-pressure_o)/max(r["pressure"], .15), .8, 1.2)
     qb_rush_projection = clip(a["qb_rushes_per_game"]*p["qb_rush_multiplier"]*pressure_ratio, 0, base_team_rush_attempts)
-    qb_rush_shift = clip((qb_rush_projection-a["qb_rushes_per_game"])/base_team_rush_attempts * (a["qb_rush_epa"]-a["epa_rush"]), -.065, .065)
+    qb_rush_opportunities=a["qb_rushes_per_game"]*a["games"]
+    qb_rush_difference=(a["qb_rush_epa"]-a["epa_rush"])*qb_rush_opportunities/(qb_rush_opportunities+25)
+    qb_rush_shift = clip((qb_rush_projection-a["qb_rushes_per_game"])/base_team_rush_attempts * qb_rush_difference, -.065, .065)
     rush_epa += qb_rush_shift
     plays_per_drive = clip(.50*a["plays_per_drive"]+.50*d["plays_per_drive_allowed"], 4.2, 8.3)
     third_down = rate_match(a["third_down_rate"], d["third_down_allowed"], r["third_down"], a_n*.2, d_n*.2, k*.28)
@@ -277,12 +302,29 @@ def projection(attack: dict, defend: dict, r: dict, side: str, home_adv_ppg: flo
     to_drive = clip(1-math.exp(-plays_per_drive*(pass_rate*interceptions+fumbles)), .015, .38)
     # Special teams & penalties as a matchup NET differential, preventing a full
     # double count of context already reflected in offensive and defensive EPA.
-    net_special_per_game = .5*(cp["special_teams_epa_per_game"]-cd["special_teams_epa_per_game"])
-    net_penalty_per_game = .35*(cp["penalty_epa_per_game"]-cd["penalty_epa_per_game"])
+    net_special_per_game = (.5*(cp["special_teams_epa_per_game"]-cd["special_teams_epa_per_game"])
+                            if cp.get("special_teams_epa_per_game") is not None and cd.get("special_teams_epa_per_game") is not None else 0.0)
+    net_penalty_per_game = (.35*(cp["penalty_epa_per_game"]-cd["penalty_epa_per_game"])
+                            if cp.get("penalty_epa_per_game") is not None and cd.get("penalty_epa_per_game") is not None else 0.0)
+    # Optional experimental residuals: these are NOT substitutes for the true
+    # EPA fields above. Coefficients are deliberately tiny, bounded, and NOT
+    # historically calibrated. Do not describe as empirically predictive.
+    ac, ad = attack.get("advanced"), defend.get("advanced")
+    advanced_penalty = 0.0
+    if (ac is not None and ad is not None and cp.get("penalty_epa_per_game") is None
+            and cd.get("penalty_epa_per_game") is None):
+        advanced_penalty=clip(r.get("penalty_yards_points_per_yard",0)*
+            (ad["penalty_yards_per_game"]-ac["penalty_yards_per_game"]),-.25,.25)
+    advanced_fg=0.0
+    if (ac is not None and ac["field_goals_attempted"]>0 and
+            cp.get("special_teams_epa_per_game") is None and cd.get("special_teams_epa_per_game") is None):
+        # Beta-binomial shrinkage toward prior 84% based on ~20 FG attempts.
+        fg_posterior=(ac["field_goals_made"]+20*.84)/(ac["field_goals_attempted"]+20)
+        advanced_fg=clip(r.get("fg_proxy_points_scale",0)*(fg_posterior-.84),-.20,.20)
     drives_est = clip(.5*(a["drives_per_game"]+d["drives_faced_per_game"]), 8, 16)
     field_ppd = (c["avg_start_yardline"]-r["ref_start_yardline"])*r["field_position_points_per_yard"]
     efficiency_ppd = plays_per_drive * (pass_rate*pass_epa+(1-pass_rate)*rush_epa)
-    adjusted_ppd = clip(r["league_ppd"]+efficiency_ppd+rz_delta_ppd+third_delta_ppd+field_ppd+(net_special_per_game+net_penalty_per_game+home_adv_ppg)/drives_est, .5, 4.8)
+    adjusted_ppd = clip(r["league_ppd"]+efficiency_ppd+rz_delta_ppd+third_delta_ppd+field_ppd+(net_special_per_game+net_penalty_per_game+advanced_penalty+advanced_fg+home_adv_ppg)/drives_est, .5, 4.8)
     return {
         "team": attack["name"], "side": side, "pass_rate": pass_rate, "plays_per_drive": round(plays_per_drive, 3),
         "expected_drives": round(drives_est*p["pace_multiplier"], 3),
@@ -303,6 +345,10 @@ def projection(attack: dict, defend: dict, r: dict, side: str, home_adv_ppg: flo
         "epa_points_per_drive_adjustment": round(efficiency_ppd, 4), "redzone_residual_ppd": round(rz_delta_ppd, 4),
         "third_down_residual_ppd": round(third_delta_ppd, 4), "field_position_ppd": round(field_ppd, 4),
         "net_penalties_ppg_component": round(net_penalty_per_game, 4), "net_special_teams_ppg_component": round(net_special_per_game, 4),
+        "advanced_penalty_yards_proxy_ppg":round(advanced_penalty,4),
+        "advanced_fg_accuracy_proxy_ppg":round(advanced_fg,4),
+        "advanced_punt_gross_descriptive_not_scored":ac.get("punt_gross_yards") if ac else None,
+        "advanced_feature_note":"Experimental bounded effects, NOT backtested; punt gross not used as net punting",
         "home_adv_ppg_component": round(home_adv_ppg, 4),
         "raw_points_per_drive": round(adjusted_ppd, 4),
         "redzone_sample_off_def": [a["redzone_trips"], d["redzone_trips_faced"]],
@@ -476,7 +522,12 @@ def run(g: dict, runs: int=50000, seed: int=20261018, perform_stress: bool=True,
         raise InputError("runs must be between 1,000 and 300,000")
     if not (0 <= seed < 2**32):
         raise InputError("seed must be a nonnegative 32-bit integer")
-    r = validate_game(g)
+    r = dict(validate_game(g))  # NEVER mutate global reference constants
+    sources=[g[t].get('pressure_source') for t in ('home','away')]
+    if any(x=='PFR_QB_TIMES_PRESSURED_OVER_SAME_GAME_PBP_DROPBACKS' for x in sources):
+        if not all(x=='PFR_QB_TIMES_PRESSURED_OVER_SAME_GAME_PBP_DROPBACKS' for x in sources):
+            raise InputError('Both teams must use the same pressure definition')
+        r['pressure']=number(g.get('pressure_reference_rate'),'PFR pressure reference rate',.10,.65)
     hfa = 0 if g["neutral_site"] else r["home_advantage_points"]
     home = projection(g["home"], g["away"], r, "home", .5*hfa)
     away = projection(g["away"], g["home"], r, "away", -.5*hfa)
@@ -510,6 +561,11 @@ def run(g: dict, runs: int=50000, seed: int=20261018, perform_stress: bool=True,
         "field_position_and_pace": True, "personnel_adjustments_traced": True,
         "drive_level_score_distribution": True, "spread_and_vig_checked": True,
         "first_half_market_evaluated": first_half is not None,
+        "supplemental_pfr_pressure_rates_used":any(g[t].get('pressure_source')=='PFR_QB_TIMES_PRESSURED_OVER_SAME_GAME_PBP_DROPBACKS' for t in ('home','away')),
+        "supplemental_proxy_coefficients_empirically_calibrated":False,
+        "optional_causal_penalty_or_specialteams_epa_omitted":any(
+            g[t]['context'].get(field) is None for t in ('home','away')
+            for field in ('penalty_epa_per_game','special_teams_epa_per_game')),
         "stress_tests": perform_stress, "historical_out_of_sample_validation": False,
         "probabilities_empirically_calibrated": False,
     }

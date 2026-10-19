@@ -18,7 +18,7 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 
-from model import OFF_KEYS, DEF_KEYS, SOS_KEYS, CONTEXT_KEYS, PERSONNEL_KEYS, InputError, utc, validate_game
+from model import OFF_KEYS, DEF_KEYS, SOS_KEYS, CONTEXT_KEYS, PERSONNEL_KEYS, InputError, utc, validate_game, VERSION
 
 ET = ZoneInfo("America/New_York")
 
@@ -384,7 +384,7 @@ def build(pbp_raw: pd.DataFrame, schedule_raw: pd.DataFrame, config: dict,
     for side in ("home","away"):
         team=g[side]
         for section, keys in (("offense",OFF_KEYS),("defense",DEF_KEYS),("schedule",SOS_KEYS),
-                              ("context",CONTEXT_KEYS),("personnel",PERSONNEL_KEYS)):
+                              ("context",("avg_start_yardline",)),("personnel",PERSONNEL_KEYS)):
             missing.extend(f"{side}.{section}.{k}" for k in keys if team[section].get(k) is None)
         missing.extend(f"{side}.{k}" for k in ("stat_as_of_utc",) if team.get(k) is None)
     missing.extend(f"market.{k}" for k in ("spread_home","home_odds_american","away_odds_american","total","as_of_utc","source") if m.get(k) is None)
@@ -400,7 +400,7 @@ def build(pbp_raw: pd.DataFrame, schedule_raw: pd.DataFrame, config: dict,
                                   "pressure":"participation was_pressure aligned by game_id/play_id",
                                   "drives":"unique game_id/drive; red-zone visit = drive reaches <=20 yards to goal",
                                   "opponent_strength":"leave-opponent-game-out, play weighted"},
-             "model_version":"0.1.0"}
+             "model_version":VERSION}
     if audit["status"]=="READY_TO_VALIDATE":
         try:
             validate_game(g)
