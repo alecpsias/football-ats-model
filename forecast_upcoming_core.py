@@ -15,6 +15,19 @@ from nflverse_connector import verify
 from integrate_advanced_features import build_overlay, attach_overlay, verified_snapshot
 from collect_extra_metrics import parse_stamp
 from model import MODEL_RULES, InputError, validate_team, projection, simulate
+
+# All source capture and forecast generation must occur before the normal
+# ~90-minute inactive announcement window. This is a policy cutoff, not
+# a claim that each actual announcement time is known.
+PREGAME_LOCK_MINUTES = 120
+
+def enforce_pregame_lock(cutoff, kickoff, lock_minutes=PREGAME_LOCK_MINUTES):
+    """Reject any data snapshot within the last lock_minutes before kickoff."""
+    as_of=parse_stamp(cutoff)
+    start=parse_stamp(kickoff)
+    if as_of > start - timedelta(minutes=lock_minutes):
+        raise InputError(f"PRE_INACTIVES_LOCK: data captured too late; require at least {lock_minutes} minutes before kickoff")
+    return True
 from measure_player_availability import measure, scenario_points
 
 NEUTRAL_PERSONNEL={'pass_epa_shift':0.,'rush_epa_shift':0.,'pressure_allowed_shift':0.,
@@ -111,6 +124,7 @@ def _assemble(snapshot:Path, extra:Path, row:pd.Series, cutoff, *, pbp=None,sche
     return g,audit,overlay
 
 def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,runs:int=3000,seed:int=20261018,pbp=None,schedule=None,roster=None):
+    enforce_pregame_lock(cutoff,row['kickoff_utc'])
     g,audit,overlay=_assemble(snapshot,extra,row,cutoff,pbp=pbp,schedule=schedule,roster=roster)
     r=dict(MODEL_RULES['NFL']);r['pressure']=float(g['pressure_reference_rate'])
     hfa=0 if g['neutral_site'] else r['home_advantage_points']
@@ -126,6 +140,7 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
         return {k:v for k,v in p.items() if not k.startswith('_') and k not in ('personnel_adjustment_source','personnel_news_checked_at_utc','personnel_notes')}
     return {'schema':'football_ats_future_core_v0.8','game_id':g['id'],'home':g['home']['name'],'away':g['away']['name'],
        'kickoff_utc':g['kickoff_utc'],'data_as_of_utc':g['data_as_of_utc'],
+       'pre_inactives_lock_minutes':PREGAME_LOCK_MINUTES,
        'status':'EXPLORATORY_CORE_PROJECTION_UNCALIBRATED',
        'score_home':sim['mean_score_home'],'score_away':sim['mean_score_away'],
        'projected_home_margin':sim['mean_margin_home'],
@@ -185,9 +200,10 @@ def generate(snapshot:Path,extra:Path,out:Path,injuries:Path|None=None,window_ho
         except (InputError,ValueError,KeyError,TypeError) as exc:
             records.append({'game_id':game_id,'status':'BLOCKED','reason':str(exc)})
     index={'schema':'future_core_index_v0.8','capture_cutoff_utc':cutoff.isoformat(),
-      'window_hours':window_hours,'games':records,'n_projected':sum(x['status']=='PROJECTED_UNCALIBRATED' for x in records),
+      'window_hours':window_hours,'pre_inactives_lock_minutes':PREGAME_LOCK_MINUTES,
+      'games':records,'n_projected':sum(x['status']=='PROJECTED_UNCALIBRATED' for x in records),
       'n_blocked':sum(x['status']=='BLOCKED' for x in records),
-      'not_a_bet':True,'notes':'No artificial odds or personnel confirmation. Future games only; separately listed measured QB scenarios are conditional.'}
+      'not_a_bet':True,'notes':'Predictions locked at least 120 minutes before kickoff; no official inactives incorporated. No artificial odds or personnel confirmation. Future games only; separately listed measured QB scenarios are conditional.'}
     (out/'index.json').write_text(json.dumps(index,indent=2)+'\n')
     return index
 

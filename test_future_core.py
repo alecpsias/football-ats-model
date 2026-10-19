@@ -122,4 +122,24 @@ class RealInjurySchemaV071Tests(unittest.TestCase):
             self.assertEqual(m['status'],'UNAVAILABLE')
             self.assertIn('report_status',m['warning'])
 
+class PreInactiveLockTests(unittest.TestCase):
+    def test_must_be_at_least_two_hours_pre_kickoff(self):
+        from forecast_upcoming_core import enforce_pregame_lock
+        from model import InputError
+        kickoff='2026-10-19T00:15:00Z'
+        self.assertTrue(enforce_pregame_lock('2026-10-18T22:15:00Z',kickoff))
+        with self.assertRaisesRegex(InputError,'PRE_INACTIVES_LOCK'):
+            enforce_pregame_lock('2026-10-18T22:15:01Z',kickoff)
+        with self.assertRaisesRegex(InputError,'PRE_INACTIVES_LOCK'):
+            enforce_pregame_lock('2026-10-19T00:10:00Z',kickoff)
+
+    def test_direct_forecast_cannot_bypass_time_lock(self):
+        from forecast_upcoming_core import forecast_one
+        from model import InputError
+        import pandas as pd
+        from datetime import datetime,timezone
+        row=pd.Series({'kickoff_utc':pd.Timestamp('2026-10-19T00:15:00Z')})
+        with self.assertRaisesRegex(InputError,'PRE_INACTIVES_LOCK'):
+            forecast_one(None,None,row,datetime(2026,10,18,23,0,tzinfo=timezone.utc))
+
 if __name__=='__main__': unittest.main()
