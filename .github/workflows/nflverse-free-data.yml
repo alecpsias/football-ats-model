@@ -8,6 +8,11 @@ on:
       - 'ingest.py'
       - 'collect_extra_metrics.py'
       - 'test_collect_extra_metrics.py'
+      - 'model.py'
+      - 'run_snapshot_ingest.py'
+      - 'integrate_advanced_features.py'
+      - 'generate_upcoming_overlays.py'
+      - 'test_integrate_advanced_features.py'
   workflow_dispatch:
   schedule:
     - cron: '15 11 * * 0'
@@ -41,7 +46,7 @@ jobs:
         run: |
           python collect_extra_metrics.py \
             --snapshot snapshots/2026/run-${{ github.run_id }} \
-            --out derived-metrics/run-${{ github.run_id }}
+            --out derived-metrics/run-${{ github.run_id }} --minimum-hours 6
       - name: Summarize advanced-stat coverage and source timestamp
         if: always()
         shell: bash
@@ -61,6 +66,13 @@ jobs:
               else:
                   f.write('\nNo extra metrics manifest generated. Inspect prior job logs.\n')
           PYCODE
+      - name: Generate verified upcoming-game feature overlays
+        run: |
+          python generate_upcoming_overlays.py \
+            --snapshot snapshots/2026/run-${{ github.run_id }} \
+            --metrics-dir derived-metrics/run-${{ github.run_id }} \
+            --out advanced-overlays/run-${{ github.run_id }} \
+            --window-hours 48
       - name: Replay Texans-Jaguars, without guessing missing data
         shell: bash
         run: |
@@ -86,5 +98,6 @@ jobs:
             run-metadata/
             replay-results/
             derived-metrics/
+            advanced-overlays/
           if-no-files-found: warn
           retention-days: 30
