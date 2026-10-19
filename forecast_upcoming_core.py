@@ -15,6 +15,7 @@ from nflverse_connector import verify
 from integrate_advanced_features import build_overlay, attach_overlay, verified_snapshot
 from collect_extra_metrics import parse_stamp
 from model import MODEL_RULES, InputError, validate_team, projection, simulate
+from measure_player_availability import measure, scenario_points
 
 NEUTRAL_PERSONNEL={'pass_epa_shift':0.,'rush_epa_shift':0.,'pressure_allowed_shift':0.,
                    'qb_rush_multiplier':1.,'pace_multiplier':1.,'notes':'Neutral scenario only, NOT a verified active roster',
@@ -116,10 +117,14 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
     h=projection(g['home'],g['away'],r,'home',.5*hfa)
     a=projection(g['away'],g['home'],r,'away',-.5*hfa)
     sim=simulate(h,a,r,None,None,runs,seed)
+    # Player evidence is source-verified and conditional QB impacts never silently
+    # override the recorded neutral baseline forecast.
+    personnel_evidence=measure(snapshot,injuries,cutoff,g['home']['name'],g['away']['name'],int(row['week']),pbp=pbp,roster=roster,metrics_dir=extra)
+    conditional_scenarios=scenario_points(g,r,personnel_evidence,runs,seed)
     # Remove the internal scenario-only placeholder fields from user-visible results.
     def clean(p):
         return {k:v for k,v in p.items() if not k.startswith('_') and k not in ('personnel_adjustment_source','personnel_news_checked_at_utc','personnel_notes')}
-    return {'schema':'football_ats_future_core_v0.7','game_id':g['id'],'home':g['home']['name'],'away':g['away']['name'],
+    return {'schema':'football_ats_future_core_v0.8','game_id':g['id'],'home':g['home']['name'],'away':g['away']['name'],
        'kickoff_utc':g['kickoff_utc'],'data_as_of_utc':g['data_as_of_utc'],
        'status':'EXPLORATORY_CORE_PROJECTION_UNCALIBRATED',
        'score_home':sim['mean_score_home'],'score_away':sim['mean_score_away'],
@@ -131,13 +136,17 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
        'spread_side':'NOT_EVALUATED_NO_VERIFIED_SIGNED_LINE','ats_roi':None,
        'team_projections':{'home':clean(h),'away':clean(a)},
        'injuries':injuries_for_game(injuries,g['home']['name'],g['away']['name'],int(row['week']),cutoff),
+       'player_availability_evidence':personnel_evidence,
+       'conditional_qb_scenarios':conditional_scenarios,
+       'personnel_analysis_version':'0.8.0',
        'limitations':['No verified active/inactive lineup; all personnel shifts set to NEUTRAL SCENARIO, NOT measured zero impact',
            'No verified signed market spread; no ATS recommendation or EV',
-           'Provisional model coefficients and raw probabilities not historically calibrated'],
+           'Provisional model coefficients and raw probabilities not historically calibrated',
+           'QB replacement scenarios are conditional and not the main forecast; no starter/inactive confirmation'],
        'audit':{'snapshot':str(snapshot),'derived_metrics':str(extra),'source_sha256':overlay['source_sha256'],
             'pressure_rate_reference':ref_to_number(g['pressure_reference_rate']),
             'advanced_missing':overlay['missing'],'statistics_provenance_issues':[x for x in audit['asof_issues'] if not x.startswith('market.as_of_utc:')],
-            'model_version':'0.7.0','simulation_runs':runs,'seed':seed}}
+            'model_version':'0.8.0','simulation_runs':runs,'seed':seed}}
 
 def ref_to_number(x):return float(x)
 
@@ -170,13 +179,15 @@ def generate(snapshot:Path,extra:Path,out:Path,injuries:Path|None=None,window_ho
             obj=forecast_one(snapshot,extra,joined,cutoff,injuries=injuries,runs=runs,seed=seed,pbp=pbp,schedule=schedule,roster=roster)
             file=out/(game_id+'.json');file.write_text(json.dumps(obj,indent=2)+'\n')
             records.append({'game_id':game_id,'status':'PROJECTED_UNCALIBRATED','file':file.name,
-                'mean_margin_home':obj['projected_home_margin'],'fair_spread_home':obj['projected_fair_spread_home']})
+                'mean_margin_home':obj['projected_home_margin'],'fair_spread_home':obj['projected_fair_spread_home'],
+                'conditional_qb_scenarios':len(obj['conditional_qb_scenarios']),
+                'reported_out_players':sum(len(t['reported_out']) for t in obj['player_availability_evidence']['teams'].values())})
         except (InputError,ValueError,KeyError,TypeError) as exc:
             records.append({'game_id':game_id,'status':'BLOCKED','reason':str(exc)})
-    index={'schema':'future_core_index_v0.7','capture_cutoff_utc':cutoff.isoformat(),
+    index={'schema':'future_core_index_v0.8','capture_cutoff_utc':cutoff.isoformat(),
       'window_hours':window_hours,'games':records,'n_projected':sum(x['status']=='PROJECTED_UNCALIBRATED' for x in records),
       'n_blocked':sum(x['status']=='BLOCKED' for x in records),
-      'not_a_bet':True,'notes':'No artificial odds or personnel confirmation. Future games only.'}
+      'not_a_bet':True,'notes':'No artificial odds or personnel confirmation. Future games only; separately listed measured QB scenarios are conditional.'}
     (out/'index.json').write_text(json.dumps(index,indent=2)+'\n')
     return index
 
