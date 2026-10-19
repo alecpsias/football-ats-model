@@ -1,24 +1,28 @@
-name: Free nflverse collection and replay
+name: NFL pregame core forecast v0.7 (free data)
 
+# No paid API keys. GitHub schedules may be delayed; a forecast is emitted
+# only when ALL consumed datasets have been captured before the game's kickoff.
 on:
   push:
     branches: [main]
     paths:
       - '.github/workflows/nflverse-free-data.yml'
-      - 'ingest.py'
-      - 'collect_extra_metrics.py'
-      - 'test_collect_extra_metrics.py'
       - 'model.py'
-      - 'run_snapshot_ingest.py'
-      - 'integrate_advanced_features.py'
-      - 'generate_upcoming_overlays.py'
-      - 'test_integrate_advanced_features.py'
+      - 'forecast_upcoming_core.py'
+      - 'collect_injury_reports.py'
+      - 'test_future_core.py'
   workflow_dispatch:
   schedule:
-    - cron: '15 11 * * 0'
+    - cron: '6 14 * * *'                # Daily morning pregame collection (UTC)
+    - cron: '6 20 * * 0,1,4,5,6'      # Afternoon before common kickoff windows
+    - cron: '6 23 * * 0,1,4,5,6'      # Evening refresh; future kickoffs only
 
 permissions:
   contents: read
+
+concurrency:
+  group: football-ats-core-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   collect:
@@ -31,73 +35,79 @@ jobs:
           python-version: '3.11'
       - name: Install free dependencies
         run: pip install -r requirements-nflverse.txt
-      - name: Run tests (accommodate flattened web upload)
+      - name: Test source code including v0.7 safety tests
         run: |
           mkdir -p ../examples run-metadata
           cp synthetic_matchup.json ../examples/synthetic_matchup.json
           python -m unittest discover -s . -p 'test_*.py' -v
-      - name: Download 2026 nflverse data
-        run: python nflverse_connector.py collect --season 2026 --out snapshots/2026/run-${{ github.run_id }}
-      - name: Check source hashes and replay cutoff
+      - name: Resolve current NFL season and run-scoped paths
+        shell: bash
         run: |
-          python nflverse_connector.py verify --snapshot snapshots/2026/run-${{ github.run_id }} > run-metadata/hashes.json
-          python check_snapshots.py --snapshot snapshots/2026/run-${{ github.run_id }} --cutoff '2026-10-18T12:30:00Z' --out run-metadata/pregame-eligibility.json
-      - name: Collect PFR weekly advanced stats and derive penalty/kicking metrics
+          YEAR=$(python - <<'PY'
+          from datetime import datetime, timezone
+          now=datetime.now(timezone.utc)
+          # July-Feb NFL-year convention; do not confuse Jan/Feb with next season.
+          print(now.year if now.month>=7 else now.year-1)
+          PY
+          )
+          echo "SEASON=$YEAR" >> "$GITHUB_ENV"
+          echo "SNAPSHOT=snapshots/$YEAR/run-${{ github.run_id }}" >> "$GITHUB_ENV"
+          echo "EXTRA=derived-metrics/run-${{ github.run_id }}" >> "$GITHUB_ENV"
+          echo "INJURIES=injury-reports/run-${{ github.run_id }}" >> "$GITHUB_ENV"
+          echo "PREDICTIONS=future-predictions/run-${{ github.run_id }}" >> "$GITHUB_ENV"
+      - name: Collect timestamped nflverse PBP schedule and rosters
+        run: python nflverse_connector.py collect --season "$SEASON" --out "$SNAPSHOT"
+      - name: Verify base hashes
+        run: python nflverse_connector.py verify --snapshot "$SNAPSHOT" > run-metadata/hashes.json
+      - name: Collect verified PFR pressure penalties and kicking
+        run: python collect_extra_metrics.py --snapshot "$SNAPSHOT" --out "$EXTRA" --minimum-hours 6
+      - name: Collect available injury report observations (nonfatal)
+        run: python collect_injury_reports.py --season "$SEASON" --out "$INJURIES"
+      - name: Generate future-only score and margin projections
         run: |
-          python collect_extra_metrics.py \
-            --snapshot snapshots/2026/run-${{ github.run_id }} \
-            --out derived-metrics/run-${{ github.run_id }} --minimum-hours 6
-      - name: Summarize advanced-stat coverage and source timestamp
+          python forecast_upcoming_core.py \
+            --snapshot "$SNAPSHOT" \
+            --metrics-dir "$EXTRA" \
+            --injuries-dir "$INJURIES" \
+            --out "$PREDICTIONS" \
+            --window-hours 48 --runs 5000
+      - name: Write run status and warnings
         if: always()
         shell: bash
         run: |
-          python - <<'PYCODE'
-          import json, os
+          python - <<'PY'
+          import os,json
           from pathlib import Path
-          p=Path('derived-metrics/run-${{ github.run_id }}/metrics_manifest.json')
-          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
-              f.write('\n## Supplementary 2026 metrics\n')
-              if p.exists():
-                  x=json.loads(p.read_text())
-                  f.write('\n**Collection status:** '+x['status']+'\n')
-                  f.write('\n**Eligible games:** '+str(x['eligible_schedule_games'])+'\n')
-                  f.write('\n**PFR feed status:** '+', '.join(k+': '+v['status'] for k,v in x['pfr'].items())+'\n')
-                  f.write('\n**Timestamp rule:** '+x['asof_policy']+'\n')
-              else:
-                  f.write('\nNo extra metrics manifest generated. Inspect prior job logs.\n')
-          PYCODE
-      - name: Generate verified upcoming-game feature overlays
-        run: |
-          python generate_upcoming_overlays.py \
-            --snapshot snapshots/2026/run-${{ github.run_id }} \
-            --metrics-dir derived-metrics/run-${{ github.run_id }} \
-            --out advanced-overlays/run-${{ github.run_id }} \
-            --window-hours 48
-      - name: Replay Texans-Jaguars, without guessing missing data
-        shell: bash
-        run: |
-          mkdir -p replay-results
-          set +e
-          python run_snapshot_ingest.py --snapshot snapshots/2026/run-${{ github.run_id }} --config ingest_config_UNVERIFIED.json --output-prefix replay-results/texans-jaguars
-          rc=$?
-          set -e
-          echo "$rc" > replay-results/exit-code.txt
-          if [ "$rc" -ne 0 ] && [ "$rc" -ne 2 ]; then exit "$rc"; fi
-          if [ "$rc" -eq 2 ]; then echo 'Full model blocked by missing or late inputs, as intended.' >> "$GITHUB_STEP_SUMMARY"; fi
-      - name: Report
-        if: always()
-        run: |
-          python write_run_summary.py --snapshot snapshots/2026/run-${{ github.run_id }} --replay-audit replay-results/texans-jaguars.audit.json --output run-metadata/run-summary.md --github-summary "$GITHUB_STEP_SUMMARY"
-      - name: Upload source data and audits
+          out=Path('run-metadata/v07-summary.json')
+          pred=Path(os.environ.get('PREDICTIONS','unavailable'))/'index.json'
+          injury=Path(os.environ.get('INJURIES','unavailable'))/'injury_manifest.json'
+          summary={'version':'0.7.0','status':'DONE' if pred.exists() else 'NO_FORECAST_INDEX',
+                   'predictions':json.loads(pred.read_text()) if pred.exists() else None,
+                   'injuries':json.loads(injury.read_text()) if injury.exists() else None,
+                   'note':'Uncalibrated pregame core projection, not a sportsbook bet or verified personnel forecast'}
+          out.parent.mkdir(exist_ok=True,parents=True)
+          out.write_text(json.dumps(summary,indent=2)+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('# v0.7 — future NFL forecasts\n\n')
+              if summary['predictions']:
+                  x=summary['predictions'];f.write(f"**Projected:** {x['n_projected']}  **Blocked:** {x['n_blocked']}\n\n")
+                  for g in x['games']:
+                      f.write(f"- {g['game_id']}: {g['status']}; {g.get('reason','fair spread '+str(g.get('fair_spread_home')))}\n")
+              else:f.write('No forecast index generated; inspect logs.\n')
+              if summary['injuries']:
+                  f.write('\nInjury feed: **'+summary['injuries']['status']+'**; NOT verified inactives.\n')
+              f.write('\n**Caution:** no empirically calibrated cover probability, no invented odds, no assumed player availability.\n')
+          PY
+      - name: Save immutable source data and pregame forecast artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nflverse-${{ github.run_id }}
+          name: football-ats-v07-${{ github.run_id }}
           path: |
             snapshots/
-            run-metadata/
-            replay-results/
             derived-metrics/
-            advanced-overlays/
+            injury-reports/
+            future-predictions/
+            run-metadata/
           if-no-files-found: warn
           retention-days: 30
