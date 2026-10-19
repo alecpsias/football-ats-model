@@ -1,4 +1,4 @@
-name: NFL pregame core forecast v0.7 (free data)
+name: NFL pregame model v0.8 with player evidence (free data)
 
 # No paid API keys. GitHub schedules may be delayed; a forecast is emitted
 # only when ALL consumed datasets have been captured before the game's kickoff.
@@ -11,6 +11,8 @@ on:
       - 'forecast_upcoming_core.py'
       - 'collect_injury_reports.py'
       - 'test_future_core.py'
+      - 'measure_player_availability.py'
+      - 'test_measure_player_availability.py'
   workflow_dispatch:
   schedule:
     - cron: '6 14 * * *'                # Daily morning pregame collection (UTC)
@@ -35,7 +37,7 @@ jobs:
           python-version: '3.11'
       - name: Install free dependencies
         run: pip install -r requirements-nflverse.txt
-      - name: Test source code including v0.7 safety tests
+      - name: Test source code including v0.8 player scenarios
         run: |
           mkdir -p ../examples run-metadata
           cp synthetic_matchup.json ../examples/synthetic_matchup.json
@@ -63,7 +65,7 @@ jobs:
         run: python collect_extra_metrics.py --snapshot "$SNAPSHOT" --out "$EXTRA" --minimum-hours 6
       - name: Collect available injury report observations (nonfatal)
         run: python collect_injury_reports.py --season "$SEASON" --out "$INJURIES"
-      - name: Generate future-only score and margin projections
+      - name: Generate future-only forecasts and measured injury scenarios
         run: |
           python forecast_upcoming_core.py \
             --snapshot "$SNAPSHOT" \
@@ -78,31 +80,33 @@ jobs:
           python - <<'PY'
           import os,json
           from pathlib import Path
-          out=Path('run-metadata/v07-summary.json')
+          out=Path('run-metadata/v08-summary.json')
           pred=Path(os.environ.get('PREDICTIONS','unavailable'))/'index.json'
           injury=Path(os.environ.get('INJURIES','unavailable'))/'injury_manifest.json'
-          summary={'version':'0.7.0','status':'DONE' if pred.exists() else 'NO_FORECAST_INDEX',
+          summary={'version':'0.8.0','status':'DONE' if pred.exists() else 'NO_FORECAST_INDEX',
                    'predictions':json.loads(pred.read_text()) if pred.exists() else None,
                    'injuries':json.loads(injury.read_text()) if injury.exists() else None,
-                   'note':'Uncalibrated pregame core projection, not a sportsbook bet or verified personnel forecast'}
+                   'note':'Neutral baseline plus conditional measured replacement evidence; uncalibrated and not an inactive confirmation'}
           out.parent.mkdir(exist_ok=True,parents=True)
           out.write_text(json.dumps(summary,indent=2)+'\n')
           with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f:
-              f.write('# v0.7 — future NFL forecasts\n\n')
+              f.write('# v0.8 — future NFL forecasts and measured player evidence\n\n')
               if summary['predictions']:
                   x=summary['predictions'];f.write(f"**Projected:** {x['n_projected']}  **Blocked:** {x['n_blocked']}\n\n")
                   for g in x['games']:
                       f.write(f"- {g['game_id']}: {g['status']}; {g.get('reason','fair spread '+str(g.get('fair_spread_home')))}\n")
+                      if g.get('status')=='PROJECTED_UNCALIBRATED':
+                          f.write(f"  - Reported OUT players: {g.get('reported_out_players',0)}; conditional QB scenarios: {g.get('conditional_qb_scenarios',0)}\n")
               else:f.write('No forecast index generated; inspect logs.\n')
               if summary['injuries']:
                   f.write('\nInjury feed: **'+summary['injuries']['status']+'**; NOT verified inactives.\n')
-              f.write('\n**Caution:** no empirically calibrated cover probability, no invented odds, no assumed player availability.\n')
+              f.write('\n**Caution:** no calibrated cover probability, no invented odds, and no assumed QB starter; conditional QB scenarios are separate from the main forecast.\n')
           PY
       - name: Save immutable source data and pregame forecast artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: football-ats-v07-${{ github.run_id }}
+          name: football-ats-v08-${{ github.run_id }}
           path: |
             snapshots/
             derived-metrics/
