@@ -41,11 +41,15 @@ def injuries_for_game(folder:Path|None, home:str,away:str,week:int,deadline):
     retrieved=parse_stamp(m['retrieved_at_utc'])
     if retrieved>deadline:
         result['status']='POST_CUTOFF_INJURY_FEED_REJECTED';return result
-    if m['status']!='COLLECTED':
+    accepted=('COLLECTED','CAPTURED_SNAPSHOT_ONLY')
+    if m['status'] not in accepted:
         result['status']='INJURY_FEED_UNAVAILABLE';result['warning']=m.get('warning');return result
     f=folder/m['file'];actual=hashlib.sha256(f.read_bytes()).hexdigest()
     if actual!=m['sha256']:raise InputError('Injury file failed SHA-256 verification')
-    result['status']='REPORT_ROWS_OBSERVED_NOT_CONFIRMED_INACTIVES'
+    result['status']=('REPORT_ROWS_SNAPSHOT_ONLY_NOT_ROW_TIMESTAMP_VERIFIED'
+                      if m['status']=='CAPTURED_SNAPSHOT_ONLY'
+                      else 'REPORT_ROWS_OBSERVED_NOT_CONFIRMED_INACTIVES')
+    result['row_timestamp_provenance']=m.get('timestamp_provenance','LEGACY_ROW_TIME')
     result['captured_at_utc']=m['retrieved_at_utc']
     for rec in m['observations']:
         if rec['team'] in (home,away) and int(rec['week'])==int(week):

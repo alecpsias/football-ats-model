@@ -67,4 +67,59 @@ class FutureCoreSafetyTests(unittest.TestCase):
             x=injuries_for_game(f,'SF','WAS',6,datetime(2026,10,18,18,30,tzinfo=timezone.utc))
             self.assertEqual(x['status'],'POST_CUTOFF_INJURY_FEED_REJECTED')
 
+class RealInjurySchemaV071Tests(unittest.TestCase):
+    def test_missing_date_modified_preserves_snapshot_without_claiming_published_time(self):
+        rows=[dict(season=2026,week=6,team='SF',report_status='Questionable',full_name='Sample A'),
+              dict(season=2026,week=6,team='WAS',report_status='Out',full_name='Sample B')]
+        with tempfile.TemporaryDirectory() as t:
+            folder=Path(t)
+            m=collect(2026,folder,InjuryStubs(rows),now=datetime(2026,10,18,19,0,tzinfo=timezone.utc))
+            self.assertEqual(m['status'],'CAPTURED_SNAPSHOT_ONLY')
+            self.assertEqual(m['rows'],2)
+            self.assertIsNone(m['row_timestamp_column'])
+            self.assertEqual(m['timestamp_provenance'],'SNAPSHOT_OBSERVED_NO_ROW_PUBLICATION_TIME')
+            self.assertEqual(m['sha256'],__import__('hashlib').sha256((folder/m['file']).read_bytes()).hexdigest())
+            x=injuries_for_game(folder,'SF','WAS',6,datetime(2026,10,18,19,30,tzinfo=timezone.utc))
+            self.assertEqual(x['status'],'REPORT_ROWS_SNAPSHOT_ONLY_NOT_ROW_TIMESTAMP_VERIFIED')
+            self.assertEqual(x['team_report_rows'],{'SF':1,'WAS':1})
+            self.assertIsNone(x['confirmed_inactives'])
+            self.assertFalse(x['personnel_point_adjustments_applied'])
+
+    def test_alternative_tz_aware_timestamp_is_checked(self):
+        rows=[dict(season=2026,week=6,team='SF',report_status='Out',updated_at='2026-10-18T18:00:00Z'),
+              dict(season=2026,week=6,team='WAS',report_status='Questionable',updated_at='2026-10-18T20:00:00Z')]
+        with tempfile.TemporaryDirectory() as t:
+            folder=Path(t)
+            m=collect(2026,folder,InjuryStubs(rows),now=datetime(2026,10,18,19,0,tzinfo=timezone.utc))
+            self.assertEqual(m['status'],'COLLECTED')
+            self.assertEqual(m['row_timestamp_column'],'updated_at')
+            self.assertEqual(m['rows'],1)
+            self.assertEqual(m['excluded_undated_or_future_rows'],1)
+            x=injuries_for_game(folder,'SF','WAS',6,datetime(2026,10,18,19,0,tzinfo=timezone.utc))
+            self.assertEqual(x['team_report_rows'],{'SF':1,'WAS':None})
+
+    def test_snapshot_only_after_cutoff_cannot_be_used(self):
+        rows=[dict(season=2026,week=6,team='SF',report_status='Out')]
+        with tempfile.TemporaryDirectory() as t:
+            folder=Path(t)
+            collect(2026,folder,InjuryStubs(rows),now=datetime(2026,10,18,19,0,tzinfo=timezone.utc))
+            x=injuries_for_game(folder,'SF','WAS',6,datetime(2026,10,18,18,59,tzinfo=timezone.utc))
+            self.assertEqual(x['status'],'POST_CUTOFF_INJURY_FEED_REJECTED')
+
+    def test_snapshot_only_tampering_blocked(self):
+        rows=[dict(season=2026,week=6,team='SF',report_status='Out')]
+        with tempfile.TemporaryDirectory() as t:
+            folder=Path(t)
+            m=collect(2026,folder,InjuryStubs(rows),now=datetime(2026,10,18,19,0,tzinfo=timezone.utc))
+            (folder/m['file']).write_bytes(b'corrupt')
+            with self.assertRaisesRegex(ValueError,'SHA-256'):
+                injuries_for_game(folder,'SF','WAS',6,datetime(2026,10,18,19,0,tzinfo=timezone.utc))
+
+    def test_missing_core_schema_still_unavailable(self):
+        rows=[dict(season=2026,week=6,team='SF',full_name='Sample A')]
+        with tempfile.TemporaryDirectory() as t:
+            m=collect(2026,Path(t),InjuryStubs(rows),now=datetime(2026,10,18,19,0,tzinfo=timezone.utc))
+            self.assertEqual(m['status'],'UNAVAILABLE')
+            self.assertIn('report_status',m['warning'])
+
 if __name__=='__main__': unittest.main()
