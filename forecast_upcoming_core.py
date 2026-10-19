@@ -1,0 +1,184 @@
+#!/usr/bin/env python3
+"""Auditable unpriced NFL pregame projection for FUTURE games only (v0.7).
+
+Never supplies invented sportsbook prices, claim of injury clearance, or
+empirically calibrated betting probabilities. Neutral PERSONNEL SCENARIO is
+an explicit assumption and not a verified injury adjustment.
+"""
+from __future__ import annotations
+import argparse, copy, hashlib, json, math
+from datetime import timedelta
+from pathlib import Path
+import pandas as pd
+from ingest import build, load_table, normalize_schedule
+from nflverse_connector import verify
+from integrate_advanced_features import build_overlay, attach_overlay, verified_snapshot
+from collect_extra_metrics import parse_stamp
+from model import MODEL_RULES, InputError, validate_team, projection, simulate
+
+NEUTRAL_PERSONNEL={'pass_epa_shift':0.,'rush_epa_shift':0.,'pressure_allowed_shift':0.,
+                   'qb_rush_multiplier':1.,'pace_multiplier':1.,'notes':'Neutral scenario only, NOT a verified active roster',
+                   'source':'UNVERIFIED_NEUTRAL_SCENARIO','checked_at_utc':None}
+
+def available_time(snapshot:Path, extra:Path, injuries:Path|None=None):
+    base,metrics,_=verified_snapshot(snapshot,extra,metrics_time(extra))
+    times=[base['datasets'][k]['captured_at_utc'] for k in ('pbp','schedule','roster')]
+    times += [metrics['finalized_at_utc']]
+    if injuries and (injuries/'injury_manifest.json').is_file():
+        im=json.loads((injuries/'injury_manifest.json').read_text())
+        times.append(im['retrieved_at_utc'])
+    return max(parse_stamp(t) for t in times)
+
+def metrics_time(extra:Path):
+    return json.loads((extra/'metrics_manifest.json').read_text())['finalized_at_utc']
+
+def injuries_for_game(folder:Path|None, home:str,away:str,week:int,deadline):
+    result={'source':'nflverse weekly injury report (not official inactive confirmation)',
+            'status':'NO_INJURY_FEED','confirmed_inactives':None,'personnel_point_adjustments_applied':False,
+            'team_report_rows':{home:None,away:None}}
+    if not folder or not (folder/'injury_manifest.json').is_file():return result
+    m=json.loads((folder/'injury_manifest.json').read_text())
+    retrieved=parse_stamp(m['retrieved_at_utc'])
+    if retrieved>deadline:
+        result['status']='POST_CUTOFF_INJURY_FEED_REJECTED';return result
+    if m['status']!='COLLECTED':
+        result['status']='INJURY_FEED_UNAVAILABLE';result['warning']=m.get('warning');return result
+    f=folder/m['file'];actual=hashlib.sha256(f.read_bytes()).hexdigest()
+    if actual!=m['sha256']:raise InputError('Injury file failed SHA-256 verification')
+    result['status']='REPORT_ROWS_OBSERVED_NOT_CONFIRMED_INACTIVES'
+    result['captured_at_utc']=m['retrieved_at_utc']
+    for rec in m['observations']:
+        if rec['team'] in (home,away) and int(rec['week'])==int(week):
+            result['team_report_rows'][rec['team']]=int(rec['game_status_rows'])
+    return result
+
+def quote_reference(row:pd.Series,captured_at):
+    """nflverse schedule spread_line is unsigned; NEVER infer a bet side."""
+    keys=('spread_line','home_spread_odds','away_spread_odds','total_line')
+    values={}
+    for k in keys:
+        v=row.get(k)
+        values[k]=float(v) if pd.notna(v) and isinstance(v,(int,float)) and math.isfinite(float(v)) else None
+    return {'source':'nflverse schedule feed: unverified original quote time/book',
+            'first_observed_in_our_snapshot_at_utc':captured_at,
+            **values,'signed_home_spread':None, 'executable_quote_verified':False,
+            'note':'spread_line is unsigned; snapshot observation does not prove bookmaker quote age. Never calculate EV or cover side from it.'}
+
+def _assemble(snapshot:Path, extra:Path, row:pd.Series, cutoff, *, pbp=None,schedule=None,roster=None):
+    b=json.loads((snapshot/'manifest.json').read_text())
+    home,away=str(row['home_team']),str(row['away_team'])
+    kickoff=row['kickoff_utc'].to_pydatetime()
+    if cutoff>=kickoff:raise InputError('Snapshot at/after kickoff')
+    where=str(row.get('location','')).strip().lower()
+    if where not in ('home','neutral'):raise InputError('Home-site/neutral-site flag unverified')
+    config={'id':str(row['game_id']),'kickoff_utc':kickoff.isoformat(),
+        'data_as_of_utc':cutoff.isoformat(),'home_code':home,'away_code':away,
+        'home_name':home,'away_name':away,'neutral_site':where=='neutral',
+        'pbp_source':'nflverse locally captured SHA256 snapshot '+str(snapshot),
+        'pbp_source_available_at_utc':b['datasets']['pbp']['captured_at_utc'],
+        'roster_source_available_at_utc':b['datasets']['roster']['captured_at_utc'],
+        'market':{'spread_home':None,'home_odds_american':None,'away_odds_american':None,
+                  'total':None,'as_of_utc':None,'source':None},
+        'teams':{home:{'personnel':{}},away:{'personnel':{}}}}
+    if pbp is None:pbp=load_table(snapshot/b['datasets']['pbp']['local_file'])
+    if schedule is None:schedule=load_table(snapshot/b['datasets']['schedule']['local_file'])
+    if roster is None:roster=load_table(snapshot/b['datasets']['roster']['local_file'])
+    g,audit=build(pbp,schedule,config,participation=None,roster=roster)
+    overlay=build_overlay(snapshot,extra,cutoff.isoformat(),(home,away))
+    g,audit=attach_overlay(g,audit,overlay,{'home':home,'away':away})
+    stat_issues=[x for x in audit['asof_issues'] if not x.startswith('market.as_of_utc:')]
+    if stat_issues:
+        raise InputError('Strict statistical provenance failed: '+str(stat_issues))
+    # Neutral personnel scenarios are NOT observed roster status, and must be
+    # documented as a counterfactual assumption. Only these technical copies
+    # are used to call the scoring calculation; original audit retains gaps.
+    for side in ('home','away'):
+        t=g[side]
+        for k in ('offense','defense','schedule'):
+            if any(v is None for v in t[k].values()):
+                raise InputError(f'{side}.{k} has unavailable essential statistics')
+        t['personnel']=dict(NEUTRAL_PERSONNEL,checked_at_utc=cutoff.isoformat())
+        validate_team(t,side)
+        if t.get('pressure_source')!='PFR_QB_TIMES_PRESSURED_OVER_SAME_GAME_PBP_DROPBACKS':
+            raise InputError(f'{side}: missing verified PFR pressure; core model requires consistent rate definition')
+    ref=g['pressure_reference_rate']
+    if ref is None or not .10<=float(ref)<=.65:raise InputError('Missing verified league PFR pressure reference')
+    return g,audit,overlay
+
+def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,runs:int=3000,seed:int=20261018,pbp=None,schedule=None,roster=None):
+    g,audit,overlay=_assemble(snapshot,extra,row,cutoff,pbp=pbp,schedule=schedule,roster=roster)
+    r=dict(MODEL_RULES['NFL']);r['pressure']=float(g['pressure_reference_rate'])
+    hfa=0 if g['neutral_site'] else r['home_advantage_points']
+    h=projection(g['home'],g['away'],r,'home',.5*hfa)
+    a=projection(g['away'],g['home'],r,'away',-.5*hfa)
+    sim=simulate(h,a,r,None,None,runs,seed)
+    # Remove the internal scenario-only placeholder fields from user-visible results.
+    def clean(p):
+        return {k:v for k,v in p.items() if not k.startswith('_') and k not in ('personnel_adjustment_source','personnel_news_checked_at_utc','personnel_notes')}
+    return {'schema':'football_ats_future_core_v0.7','game_id':g['id'],'home':g['home']['name'],'away':g['away']['name'],
+       'kickoff_utc':g['kickoff_utc'],'data_as_of_utc':g['data_as_of_utc'],
+       'status':'EXPLORATORY_CORE_PROJECTION_UNCALIBRATED',
+       'score_home':sim['mean_score_home'],'score_away':sim['mean_score_away'],
+       'projected_home_margin':sim['mean_margin_home'],
+       'projected_fair_spread_home':round(-sim['mean_margin_home'],2),
+       'home_win_probability_RAW_UNCALIBRATED':sim['home_win_probability_raw'],
+       'margin_interval_p10_p50_p90':sim['margin_p10_p50_p90'],
+       'market_reference':quote_reference(row,cutoff.isoformat()),
+       'spread_side':'NOT_EVALUATED_NO_VERIFIED_SIGNED_LINE','ats_roi':None,
+       'team_projections':{'home':clean(h),'away':clean(a)},
+       'injuries':injuries_for_game(injuries,g['home']['name'],g['away']['name'],int(row['week']),cutoff),
+       'limitations':['No verified active/inactive lineup; all personnel shifts set to NEUTRAL SCENARIO, NOT measured zero impact',
+           'No verified signed market spread; no ATS recommendation or EV',
+           'Provisional model coefficients and raw probabilities not historically calibrated'],
+       'audit':{'snapshot':str(snapshot),'derived_metrics':str(extra),'source_sha256':overlay['source_sha256'],
+            'pressure_rate_reference':ref_to_number(g['pressure_reference_rate']),
+            'advanced_missing':overlay['missing'],'statistics_provenance_issues':[x for x in audit['asof_issues'] if not x.startswith('market.as_of_utc:')],
+            'model_version':'0.7.0','simulation_runs':runs,'seed':seed}}
+
+def ref_to_number(x):return float(x)
+
+def generate(snapshot:Path,extra:Path,out:Path,injuries:Path|None=None,window_hours:float=48,runs:int=3000,seed:int=20261018):
+    if not 0<window_hours<=168:raise ValueError('Window must be 0-168 hours')
+    if not 1000<=runs<=100000:raise ValueError('Runs out of bounds')
+    snapshot,extra,out=Path(snapshot),Path(extra),Path(out)
+    if verify(snapshot)['status']!='VERIFIED':raise InputError('Base snapshot manifest failed validation')
+    cutoff=available_time(snapshot,extra,injuries)
+    m=json.loads((snapshot/'manifest.json').read_text())
+    pbp=load_table(snapshot/m['datasets']['pbp']['local_file'])
+    schedule=load_table(snapshot/m['datasets']['schedule']['local_file'])
+    roster=load_table(snapshot/m['datasets']['roster']['local_file'])
+    table=normalize_schedule(schedule)
+    # Normalize schedule returns game_id, home_team, away_team & kickoff_utc;
+    # join verified source location, odds and week strictly by unique game_id.
+    if schedule.duplicated('game_id').any():raise InputError('Duplicate schedule game_id')
+    meta=schedule.set_index('game_id')
+    out.mkdir(parents=True,exist_ok=True)
+    records=[]
+    for _,r in table.iterrows():
+        kickoff=r['kickoff_utc'].to_pydatetime()
+        if not cutoff<kickoff<=cutoff+timedelta(hours=window_hours):continue
+        raw=meta.loc[r['game_id']]
+        joined=r.copy()
+        for key in ('week','location','spread_line','home_spread_odds','away_spread_odds','total_line'):
+            joined[key]=raw.get(key)
+        game_id=str(r['game_id'])
+        try:
+            obj=forecast_one(snapshot,extra,joined,cutoff,injuries=injuries,runs=runs,seed=seed,pbp=pbp,schedule=schedule,roster=roster)
+            file=out/(game_id+'.json');file.write_text(json.dumps(obj,indent=2)+'\n')
+            records.append({'game_id':game_id,'status':'PROJECTED_UNCALIBRATED','file':file.name,
+                'mean_margin_home':obj['projected_home_margin'],'fair_spread_home':obj['projected_fair_spread_home']})
+        except (InputError,ValueError,KeyError,TypeError) as exc:
+            records.append({'game_id':game_id,'status':'BLOCKED','reason':str(exc)})
+    index={'schema':'future_core_index_v0.7','capture_cutoff_utc':cutoff.isoformat(),
+      'window_hours':window_hours,'games':records,'n_projected':sum(x['status']=='PROJECTED_UNCALIBRATED' for x in records),
+      'n_blocked':sum(x['status']=='BLOCKED' for x in records),
+      'not_a_bet':True,'notes':'No artificial odds or personnel confirmation. Future games only.'}
+    (out/'index.json').write_text(json.dumps(index,indent=2)+'\n')
+    return index
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('--snapshot',type=Path,required=True)
+    p.add_argument('--metrics-dir',type=Path,required=True);p.add_argument('--injuries-dir',type=Path)
+    p.add_argument('--out',type=Path,required=True);p.add_argument('--window-hours',type=float,default=48)
+    p.add_argument('--runs',type=int,default=3000);p.add_argument('--seed',type=int,default=20261018)
+    a=p.parse_args();print(json.dumps(generate(a.snapshot,a.metrics_dir,a.out,a.injuries_dir,a.window_hours,a.runs,a.seed),indent=2))

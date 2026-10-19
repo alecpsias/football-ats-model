@@ -16,7 +16,7 @@ from typing import Any
 
 import numpy as np
 
-VERSION = "0.6.0"
+VERSION = "0.7.0"
 MODEL_RULES = {
     "NFL": {
         "league_ppd": 2.08, "plays_per_drive": 5.8, "drives_per_team": 10.8,
@@ -385,7 +385,7 @@ def draw_possession(proj: dict, r: dict, rng: np.random.Generator, active: np.nd
     return points, turnover
 
 
-def simulate(home: dict, away: dict, r: dict, spread_home: float, total: float, runs: int, seed: int,
+def simulate(home: dict, away: dict, r: dict, spread_home: float | None, total: float | None, runs: int, seed: int,
              drives_fraction: float=1.0, allow_overtime: bool=True) -> dict:
     rng = np.random.default_rng(seed)
     n = runs
@@ -435,10 +435,10 @@ def simulate(home: dict, away: dict, r: dict, spread_home: float, total: float, 
         away_scores += a
         tied = home_scores == away_scores
     margins = home_scores.astype(float)-away_scores
-    settle = margins+spread_home
-    home_cover = np.mean(settle > 1e-9)
-    away_cover = np.mean(settle < -1e-9)
-    push = 1-home_cover-away_cover
+    settle = margins+spread_home if spread_home is not None else None
+    home_cover = float(np.mean(settle > 1e-9)) if settle is not None else None
+    away_cover = float(np.mean(settle < -1e-9)) if settle is not None else None
+    push = 1-home_cover-away_cover if settle is not None else None
     return {
         "mean_score_home": round(float(home_scores.mean()), 2),
         "mean_score_away": round(float(away_scores.mean()), 2),
@@ -448,15 +448,15 @@ def simulate(home: dict, away: dict, r: dict, spread_home: float, total: float, 
         "median_margin_home": round(float(np.median(margins)), 2),
         "margin_p10_p50_p90": [float(x) for x in np.quantile(margins, [.1,.5,.9])],
         "margin_standard_deviation": round(float(margins.std()), 2),
-        "home_cover_probability_raw": round(float(home_cover), 5),
-        "away_cover_probability_raw": round(float(away_cover), 5),
-        "push_probability": round(float(push), 5),
+        "home_cover_probability_raw": round(home_cover, 5) if home_cover is not None else None,
+        "away_cover_probability_raw": round(away_cover, 5) if away_cover is not None else None,
+        "push_probability": round(push, 5) if push is not None else None,
         "home_win_probability_raw": round(float(np.mean(margins>0) + .5*np.mean(margins==0)), 5),
-        "over_probability_raw": round(float(np.mean(home_scores+away_scores>total)), 5),
-        "under_probability_raw": round(float(np.mean(home_scores+away_scores<total)), 5),
-        "total_push_probability": round(float(np.mean(home_scores+away_scores==total)), 5),
+        "over_probability_raw": round(float(np.mean(home_scores+away_scores>total)), 5) if total is not None else None,
+        "under_probability_raw": round(float(np.mean(home_scores+away_scores<total)), 5) if total is not None else None,
+        "total_push_probability": round(float(np.mean(home_scores+away_scores==total)), 5) if total is not None else None,
         "mean_total": round(float(np.mean(home_scores+away_scores)), 2),
-        "home_cover_monte_carlo_se": round(float(math.sqrt(home_cover*(1-home_cover)/n)), 5),
+        "home_cover_monte_carlo_se": round(float(math.sqrt(home_cover*(1-home_cover)/n)), 5) if home_cover is not None else None,
         "simulations": runs, "seed": seed,
         "simulation_note": ("Approximate possession model with provisional priors; " +
                             ("simplified overtime. " if allow_overtime else "no overtime (first half). ")+
