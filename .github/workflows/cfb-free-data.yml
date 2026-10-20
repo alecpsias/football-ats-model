@@ -47,6 +47,12 @@ jobs:
         run: |
           set -euo pipefail
           python -m cfb.pipeline report --snapshot "$SNAPSHOT" --out cfb_artifacts/evidence --days 7
+      - name: Retrospective CFB margin replay
+        run: |
+          python -m cfb.research_backtest \
+            --snapshot "$SNAPSHOT" \
+            --out cfb_artifacts/historical_replay \
+            --runs 1500
       - name: Upload checksums, schemas, and evidence for audit
         if: always()
         uses: actions/upload-artifact@v4
