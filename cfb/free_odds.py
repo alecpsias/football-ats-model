@@ -83,19 +83,28 @@ def choose_espn_quote(body, fetcher=fetch, expected_gid=None):
     for i,item in enumerate(data['items'][:40]):
         provider_body=None
         src=None
-        if isinstance(item,dict) and '$ref' in item:
+        # The ESPN collection often includes COMPLETE odds inline *alongside*
+        # a legacy http:// $ref. Read and validate the inline record FIRST.
+        # Never discard valid source evidence because its optional link is HTTP.
+        q=_odds_item(item)
+        if q is None and isinstance(item,dict) and '$ref' in item:
             ref=item['$ref']
+            if not isinstance(ref,str):
+                continue
+            # Follow same-origin references over HTTPS only. ESPN embeds
+            # http:// links in otherwise HTTPS JSON; do not make HTTP calls.
+            if ref.startswith('http://sports.core.api.espn.com/'):
+                ref='https://'+ref[len('http://'):]
             prefix=(f'{CORE}/events/{expected_gid}/competitions/{expected_gid}/odds/'
                     if expected_gid is not None else CORE+'/events/')
-            if not isinstance(ref,str) or not ref.startswith(prefix):
+            if not ref.startswith(prefix):
                 continue
             try:
                 provider_body=fetcher(ref)
-                item=json.loads(provider_body)
+                q=_odds_item(json.loads(provider_body))
                 src=ref
             except (OSError,ValueError,TypeError,TimeoutError):
                 continue
-        q=_odds_item(item)
         if q:
             matched.append((PREFERRED.index(q['book']),i,q,provider_body,src))
     if not matched:return None,None,None
@@ -236,7 +245,7 @@ def load_quotes(archive_root):
     """Choose latest captured valid quote before kickoff, fixed source priority."""
     result={}
     if not Path(archive_root).is_dir():return result
-    for archive in sorted(Path(archive_root).glob('*.zip')):
+    for archive in sorted(Path(archive_root).rglob('*.zip')):
         index,rows=verify_odds_archive(archive)
         for row in rows:
             if row['status']!='OBSERVED_COMPLETE_SPREAD_AND_BOTH_PRICES':continue
