@@ -141,9 +141,8 @@ class IntegratedBuild15(unittest.TestCase):
         base=Path(__file__).parent
         for n in ('fresh_matchup.py','prospective.py','research_backtest.py','forward_monitor.py'):
             s=(base/n).read_text()
-            self.assertIn('integrated_scoring',s)
-        self.assertIn('integrated_scoring_plus_script_research',
-            (base/'fresh_matchup.py').read_text())
+            self.assertIn('build16',s)
+        self.assertIn('simulate_build16', (base/'fresh_matchup.py').read_text())
 
 if __name__=='__main__':unittest.main()
 
@@ -156,11 +155,8 @@ class IntegratedForwardAudit(unittest.TestCase):
             row={'game_id':'401000002','kickoff_utc':'2026-10-25T19:00:00+00:00',
                 'forecast_generated_at_utc':'2026-10-25T12:00:00+00:00',
                 'predicted_home_margin':3.0,'actual_home_margin':-5.0,
-                'integrated_scoring_challenger':{
-                    'status':'ORIGINAL_FROZEN_INTEGRATED_RESEARCH_CANDIDATE',
-                    'projected_home_margin':1.0},
-                'integrated_script_challenger':{
-                    'status':'ORIGINAL_FROZEN_INTEGRATED_RESEARCH_CANDIDATE',
+                'build16_challenger':{
+                    'status':'ORIGINAL_FROZEN_BUILD16_CHALLENGER',
                     'projected_home_margin':2.0}}
             Path(tmp,'1.json').write_text(json.dumps({
                 'schema':'cfb_forward_research_audit_v1',
@@ -168,11 +164,10 @@ class IntegratedForwardAudit(unittest.TestCase):
                 'scored_games':[row]}))
             rows=observations(tmp)
             self.assertEqual(len(rows),1)
-            self.assertEqual(rows[0]['integrated_projected_margin'],1.0)
-            self.assertEqual(rows[0]['integrated_script_projected_margin'],2.0)
+            self.assertEqual(rows[0]['build16_projected_margin'],2.0)
             result=investigate(rows)
             self.assertFalse(result['deploy_automatically'])
-            self.assertEqual(result['integrated_projected_margin_paired_games'],1)
+            self.assertEqual(result['build16_paired_games'],1)
 
     def test_learning_rejects_forecast_after_kickoff(self):
         import json

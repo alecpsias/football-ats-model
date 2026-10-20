@@ -214,7 +214,7 @@ class PersonnelPriorityTwo(unittest.TestCase):
             self.assertIsNone(r['personnel_adjustment_to_model_points'])
             self.assertEqual(r['conditional_personnel_scenarios']['scenarios'],[])
             self.assertIsInstance(r['simulated_margin_home'],float)
-            self.assertTrue(r['advanced_challenger_not_primary'])
+            self.assertTrue(r['build16_not_primary'])
 
     def test_final_grader_does_not_score_counterfactual_as_prediction(self):
         from tempfile import TemporaryDirectory

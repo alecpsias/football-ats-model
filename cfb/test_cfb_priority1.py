@@ -110,18 +110,18 @@ class AdvancedPriorityOne(unittest.TestCase):
             with patch('cfb.fresh_matchup.verify',return_value=manifest),\
                  patch('cfb.fresh_matchup.pd.read_parquet',side_effect=reader):
                 x=analyze(snap,'SCHOOL_A','SCHOOL_B',runs=180,min_games=1,now=RUN_AT)
-                base=x['simulated_margin_home']; adv=x['advanced_research_challenger']
+                base=x['simulated_margin_home']; adv=x['build16_challenger']
                 self.assertEqual(x['status'],'FRESH_PREGAME_PROJECTION_LOCKED')
-                self.assertTrue(x['advanced_challenger_not_primary'])
+                self.assertTrue(x['build16_not_primary'])
                 self.assertEqual(x['simulated_margin_home'],base)
-                self.assertIn('advanced_research_challenger',x)
-                self.assertIn('experimental challenger',markdown(x)) if adv['simulation'] else self.assertIn('Not scored',markdown(x))
+                self.assertIn('build16_challenger',x)
+                self.assertIn('Build 16',markdown(x))
                 first_source=x['source_manifest_sha256']
                 # Future target play alterations cannot change the original OR candidate.
                 tables['pbp.parquet'].loc[tables['pbp.parquet'].game_id.eq(103),'EPA']=50000
                 y=analyze(snap,'SCHOOL_A','SCHOOL_B',runs=180,min_games=1,now=RUN_AT)
                 self.assertEqual(x['simulated_margin_home'],y['simulated_margin_home'])
-                self.assertEqual(x['advanced_research_challenger'],y['advanced_research_challenger'])
+                self.assertEqual(x['build16_challenger'],y['build16_challenger'])
                 self.assertEqual(first_source,y['source_manifest_sha256'])
 
     def test_true_early_archive_unchanged_vs_old_games(self):
@@ -134,7 +134,7 @@ class AdvancedPriorityOne(unittest.TestCase):
                 'home_points':40,'away_points':20}])
             out=grade(p/'archives',p/'no_odds',schedule,'2026-10-25T17:00:00Z','https://example.com/final','a'*64)
             self.assertEqual(out['forward_margin']['mae'],14)
-            self.assertEqual(out['advanced_challenger_forward']['games_with_frozen_challenger'],0)
+            self.assertEqual(out['build16_challenger_forward']['paired_games'],0)
             self.assertNotIn('advanced_challenger',out['scored_games'][0])
 
     def test_new_challenger_is_graded_from_frozen_record_only(self):
@@ -143,8 +143,9 @@ class AdvancedPriorityOne(unittest.TestCase):
             from cfb.test_cfb_build6 import G,K
             p=Path(td);a=p/'pre';frozen(a)
             file=a/(G+'.json'); data=json.loads(file.read_text())
-            data['advanced_research_challenger']={'status':'AVAILABLE_UNCALIBRATED_RESEARCH_ONLY',
-                'version':'cfb-advanced-scoring-research-v1','simulated_margin_home':12.}
+            data['build16_challenger']={'status':'AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY',
+                'version':'cfb-build16-unified-situational-v1','mean_margin_home':12.,
+                'margin_p10_p50_p90':[-1.,12.,27.]}
             file.write_text(json.dumps(data)+'\n')
             index=json.loads((a/'index.json').read_text())
             from cfb.archive import digest
@@ -155,10 +156,10 @@ class AdvancedPriorityOne(unittest.TestCase):
                 'home_id':333,'away_id':245,'home_team':'Alabama','away_team':'Texas A&M',
                 'home_points':40,'away_points':20}])
             out=grade(p/'archives',p/'no_odds',sched,'2026-10-25T17:00:00Z','https://example.com/final','a'*64)
-            self.assertEqual(out['advanced_challenger_forward']['games_with_frozen_challenger'],1)
-            self.assertEqual(out['advanced_challenger_forward']['on_same_games_advanced_mae'],8.)
-            self.assertEqual(out['advanced_challenger_forward']['on_same_games_baseline_mae'],14.)
-            self.assertFalse(out['scored_games'][0]['advanced_challenger']['not_deployed']==False)
+            self.assertEqual(out['build16_challenger_forward']['paired_games'],1)
+            self.assertEqual(out['build16_challenger_forward']['paired_build16_mae'],8.)
+            self.assertEqual(out['build16_challenger_forward']['paired_baseline_mae'],14.)
+            self.assertTrue(out['scored_games'][0]['build16_challenger']['not_primary'])
 
     def test_postgame_uses_original_challenger_without_running_a_new_model(self):
         import hashlib
@@ -176,39 +177,39 @@ class AdvancedPriorityOne(unittest.TestCase):
                 schedule.loc[schedule.game_id.eq(103),'home_points']=14
                 schedule.loc[schedule.game_id.eq(103),'away_points']=35
                 tables['schedule.parquet']=schedule
-                with patch('cfb.fresh_matchup.simulate_challenger',side_effect=AssertionError('Postgame reran challenger')):
+                with patch('cfb.fresh_matchup.simulate_build16',side_effect=AssertionError('Postgame reran challenger')):
                     scored=review(frozen,'a'*64,'777.json',snap)
             self.assertTrue(scored['postgame_does_not_rerun_the_original_model'])
-            c=scored.get('original_advanced_challenger_comparison')
-            if frozen['advanced_research_challenger']['simulation'] is not None:
-                self.assertEqual(c['status'],'LOCKED_RESEARCH_CHALLENGER_EVALUATED')
-                self.assertEqual(c['frozen_projected_home_margin'],frozen['advanced_research_challenger']['simulated_margin_home'])
+            c=scored.get('original_build16_comparison')
+            if frozen['build16_challenger']['simulation'] is not None:
+                self.assertFalse(c['recomputed_after_game'])
+                self.assertEqual(c['frozen_projected_home_margin'],frozen['build16_challenger']['mean_margin_home'])
                 self.assertEqual(c['baseline_absolute_error'],round(abs(frozen['simulated_margin_home']+21),5))
-                self.assertIn('Original research challenger comparison',markdown(scored))
+                self.assertIn('Original frozen Build 16 comparison',markdown(scored))
 
     def test_learning_does_not_promote_candidate_from_one_game(self):
         rows=[{'game_id':str(i),'kickoff_utc':f'2026-10-{i+1:02}T12:00:00+00:00',
-               'projected_margin':3.,'advanced_projected_margin':7.,'actual_margin':7.}
+               'projected_margin':3.,'build16_projected_margin':7.,'actual_margin':7.}
               for i in range(5)]
         z=investigate(rows)
         self.assertEqual(z['status'],'INSUFFICIENT_GENUINE_FORWARD_GAMES')
-        self.assertEqual(z['advanced_challenger_paired_games'],5)
+        self.assertEqual(z['build16_paired_games'],5)
         self.assertFalse(z['deploy_automatically'])
 
     def test_future_scores_do_not_affect_research_challenger_selection(self):
         rows=[{'game_id':str(i),'kickoff_utc':f'2026-05-{1+i//10:02}T12:00:00+00:00',
-               'projected_margin':3.,'advanced_projected_margin':7.,'actual_margin':7.} for i in range(150)]
+               'projected_margin':3.,'build16_projected_margin':7.,'actual_margin':7.} for i in range(150)]
         original=investigate(copy.deepcopy(rows))
         changed=copy.deepcopy(rows)
         # Test block is last calendar days; leave training + validation untouched.
         for r in changed[-25:]:r['actual_margin']=-100.
         updated=investigate(changed)
-        self.assertEqual(original['advanced_challenger_validation']['passes_gate'],
-                         updated['advanced_challenger_validation']['passes_gate'])
-        self.assertEqual(original['advanced_challenger_validation']['advanced_validation_mae'],
-                         updated['advanced_challenger_validation']['advanced_validation_mae'])
-        self.assertNotEqual(original['advanced_challenger_validation']['holdout_advanced_mae'],
-                            updated['advanced_challenger_validation']['holdout_advanced_mae'])
+        self.assertEqual(original['build16_validation']['passes_gate'],
+                         updated['build16_validation']['passes_gate'])
+        self.assertEqual(original['build16_validation']['build16_validation_mae'],
+                         updated['build16_validation']['build16_validation_mae'])
+        self.assertNotEqual(original['build16_validation']['untouched_test_build16_mae'],
+                            updated['build16_validation']['untouched_test_build16_mae'])
         self.assertFalse(updated['deploy_automatically'])
 
 

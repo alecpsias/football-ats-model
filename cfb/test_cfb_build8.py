@@ -145,10 +145,9 @@ class Build8Tests(unittest.TestCase):
         altered=[dict(r) for r in rows]
         for r in altered[-25:]:r['actual_margin']+=70
         second=investigate(altered)
-        self.assertEqual(first['best_candidate'],second['best_candidate'])
-        self.assertEqual(first['validation_mae_improvement'],second['validation_mae_improvement'])
-        self.assertEqual(first['passes_validation_gate'],second['passes_validation_gate'])
-        self.assertEqual(first['train_coefficients_research_only'],second['train_coefficients_research_only'])
+        self.assertEqual(first['build16_status'],second['build16_status'])
+        self.assertEqual(first['build16_paired_games'],0)
+        self.assertEqual(first['split_games'],second['split_games'])
         self.assertFalse(first['deploy_automatically'])
 
     def test_forward_learner_rejects_forecasts_issued_after_kickoff(self):

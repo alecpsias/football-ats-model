@@ -19,7 +19,7 @@ import pandas as pd
 from cfb.engine import CFB_RULES, simulate
 from cfb.advanced_scoring import simulate_challenger
 from cfb.game_script import simulate_script
-from cfb.integrated_scoring import simulate_integrated
+from cfb.mechanism_build16 import simulate_build16, observe_game_context
 from cfb.matchups import matchup_signals
 from cfb.calibration import calibrate
 from cfb.pipeline import verify, normalize_pbp_teams, iso_utc
@@ -128,6 +128,7 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids):
     conceded_rz_tds=int(drzone.loc[drzone.offense_score_play.eq(True)&drzone.td_play.eq(True),'drive_id'].nunique()) if len(drzone) else 0
 
     return {'opponent_id':int(opponent),
+            'mechanism':observe_game_context(plays,team,opponent),
             'points':float(points),'conceded':float(conceded),
             'drives':int(drives),'faced':int(faced),
             'off_pass_sum':op,'off_pass_n':pn,'off_rush_sum':or_,'off_rush_n':rn,
@@ -255,51 +256,20 @@ def replay(snapshot, out, runs=1500, min_games=3):
                 item={'game_id':str(g.game_id),'kickoff':str(kickoff),
                       'home':str(g.home_team),'away':str(g.away_team),
                       'actual_margin':float(g.home_points-g.away_points)}
-                for candidate,field in ((False,'baseline_margin'),(True,'epa_candidate_margin')):
-                    hproj=project(history[home],history[away],bool(g.neutral_site),'home',candidate)
-                    aproj=project(history[away],history[home],bool(g.neutral_site),'away',candidate)
-                    result=simulate(hproj,aproj,runs=runs,
-                                    seed=int(g.game_id)%(2**32),allow_overtime=True)
-                    item[field]=result['mean_margin_home']
-                signals=matchup_signals(home,away,history)
-                s_hp=project(history[home],history[away],bool(g.neutral_site),'home',False)
-                s_ap=project(history[away],history[home],bool(g.neutral_site),'away',False)
-                script=simulate_script(s_hp,s_ap,history[home],history[away],
+                hp=project(history[home],history[away],bool(g.neutral_site),'home',False)
+                ap=project(history[away],history[home],bool(g.neutral_site),'away',False)
+                baseline=simulate(hp,ap,runs=runs,seed=int(g.game_id)%(2**32),allow_overtime=True)
+                item['baseline_margin']=baseline['mean_margin_home']
+                challenger=simulate_build16(home,away,history,bool(g.neutral_site),
                     runs=runs,seed=int(g.game_id)%(2**32))
-                item['game_script_candidate_margin']=script['mean_margin_home']
-                item['game_script_candidate_p10_p90']=[script['margin_p10_p50_p90'][0],script['margin_p10_p50_p90'][2]]
-                item['game_script_candidate_win_probability_raw']=script['home_win_probability_raw']
-                item['game_script_candidate_version']=script['version']
-                integrated=simulate_integrated(home,away,history,bool(g.neutral_site),
-                    runs=runs,seed=int(g.game_id)%(2**32))
-                combined=simulate_integrated(home,away,history,bool(g.neutral_site),
-                    runs=runs,seed=int(g.game_id)%(2**32),use_script=True)
-                item['integrated_scoring_status']=integrated['status']
-                item['integrated_script_status']=combined['status']
-                # No-lookahead missingness: excluded from paired comparison,
-                # never silently replaced by a baseline forecast.
-                item['integrated_scoring_candidate_margin']=(integrated.get('mean_margin_home')
-                    if integrated.get('simulation') is not None else None)
-                item['integrated_script_candidate_margin']=(combined.get('mean_margin_home')
-                    if combined.get('simulation') is not None else None)
-                item.update(signals)
+                item['build16_candidate_status']=challenger['status']
+                item['build16_candidate_margin']=(challenger.get('mean_margin_home')
+                    if challenger.get('simulation') is not None else None)
+                item['build16_candidate_interval']=challenger.get('margin_p10_p50_p90')
                 item['completed_prior_games_home']=len(history[home])
                 item['completed_prior_games_away']=len(history[away])
-                # Same inputs, same random seed, frozen feature definitions.
-                # The advanced challenger NEVER overrides the original baseline.
-                for ablation,field in (('all','advanced_candidate_margin'),
-                                       ('sos_only','advanced_sos_only_margin'),
-                                       ('context_only','advanced_context_only_margin')):
-                    hp=project(history[home],history[away],bool(g.neutral_site),'home',False)
-                    ap=project(history[away],history[home],bool(g.neutral_site),'away',False)
-                    challenger=simulate_challenger(hp,ap,signals,len(history[home]),
-                                      len(history[away]),runs=runs,
-                                      seed=int(g.game_id)%(2**32),mode=ablation)
-                    item[field]=(challenger['simulated_margin_home']
-                                 if challenger['simulation'] is not None
-                                 else item['baseline_margin'])
-                    if ablation=='all':
-                        item['advanced_candidate_status']=challenger['status']
+                # Stored diagnostic inputs are not additional competing forecasts.
+                item['matchup_evidence']=matchup_signals(home,away,history)
                 preds.append(item)
             additions.extend(((home,h),(away,a)))
         for t,r in additions:
@@ -310,49 +280,31 @@ def replay(snapshot, out, runs=1500, min_games=3):
         split-=1
     holdout=preds[split:]
     baseline=metrics(holdout,'baseline_margin')
-    challenger=metrics(holdout,'epa_candidate_margin')
-    benchmark=[dict(r,constant_home_margin=CFB_RULES['home_advantage_points']) for r in holdout]
+    paired=[r for r in holdout if r['build16_candidate_margin'] is not None]
     summary={
         'engine':'cfb.engine.v1', 'nfl_code_imported':False,
         'status':'RETROSPECTIVE_CFB_RESEARCH_NOT_ATS_VALIDATED',
         'source_snapshot_utc':str(cutoff),
         'chronologically_evaluated_games':len(preds),
         'holdout_games':len(holdout),
-        'holdout_baseline':baseline,'holdout_epa_challenger':challenger,
-        'holdout_advanced_challenger':metrics(holdout,'advanced_candidate_margin'),
-        'holdout_game_script_challenger':metrics(holdout,'game_script_candidate_margin'),
-        'integrated_scoring_candidate':{
+        'holdout_baseline':baseline,
+        'build16_challenger':{
             'status':'RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED',
-            'eligible_holdout_games':sum(r['integrated_scoring_candidate_margin'] is not None for r in holdout),
-            'unavailable_holdout_games':sum(r['integrated_scoring_candidate_margin'] is None for r in holdout),
-            'paired_baseline':metrics([r for r in holdout if r['integrated_scoring_candidate_margin'] is not None],'baseline_margin'),
-            'paired_integrated':metrics([r for r in holdout if r['integrated_scoring_candidate_margin'] is not None],'integrated_scoring_candidate_margin'),
+            'eligible_holdout_games':len(paired),
+            'unavailable_holdout_games':len(holdout)-len(paired),
+            'paired_baseline':metrics(paired,'baseline_margin'),
+            'paired_build16':metrics(paired,'build16_candidate_margin'),
+            'p10_p90_coverage':round(sum(
+                r['build16_candidate_interval'][0]<=r['actual_margin']<=r['build16_candidate_interval'][2]
+                for r in paired)/len(paired),4) if paired else None,
             'not_primary':True},
-        'integrated_scoring_plus_script_candidate':{
-            'status':'RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED',
-            'eligible_holdout_games':sum(r['integrated_script_candidate_margin'] is not None for r in holdout),
-            'paired_baseline':metrics([r for r in holdout if r['integrated_script_candidate_margin'] is not None],'baseline_margin'),
-            'paired_integrated_plus_script':metrics([r for r in holdout if r['integrated_script_candidate_margin'] is not None],'integrated_script_candidate_margin'),
-            'not_primary':True},
-        'game_script_interval_p10_p90_coverage':(round(sum(
-            r['game_script_candidate_p10_p90'][0]<=r['actual_margin']<=r['game_script_candidate_p10_p90'][1]
-            for r in holdout)/len(holdout),4) if holdout else None),
-        'game_script_challenger_status':'RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED',
-        'holdout_advanced_sos_only':metrics(holdout,'advanced_sos_only_margin'),
-        'holdout_advanced_context_only':metrics(holdout,'advanced_context_only_margin'),
-        'advanced_challenger_status':'RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED',
-        'advanced_eligible_with_opponent_epa':sum(r['advanced_candidate_status']=='AVAILABLE_UNCALIBRATED_RESEARCH_ONLY' for r in holdout),
-        'holdout_constant_home_advantage':metrics(benchmark,'constant_home_margin'),
-        'candidate_improves_holdout_mae':
-            challenger['mae']<baseline['mae'] if holdout else None,
         'disclosures':[
-            '2026 source snapshot captured after the historical games; not true historical as-of.',
-            'No market spreads or wager grades used; winner direction is NOT ATS accuracy.',
-            'No future-game scores used in previous-matchup feature averages.',
-            '2026 season results do not validate next-season predictions.',
-            'Historical game outcomes embargoed for 24 hours after kickoff; actual final publication times unavailable.',
-            'CFB scoring coefficients and overtime outcomes are uncalibrated.',
-            'QB roster evidence may have later updates; used only for descriptive tracking.'
+            'Two published models only: original baseline vs Build 16 unified challenger.',
+            '2026 source snapshot captured after historical games; not true as-of evidence.',
+            'No historical sportsbook spreads here; margin winner accuracy is NOT ATS accuracy.',
+            'Earlier-game results embargoed for 24h after kickoff.',
+            'Build16 parameters uncalibrated; do not tune to previously examined holdout.',
+            'Missing complete pressure/penalty/special teams data are never synthesized.'
         ]}
     calibrated=calibrate(preds)
     summary['margin_calibration']=calibrated

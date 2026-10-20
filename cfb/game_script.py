@@ -145,7 +145,8 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                     *, runs=3000,seed=1,spread_home=None,total=None,allow_overtime=True,
                     clock_response=True, tempo_shift=0.0,
                     turnover_shift_home=0.0,turnover_shift_away=0.0,
-                    efficiency_shift_home=0.0,efficiency_shift_away=0.0):
+                    efficiency_shift_home=0.0,efficiency_shift_away=0.0,
+                    mechanisms=None):
     """Vectorized sequential possessions; outcomes remain a research hypothesis.
 
     Turnover-induced short field applies to the *next actual opposing series*;
@@ -165,6 +166,9 @@ def simulate_script(home_projection, away_projection, home_history, away_history
         if isinstance(spread_home,bool) or not isinstance(spread_home,(int,float)) or not math.isfinite(spread_home) or abs(spread_home)>100:raise ValueError('Invalid spread')
     if total is not None:
         if isinstance(total,bool) or not isinstance(total,(int,float)) or not math.isfinite(total) or not 0<=total<=200:raise ValueError('Invalid total')
+    if mechanisms is not None:
+        if not isinstance(mechanisms,dict) or not all(k in mechanisms for k in ('home','away','turnover_field')):
+            raise ValueError('Invalid Build16 mechanism evidence')
     evidence=profile(home_history,away_history,home_projection,away_projection)
     rng=np.random.default_rng(seed)
     n=int(runs)
@@ -182,7 +186,49 @@ def simulate_script(home_projection, away_projection, home_history, away_history
     to_a=beta_prop(a,evidence['away_turnover_beta_concentration'])
     hs=np.zeros(n,dtype=np.int32); ass=np.zeros(n,dtype=np.int32)
     turnovers_h=np.zeros(n,dtype=np.int16);turnovers_a=np.zeros(n,dtype=np.int16)
-    short_h=np.zeros(n,dtype=bool);short_a=np.zeros(n,dtype=bool)
+    short_h=np.zeros(n,dtype=float);short_a=np.zeros(n,dtype=float)
+    def state_propensity(side,original,delta):
+        """Observed game-state passing shifts affect only interception exposure.
+
+        No extra pressure impact, no invented penalty EPA, no double-counted
+        turnover point deduction. The baseline beta propensity is retained.
+        """
+        if mechanisms is None:return original
+        z=mechanisms[side]
+        by=(z.get('pass_states') or {}).get('by_state')
+        ip=z.get('int_rate');fl=z.get('fumble_rate');plays=z.get('plays_per_drive')
+        neutral=z.get('neutral_pass_rate')
+        if not isinstance(by,dict) or any(not isinstance(x,(float,int)) or not np.isfinite(x) for x in (ip,fl,plays,neutral)):
+            return original
+        if not 0<=ip<=.2 or not 0<=fl<=.2 or not 2<=plays<=15 or not .01<=neutral<=.99:
+            return original
+        desired=np.where(delta<=-9,by['trailing_9_plus'],
+                          np.where(delta>=9,by['leading_9_plus'],by['within_8']))
+        current=1-np.exp(-plays*(desired*ip+fl))
+        reference=1-np.exp(-plays*(neutral*ip+fl))
+        return np.clip(original + np.clip(current-reference,-.08,.08),.003,.47)
+    def next_field_bonus(turnovers):
+        if mechanisms is None:return turnovers.astype(float)
+        data=mechanisms['turnover_field']
+        if data.get('status')!='OBSERVED':return turnovers.astype(float)
+        starts=data.get('following_start_by_turnover_zone',{})
+        zones=data.get('turnover_zone_counts',{})
+        near=starts.get('opponent_40_or_closer',[])
+        far=starts.get('outside_opponent_40',[])
+        all_starts=near+far
+        if len(all_starts)<4:return turnovers.astype(float)
+        chance=(zones.get('opponent_40_or_closer',0)+2)/max(1,sum(zones.values())+4)
+        isnear=rng.random(n)<chance
+        result=np.zeros(n,dtype=float)
+        # Sample observed follow-up possession positions, not turnover spots.
+        for mask,choices in ((turnovers&isnear,near or all_starts),
+                             (turnovers&~isnear,far or all_starts)):
+            k=int(mask.sum())
+            if k:
+                selected=np.array(choices,float)[rng.integers(0,len(choices),size=k)]
+                result[mask]=np.clip((selected-29.0)*.018,-.55,1.1)/MAX_SHORTFIELD_BONUS
+        return result
+
     latent_h += float(efficiency_shift_home)
     latent_a += float(efficiency_shift_away)
     first_home=(rng.random(n)<.5)
@@ -200,15 +246,17 @@ def simulate_script(home_projection, away_projection, home_history, away_history
             if not np.any(mask):continue
             for side in (('home','away') if hfirst else ('away','home')):
                 if side=='home':
-                    pts,to=_regulation_draw(h,rng,to_h,latent_h+global_env,short_h.astype(float),mask)
+                    prop=state_propensity('home',to_h,hs-ass)
+                    pts,to=_regulation_draw(h,rng,prop,latent_h+global_env,short_h,mask)
                     hs+=pts;turnovers_h+=to.astype(np.int16)
-                    short_h=np.where(mask,False,short_h)
-                    short_a=short_a|to
+                    short_h=np.where(mask,0.,short_h)
+                    short_a=np.where(to,next_field_bonus(to),short_a)
                 else:
-                    pts,to=_regulation_draw(a,rng,to_a,latent_a+global_env,short_a.astype(float),mask)
+                    prop=state_propensity('away',to_a,ass-hs)
+                    pts,to=_regulation_draw(a,rng,prop,latent_a+global_env,short_a,mask)
                     ass+=pts;turnovers_a+=to.astype(np.int16)
-                    short_a=np.where(mask,False,short_a)
-                    short_h=short_h|to
+                    short_a=np.where(mask,0.,short_a)
+                    short_h=np.where(to,next_field_bonus(to),short_h)
     regulation_margin=hs.astype(float)-ass
     reg_ties=int(np.count_nonzero(hs==ass))
     if allow_overtime:
@@ -250,6 +298,7 @@ def simulate_script(home_projection, away_projection, home_history, away_history
        'scenario_distributions':scripts,
        'historical_variance_evidence':evidence,
        'simulations':runs,'seed':seed,'clock_response_enabled':clock_response,
+       'build16_mechanisms_enabled':mechanisms is not None,
        'not_auto_deployed':True,'ATS_calibrated':False,
        'stress_input':{'tempo_shift':tempo_shift,'turnover_shift_home':turnover_shift_home,
             'turnover_shift_away':turnover_shift_away,'efficiency_shift_home':efficiency_shift_home,

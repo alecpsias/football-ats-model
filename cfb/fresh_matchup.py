@@ -19,7 +19,7 @@ import pandas as pd
 from cfb.engine import simulate
 from cfb.advanced_scoring import simulate_challenger
 from cfb.game_script import simulate_script, adverse_scripts
-from cfb.integrated_scoring import simulate_integrated
+from cfb.mechanism_build16 import simulate_build16
 from cfb.market import _date
 from cfb.matchups import matchup_signals
 from cfb.matchup_cycle import _market, postgame as compare_postgame, markdown as legacy_markdown, normalized
@@ -230,17 +230,10 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
         qmap={str(g.game_id):q} if q else {}
         sim=simulate(hp,ap,runs=runs,seed=int(g.game_id)%(2**32),
                      spread_home=q['quote']['spread_home'] if q else None)
-        advanced=simulate_challenger(hp,ap,signals,len(histories[hid]),
-                     len(histories[aid]),runs=runs,seed=int(g.game_id)%(2**32))
-        integrated=simulate_integrated(hid,aid,histories,neutral,
-                     runs=runs,seed=int(g.game_id)%(2**32),
-                     spread_home=q['quote']['spread_home'] if q else None)
-        integrated_script=simulate_integrated(hid,aid,histories,neutral,
-                     runs=runs,seed=int(g.game_id)%(2**32),use_script=True,
-                     spread_home=q['quote']['spread_home'] if q else None)
-        script=simulate_script(hp,ap,histories[hid],histories[aid],runs=runs,
+        challenger=simulate_build16(hid,aid,histories,neutral,runs=runs,
                      seed=int(g.game_id)%(2**32),
-                     spread_home=q['quote']['spread_home'] if q else None)
+                     spread_home=q['quote']['spread_home'] if q else None,
+                     stress_runs=max(100,min(400,runs//8)))
         personnel=simulate_personnel_scenarios(hp,ap,qb_effects['home'],qb_effects['away'],
                      runs=runs,seed=int(g.game_id)%(2**32))
         # _market validates fixture, source observation and model creation time.
@@ -249,14 +242,8 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
         scripts_stress=adverse_scripts(hp,ap,histories[hid],histories[aid],
                     runs=max(100,min(600,runs//5)),seed=int(g.game_id)%(2**32))
         result.update({'status':'FRESH_PREGAME_PROJECTION_LOCKED',
-                       'game_script_adverse_sensitivity':scripts_stress,
-                       'game_script_research_challenger':script,
-                       'integrated_scoring_research_challenger':integrated,
-                       'integrated_scoring_plus_script_research':integrated_script,
-                       'integrated_challengers_not_primary':True,
-                       'game_script_challenger_not_primary':True,
-                       'advanced_research_challenger':advanced,
-                       'advanced_challenger_not_primary':True,
+                       'build16_challenger':challenger,
+                       'build16_not_primary':True,
                        'conditional_personnel_scenarios':personnel,
                        'home_projection':hp,'away_projection':ap,
                        'matchup_evidence':signals,'simulation':sim,
@@ -362,6 +349,18 @@ def review(saved, saved_sha, saved_file, snapshot):
                          'actual_home_margin':actual,'baseline_absolute_error':round(abs(primary-actual),5),
                          'integrated_absolute_error':round(abs(float(cand)-actual),5),
                          'recomputed_after_game':False,'not_primary':True}
+    if report.get('status')=='FINAL_REVIEW_RECORDED':
+        z=saved.get('build16_challenger')
+        if isinstance(z,dict) and z.get('status')=='AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY':
+            cand=z.get('mean_margin_home')
+            if isinstance(cand,(int,float)) and math.isfinite(float(cand)):
+                actual=float(report['observed_final']['home_margin'])
+                primary=float(saved['simulated_margin_home'])
+                report['original_build16_comparison']={
+                    'version':z.get('version'),'frozen_projected_home_margin':float(cand),
+                    'baseline_absolute_error':round(abs(primary-actual),5),
+                    'build16_absolute_error':round(abs(float(cand)-actual),5),
+                    'recomputed_after_game':False,'not_primary':True}
     # Frozen conditional personnel scenarios are not picks: the model did not
     # predict or attest who started. Record what was known, never retro-select a
     # matching alternate after observing the box score.
@@ -397,8 +396,14 @@ def requested_learning(review_folder, current=None):
             kickoff=_date(z['kickoff_utc'],'kickoff')
             if not ts<kickoff or not all(math.isfinite(x) for x in (pred,actual)):continue
         except (KeyError,TypeError,ValueError):continue
-        rows.setdefault(gid,{'game_id':gid,'kickoff_utc':kickoff.isoformat(),
-                             'projected_margin':pred,'actual_margin':actual})
+        row={'game_id':gid,'kickoff_utc':kickoff.isoformat(),
+             'projected_margin':pred,'actual_margin':actual}
+        frozen=z.get('original_build16_comparison')
+        if isinstance(frozen,dict) and frozen.get('recomputed_after_game') is False:
+            value=frozen.get('frozen_projected_home_margin')
+            if isinstance(value,(int,float)) and math.isfinite(value):
+                row['build16_projected_margin']=float(value)
+        rows.setdefault(gid,row)
     if current and current.get('schema')=='cfb_fresh_requested_postgame_v1' and current.get('status')=='FINAL_REVIEW_RECORDED':
         x=current;gid=str(x['game_id'])
         if gid not in rows:
@@ -407,8 +412,14 @@ def requested_learning(review_folder, current=None):
             created=_date(x['locked_original_forecast']['generated_at_utc'],'prediction')
             kickoff=_date(x['kickoff_utc'],'kickoff')
             if created<kickoff and math.isfinite(pred) and math.isfinite(actual):
-                rows[gid]={'game_id':gid,'kickoff_utc':kickoff.isoformat(),
-                           'projected_margin':pred,'actual_margin':actual}
+                row={'game_id':gid,'kickoff_utc':kickoff.isoformat(),
+                     'projected_margin':pred,'actual_margin':actual}
+                candidate=x.get('original_build16_comparison')
+                if isinstance(candidate,dict) and candidate.get('recomputed_after_game') is False:
+                    value=candidate.get('frozen_projected_home_margin')
+                    if isinstance(value,(int,float)) and math.isfinite(value):
+                        row['build16_projected_margin']=float(value)
+                rows[gid]=row
     return investigate(list(rows.values()))
 
 
@@ -421,24 +432,14 @@ def markdown(report):
             output+=('\n## Frozen personnel scenarios\n'
                       f"{p['scenario_count']} conditional QB scenario(s) archived. "
                       'Not graded as predictions because next-game starters were unverified.\n')
-        c=report.get('original_advanced_challenger_comparison')
+        c=report.get('original_build16_comparison')
         if c:
-            output+=('\n## Original research challenger comparison\n'
+            output += ("\n## Original frozen Build 16 comparison\n"
                 f"Baseline absolute margin error: {c['baseline_absolute_error']:.2f}\n"
-                f"Advanced challenger absolute margin error: {c['advanced_absolute_error']:.2f}\n"
-                'Based only on pregame-saved challenger. No model promotion.\n')
-        g=report.get('original_game_script_comparison')
-        if g:
-            output+=('\n## Original game-script research challenger\n'
-                f"Baseline margin error: {g['baseline_absolute_error']:.2f}\n"
-                f"Script challenger margin error: {g['game_script_absolute_error']:.2f}\n"
-                'Compared using the original pregame record only. No automatic promotion.\n')
-        for k in ('original_integrated_scoring_comparison','original_integrated_script_comparison'):
-            c=report.get(k)
-            if c:
-                output+=(f"\n## {k.replace('_',' ').title()} (frozen only)\n"
-                         f"Baseline margin error: {c['baseline_absolute_error']:.2f}; "
-                         f"integrated error: {c['integrated_absolute_error']:.2f}.\n")
+                f"Build 16 absolute margin error: {c['build16_absolute_error']:.2f}\n"
+                "Compared using the frozen candidate only; no postgame simulation.\n")
+        # Earlier frozen runs may contain historic research variants. Their
+        # original hashes remain archived; they are not active Build16 rivals.
         return output
     if report['status']!='FRESH_PREGAME_PROJECTION_LOCKED':
         return '# CFB fresh matchup — insufficient observed data\n\n'+(
@@ -461,48 +462,26 @@ def markdown(report):
            f"**Market:** {quote}. Confidence not calibrated.",
            '', '## Current opponent-context team statistics', '',
            f"| Metric | {report['home']} | {report['away']} |",'|---|---:|---:|']
-    advanced=report.get('advanced_research_challenger',{})
-    if advanced.get('simulation') is not None:
-        lines += ['', '## Opponent-adjusted experimental challenger (NOT the primary pick)',
-                  f"**Challenger score:** {report['home']} {advanced['simulated_score_home']:.1f}, "
-                  f"{report['away']} {advanced['simulated_score_away']:.1f}",
-                  f"**Challenger home margin:** {advanced['simulated_margin_home']:+.2f}",
-                  'Uses leave-opponent-out pass/rush EPA, explosives, third down, QB-hurry proxy, '
-                  'red-zone finishing, and field position where recorded.',
-                  'Experimental coefficients are NOT validated; do not confuse this with the primary forecast.']
+    build16=report.get('build16_challenger') or {}
+    if build16.get('status')=='AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY':
+        lines+=['', '## Build 16 — sole research challenger',
+                f"**Build 16 score:** {report['home']} {build16['mean_score_home']:.1f}, "
+                f"{report['away']} {build16['mean_score_away']:.1f}",
+                f"**Build 16 home margin:** {build16['mean_margin_home']:+.2f}",
+                f"**10th / median / 90th margin:** {build16['margin_p10_p50_p90']}",
+                'Combines opponent-adjusted integrated scoring, historically variable drive scripts, '
+                'third-down distance, state-dependent pass mix and verified next-drive field starts. '
+                'No fitted coefficients or validated ATS edge.']
+        for name,item in build16['simulation'].get('scenario_distributions',{}).items():
+            lines.append(f"- {name}: {item['share']:.1%} simulated frequency, "
+                         f"conditional home margin {item['mean_home_margin']}")
+        if build16.get('adverse_sensitivity',{}).get('counterfactuals'):
+            lines+=['', '### Build 16 same-seed adverse scripts (unfitted counterfactuals)']
+            for name,case in build16['adverse_sensitivity']['counterfactuals'].items():
+                lines.append(f"- {name}: home margin {case['mean_home_margin']:+.2f}")
     else:
-        lines += ['', '## Opponent-adjusted research challenger',
-                  'Not scored: '+str(advanced.get('status','NO_RESULT'))]
-    integrated=report.get('integrated_scoring_research_challenger') or {}
-    if integrated.get('simulation') is not None:
-        lines += ['', '## Integrated NFL-style CFB scoring challenger (research only)',
-                  f"Integrated score: {report['home']} {integrated['mean_score_home']:.1f}, "
-                  f"{report['away']} {integrated['mean_score_away']:.1f}; "
-                  f"home margin {integrated['mean_margin_home']:+.2f}",
-                  'Opponent-adjusted passing/rushing EPA drives scoring levels; '
-                  'limited situational residuals and matched turnover effects. Unfitted.']
-    else:lines += ['', '## Integrated CFB scoring challenger',
-                  'Not scored: '+str(integrated.get('status','NOT_RUN'))]
-    plus=report.get('integrated_scoring_plus_script_research') or {}
-    if plus.get('simulation') is not None:
-        lines += ['', '### Integrated scoring + Build 14 game script (research only)',
-                  f"Combined home margin {plus['mean_margin_home']:+.2f}. Not the primary pick."]
-    script=report.get('game_script_research_challenger') or {}
-    if script.get('status')=='UNFITTED_GAME_SCRIPT_CHALLENGER_NOT_PRIMARY':
-        lines += ['', '## Game-script distribution challenger (NOT the primary forecast)',
-                  f"Script projected score: {report['home']} {script['mean_score_home']:.1f}, "
-                  f"{report['away']} {script['mean_score_away']:.1f}",
-                  f"Script home margin: {script['mean_margin_home']:+.2f}; "
-                  f"p10/p50/p90 {script['margin_p10_p50_p90']}",
-                  'Possession volatility, turnover short fields, shared scoring conditions, '
-                  'and hypothetical halftime clock response. Unfitted; research only.']
-        for name,item in script.get('scenario_distributions',{}).items():
-            lines.append(f"- {name}: {item['share']:.1%} of draws, conditional home margin {item['mean_home_margin']}")
-    stress=report.get('game_script_adverse_sensitivity') or {}
-    if stress.get('scenarios'):
-        lines += ['', '### Conditional game-script stress tests (not probabilities)']
-        for name,scenario in stress['scenarios'].items():
-            lines.append(f"- {name}: home margin {scenario['mean_home_margin']:+.2f}")
+        lines+=['', '## Build 16 — research challenger unavailable',
+                'Reason: '+str(build16.get('status','MISSING'))]
     personnel=report.get('conditional_personnel_scenarios') or {}
     lines += ['', '## Personnel replacement evidence (conditional, NOT the primary forecast)']
     for side in ('home','away'):

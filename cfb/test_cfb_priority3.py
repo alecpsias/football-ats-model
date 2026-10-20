@@ -143,8 +143,8 @@ class Priority3(unittest.TestCase):
                     now='2026-10-19T12:10:00+00:00')
             obj=json.loads((Path(temp)/'out'/'103.json').read_text())
             self.assertEqual(obj['status'],'FROZEN_CFB_RESEARCH_MARGIN_NO_ATS_GRADE')
-            self.assertEqual(obj['game_script_research_challenger']['version'],VERSION)
-            self.assertTrue(obj['game_script_challenger_not_primary'])
+            self.assertEqual(obj['build16_challenger']['version'],'cfb-build16-unified-situational-v1')
+            self.assertTrue(obj['build16_not_primary'])
             self.assertEqual(obj['simulated_margin_home'],obj['simulation']['mean_margin_home'])
 
     def test_fresh_matchup_records_script(self):
@@ -155,8 +155,8 @@ class Priority3(unittest.TestCase):
                  patch('cfb.fresh_matchup.pd.read_parquet',side_effect=reader):
                 data=analyze(snap,'School A','School B',runs=100,min_games=2,now=RUN_AT)
             self.assertEqual(data['status'],'FRESH_PREGAME_PROJECTION_LOCKED')
-            self.assertEqual(data['game_script_research_challenger']['version'],VERSION)
-            self.assertIn('Game-script distribution challenger',markdown(data))
+            self.assertEqual(data['build16_challenger']['version'],'cfb-build16-unified-situational-v1')
+            self.assertIn('Build 16',markdown(data))
             self.assertEqual(data['simulated_margin_home'],data['simulation']['mean_margin_home'])
 
     def test_forward_grader_only_uses_frozen_candidate(self):
@@ -164,8 +164,8 @@ class Priority3(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             base=Path(temp); folder=base/'raw';frozen(folder)
             file=folder/(G+'.json');row=json.loads(file.read_text())
-            row['game_script_research_challenger']={'version':VERSION,
-                'status':'UNFITTED_GAME_SCRIPT_CHALLENGER_NOT_PRIMARY',
+            row['build16_challenger']={'version':'cfb-build16-unified-situational-v1',
+                'status':'AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY',
                 'mean_margin_home':12.,'margin_p10_p50_p90':[-2,12,26]}
             file.write_text(json.dumps(row))
             index=json.loads((folder/'index.json').read_text())
@@ -180,9 +180,9 @@ class Priority3(unittest.TestCase):
                     'https://github.com/sportsdataverse/data','a'*64)
             self.assertEqual(r['graded_final_games'],1)
             self.assertEqual(r['forward_margin']['mae'],14.)
-            self.assertEqual(r['game_script_challenger_forward']['on_same_games_script_mae'],8.)
-            self.assertEqual(r['game_script_challenger_forward']['on_same_games_baseline_mae'],14.)
-            self.assertTrue(r['scored_games'][0]['game_script_challenger']['margin_p10_p90_covered'])
+            self.assertEqual(r['build16_challenger_forward']['paired_build16_mae'],8.)
+            self.assertEqual(r['build16_challenger_forward']['paired_baseline_mae'],14.)
+            self.assertTrue(r['scored_games'][0]['build16_challenger']['margin_p10_p90_covered'])
 
     def test_postgame_uses_only_saven_original(self):
         source=(Path(__file__).parent/'fresh_matchup.py').read_text()

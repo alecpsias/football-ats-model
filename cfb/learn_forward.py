@@ -29,18 +29,11 @@ def observations(root):
             candidate={'game_id':gid,'kickoff_utc':kickoff.isoformat(),
                        'final_source_captured_at_utc':stamp.isoformat(),
                        'projected_margin':pred,'actual_margin':actual}
-            advanced=row.get('advanced_challenger')
-            if isinstance(advanced,dict) and advanced.get('status')=='ORIGINAL_FROZEN_RESEARCH_CANDIDATE':
-                v=advanced.get('projected_home_margin')
+            z=row.get('build16_challenger')
+            if isinstance(z,dict) and z.get('status')=='ORIGINAL_FROZEN_BUILD16_CHALLENGER':
+                v=z.get('projected_home_margin')
                 if isinstance(v,(float,int)) and math.isfinite(v):
-                    candidate['advanced_projected_margin']=float(v)
-            for key,field in (('integrated_scoring_challenger','integrated_projected_margin'),
-                              ('integrated_script_challenger','integrated_script_projected_margin')):
-                item=row.get(key)
-                if isinstance(item,dict) and item.get('status')=='ORIGINAL_FROZEN_INTEGRATED_RESEARCH_CANDIDATE':
-                    v=item.get('projected_home_margin')
-                    if isinstance(v,(float,int)) and math.isfinite(v):
-                        candidate[field]=float(v)
+                    candidate['build16_projected_margin']=float(v)
             if gid not in earliest or stamp<_date(earliest[gid]['final_source_captured_at_utc'],'first final source'):
                 earliest[gid]=candidate
     return sorted(earliest.values(),key=lambda z:(z['kickoff_utc'],z['game_id']))
@@ -77,78 +70,37 @@ def investigate(rows,min_games=120,gate_points=.5):
     out={'status':'INSUFFICIENT_GENUINE_FORWARD_GAMES','completed_forward_games':len(rows),
          'minimum_forward_games':min_games,'deploy_automatically':False,
          'selection':'requires >=0.5-point validation margin MAE gain; ATS still separately unvalidated'}
-    paired=[r for r in rows if 'advanced_projected_margin' in r]
-    out['advanced_challenger_paired_games']=len(paired)
-    out['advanced_challenger_status']='AWAITING_GENUINE_FORWARD_COMPARISON'
-    for key in ('integrated_projected_margin','integrated_script_projected_margin'):
-        out[key+'_paired_games']=sum(key in r for r in rows)
-        out[key+'_status']='AWAITING_GENUINE_FORWARD_COMPARISON'
+    out['build16_paired_games']=sum('build16_projected_margin' in r for r in rows)
+    out['build16_status']='AWAITING_GENUINE_FORWARD_COMPARISON'
     if len(rows)<min_games:return out
     parts=_splits(rows)
     if parts is None:return {**out,'reason':'Insufficient separated chronological game-date groups'}
     train,val,test=parts
-    # Compare archived challengers on matching pregame/final games only.
-    # Gate uses validation results, never the untouched test block.
-    if all('advanced_projected_margin' in r for r in rows):
-        def _pair_mae(group,k):
-            err=np.array([r[k]-r['actual_margin'] for r in group],dtype=float)
-            return round(float(np.abs(err).mean()),4)
-        bval=_pair_mae(val,'projected_margin')
-        aval=_pair_mae(val,'advanced_projected_margin')
-        passes=aval+gate_points<=bval
-        out['advanced_challenger_validation']={
-            'paired_train_games':len(train),'paired_validation_games':len(val),
-            'paired_untouched_test_games':len(test),
-            'baseline_validation_mae':bval,'advanced_validation_mae':aval,
-            'validation_gate_points':gate_points,'passes_gate':passes,
-            'holdout_baseline_mae':_pair_mae(test,'projected_margin'),
-            'holdout_advanced_mae':_pair_mae(test,'advanced_projected_margin'),
-            'deployment':'MANUAL_APPROVAL_REQUIRED_NO_AUTOMATIC_PROMOTION'}
-        out['advanced_challenger_status']=('VALIDATION_GATE_PASSED_AWAITING_MANUAL_REVIEW'
-                                           if passes else 'NOT_BETTER_ON_VALIDATION')
-    # Manual-validation gates for ORIGINAL frozen Build15 candidates.
-    # Availability can differ by game: only compare paired observations.
-    for key in ('integrated_projected_margin','integrated_script_projected_margin'):
-        a=[r for r in val if key in r]
-        t=[r for r in test if key in r]
-        if len(a)<20 or len(t)<20:
-            out[key+'_status']='INSUFFICIENT_PAIRED_VALIDATION_AND_TEST_GAMES'
-            continue
-        def _mae(group,name):
-            return round(sum(abs(r[name]-r['actual_margin']) for r in group)/len(group),4)
-        b=_mae(a,'projected_margin');c=_mae(a,key)
-        out[key+'_validation']={
-            'paired_validation_games':len(a),'paired_holdout_games':len(t),
-            'baseline_validation_mae':b,'candidate_validation_mae':c,
-            'validation_gain':round(b-c,4),'passes_validation_gate':(b-c)>=gate_points,
-            'holdout_baseline_mae':_mae(t,'projected_margin'),
-            'holdout_candidate_mae':_mae(t,key),
-            'auto_promoted':False,
-            'status':'REQUIRES_MANUAL_REVIEW_NO_ATS_VALIDATION'}
-        out[key+'_status']=('VALIDATION_GATE_PASSED_AWAITING_MANUAL_REVIEW'
+    # Only the original-frozen Build16 candidate may compete with baseline.
+    valpaired=[r for r in val if 'build16_projected_margin' in r]
+    testpaired=[r for r in test if 'build16_projected_margin' in r]
+    if len(valpaired)>=20 and len(testpaired)>=20:
+        def _mae(group,k):
+            return round(sum(abs(r[k]-r['actual_margin']) for r in group)/len(group),4)
+        b=_mae(valpaired,'projected_margin');c=_mae(valpaired,'build16_projected_margin')
+        out['build16_validation']={
+            'paired_validation_games':len(valpaired),
+            'paired_untouched_test_games':len(testpaired),
+            'baseline_validation_mae':b,'build16_validation_mae':c,
+            'validation_gain':round(b-c,4),'passes_gate':(b-c)>=gate_points,
+            'untouched_test_baseline_mae':_mae(testpaired,'projected_margin'),
+            'untouched_test_build16_mae':_mae(testpaired,'build16_projected_margin'),
+            'auto_promoted':False,'status':'REQUIRES_MANUAL_REVIEW_NO_ATS_VALIDATION'}
+        out['build16_status']=('VALIDATION_GATE_PASSED_AWAITING_MANUAL_REVIEW'
             if b-c>=gate_points else 'NOT_BETTER_ON_VALIDATION')
-    pred=np.array([r['projected_margin'] for r in train]);actual=np.array([r['actual_margin'] for r in train]);err=actual-pred
-    bias=float(np.clip(err.mean(),-7,7))
-    ridge=1000.;mu=float(pred.mean())
-    slope=float(np.clip(1+((pred-mu)*err).sum()/(((pred-mu)**2).sum()+ridge),.65,1.35))
-    funcs={'baseline':lambda z:z,'bias_adjusted':lambda z:z+bias,
-           'shrink_expand':lambda z:mu+(z-mu)*slope+bias}
-    val_scores={k:_err(val,f) for k,f in funcs.items()}
-    base=val_scores['baseline']['mae']
-    best=min((k for k in funcs if k!='baseline'),key=lambda k:val_scores[k]['mae'])
-    improvement=round(base-val_scores[best]['mae'],4)
-    eligible=improvement>=gate_points
-    chosen=best if eligible else 'baseline'
-    out.update({'status':'CANDIDATE_REQUIRES_MANUAL_REVIEW' if eligible else 'NO_VALIDATED_IMPROVEMENT',
-                'split_games':{'train':len(train),'validation':len(val),'untouched_test':len(test)},
-                'train_coefficients_research_only':{'bias':round(bias,6),'slope':round(slope,6),'train_margin_center':round(mu,6)},
-                'validation':val_scores,'best_candidate':best,'validation_mae_improvement':improvement,
-                'passes_validation_gate':eligible,
-                'untouched_test_baseline':_err(test,funcs['baseline']),
-                'untouched_test_selected':_err(test,funcs[chosen]),
-                'selection':f'Validation only; >= {gate_points:.2f} points MAE improvement',
-                'holdout_policy':'Never use this test split for later tuning; wait for new frozen games',
-                'ats_proven_edge':False,'deployment_status':'REQUIRES_EXPLICIT_APPROVAL_AND_FUTURE_ATS_VALIDATION'})
+    else:
+        out['build16_status']='INSUFFICIENT_PAIRED_VALIDATION_AND_TEST_GAMES'
+    out['split_games']={'train':len(train),'validation':len(val),'untouched_test':len(test)}
+    out['selection']='Original baseline versus frozen Build 16 only; validation precedes untouched test'
+    out['status']=('BUILD16_REQUIRES_MANUAL_REVIEW' if out['build16_status']=='VALIDATION_GATE_PASSED_AWAITING_MANUAL_REVIEW'
+                   else 'NO_VALIDATED_BUILD16_IMPROVEMENT')
+    out['ats_proven_edge']=False
+    out['deployment_status']='REQUIRES_EXPLICIT_APPROVAL_AND_FUTURE_ATS_VALIDATION'
     return out
 
 

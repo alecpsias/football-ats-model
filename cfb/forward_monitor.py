@@ -122,6 +122,20 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                         'baseline_absolute_error':round(abs(pred-actual),5),
                         'candidate_absolute_error':round(abs(float(cand)-actual),5),
                         'not_primary':True,'recomputed_after_kickoff':False}
+        challenger=p.get('build16_challenger')
+        if isinstance(challenger,dict) and challenger.get('status')=='AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY':
+            value=challenger.get('mean_margin_home')
+            if isinstance(value,(int,float)) and math.isfinite(float(value)):
+                interval=challenger.get('margin_p10_p50_p90') or []
+                row['build16_challenger']={
+                    'status':'ORIGINAL_FROZEN_BUILD16_CHALLENGER',
+                    'version':challenger.get('version'),
+                    'projected_home_margin':float(value),
+                    'baseline_absolute_error':round(abs(pred-actual),5),
+                    'candidate_absolute_error':round(abs(float(value)-actual),5),
+                    'margin_p10_p90_covered':(float(interval[0])<=actual<=float(interval[2])
+                        if len(interval)==3 else None),
+                    'recomputed_after_kickoff':False,'not_primary':True}
         # Personnel cases were frozen as counterfactual sensitivities. Without
         # independently confirmed pregame starter assignments they cannot be
         # selected with hindsight and scored as an honest forward prediction.
@@ -170,6 +184,22 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                        'research_side':decision,'result':outcome,
                        'correct_excluding_push_or_no_edge':success,
                        'flat_stake_unit_profit_research_only':round(pnl,5)}
+                # Same verified, jointly pre-kickoff quote: compare the ONE
+                # frozen Build16 alternative independently of baseline.
+                build16=row.get('build16_challenger')
+                if isinstance(build16,dict):
+                    bpred=build16['projected_home_margin'];bedge=bpred+spread
+                    bside=('HOME' if bedge>1e-8 else 'AWAY'
+                           if bedge< -1e-8 else 'NO_EDGE')
+                    bcorrect=(bside==outcome if bside!='NO_EDGE' and outcome!='PUSH' else None)
+                    row['ATS']['build16_research_comparison']={
+                        'candidate_frozen_pre_kickoff':True,
+                        'signed_home_spread':spread,
+                        'predicted_edge_at_observed_line':round(bedge,4),
+                        'research_side':bside,
+                        'correct_excluding_push_or_no_edge':bcorrect,
+                        'ats_calibrated':False,
+                        'original_book_quote_time_verified':False}
         scored.append(row)
     if scored:
         errors=[r['margin_error'] for r in scored]
@@ -210,36 +240,35 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
           'archived_forecast_games':len(forecasts),'graded_final_games':len(scored),
           'pending_games':len(pending),'pending':pending,
           'forward_margin':margin,
-          'advanced_challenger_forward':advanced_forward,
-          'game_script_challenger_forward':script_forward,
-          'integrated_scoring_forward':{
-              'paired_games':sum('integrated_scoring_challenger' in r for r in scored),
-              'not_primary':True,
-              'paired_baseline_mae':(round(sum(r['integrated_scoring_challenger']['baseline_absolute_error']
-                  for r in scored if 'integrated_scoring_challenger' in r)/
-                  sum('integrated_scoring_challenger' in r for r in scored),5)
-                  if any('integrated_scoring_challenger' in r for r in scored) else None),
-              'paired_integrated_mae':(round(sum(r['integrated_scoring_challenger']['candidate_absolute_error']
-                  for r in scored if 'integrated_scoring_challenger' in r)/
-                  sum('integrated_scoring_challenger' in r for r in scored),5)
-                  if any('integrated_scoring_challenger' in r for r in scored) else None)},
-          'integrated_script_forward':{
-              'paired_games':sum('integrated_script_challenger' in r for r in scored),
-              'not_primary':True,
-              'paired_baseline_mae':(round(sum(r['integrated_script_challenger']['baseline_absolute_error']
-                  for r in scored if 'integrated_script_challenger' in r)/
-                  sum('integrated_script_challenger' in r for r in scored),5)
-                  if any('integrated_script_challenger' in r for r in scored) else None),
-              'paired_integrated_mae':(round(sum(r['integrated_script_challenger']['candidate_absolute_error']
-                  for r in scored if 'integrated_script_challenger' in r)/
-                  sum('integrated_script_challenger' in r for r in scored),5)
-                  if any('integrated_script_challenger' in r for r in scored) else None)},
+          'build16_challenger_forward':{
+              'status':'RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED',
+              'paired_games':sum('build16_challenger' in r for r in scored),
+              'paired_baseline_mae':(round(sum(r['build16_challenger']['baseline_absolute_error']
+                  for r in scored if 'build16_challenger' in r)/
+                  sum('build16_challenger' in r for r in scored),5)
+                  if any('build16_challenger' in r for r in scored) else None),
+              'paired_build16_mae':(round(sum(r['build16_challenger']['candidate_absolute_error']
+                  for r in scored if 'build16_challenger' in r)/
+                  sum('build16_challenger' in r for r in scored),5)
+                  if any('build16_challenger' in r for r in scored) else None),
+              'not_primary':True},
           'personnel_conditional_forward':personnel_forward,
           'ats_provisional':{'complete_observed_quoted_games':len(ats),
             'research_decisions':len(graded),'wins':w,'losses':losses,'pushes':pushes,
             'cover_accuracy_excluding_pushes':round(w/(w+losses),5) if w+losses else None,
             'flat_stake_roi_per_decision':round(sum(x['flat_stake_unit_profit_research_only'] for x in graded)/len(graded),5) if graded else None,
             'ats_validated':False},
+          'build16_ats_provisional':{
+              'games_with_joint_pre_kickoff_line':sum(
+                 'build16_research_comparison' in x.get('ATS',{}) for x in scored),
+              'cover_accuracy_excluding_pushes_and_no_edge':(
+                 round(sum(x['ATS']['build16_research_comparison']['correct_excluding_push_or_no_edge'] is True
+                     for x in scored if 'build16_research_comparison' in x.get('ATS',{})) /
+                 sum(x['ATS']['build16_research_comparison']['correct_excluding_push_or_no_edge'] is not None
+                     for x in scored if 'build16_research_comparison' in x.get('ATS',{})),5)
+                 if any(x['ATS']['build16_research_comparison']['correct_excluding_push_or_no_edge'] is not None
+                     for x in scored if 'build16_research_comparison' in x.get('ATS',{})) else None),
+              'ats_validated':False},
           'scored_games':scored,
           'limitations':['No independently attested original sportsbook publication time',
             'GitHub archive commit must be independently checked to establish pregame durability',
