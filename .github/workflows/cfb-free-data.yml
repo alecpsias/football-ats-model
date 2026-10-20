@@ -1,6 +1,14 @@
 name: CFB free-data snapshot and schema audit
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-free-data.yml'
+      - 'cfb/**'
+      - '!cfb/archive/**'
+      - 'requirements-cfb.txt'
+
   workflow_dispatch:
     inputs:
       season:
@@ -8,6 +16,7 @@ on:
         required: true
         type: string
         default: '2026'
+
   schedule:
     # Mon/Wed/Fri around 12:19 UTC during college football season.
     - cron: '19 12 * 8-12 1,3,5'
