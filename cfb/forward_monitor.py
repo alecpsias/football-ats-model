@@ -82,6 +82,20 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
              'margin_error':round(pred-actual,5),'winner_direction_correct':((pred>0)==(actual>0) if actual!=0 and pred!=0 else None),
              'source_final_scores':{'home':int(hs),'away':int(ass)},
              'ATS':{'status':'NO_PREKICKOFF_SIGNED_SPREAD_OBSERVED'}}
+        # Evaluate the PRE-RECORDED challenger; never reconstruct after a final.
+        advanced=p.get('advanced_research_challenger')
+        if isinstance(advanced,dict) and advanced.get('status')=='AVAILABLE_UNCALIBRATED_RESEARCH_ONLY':
+            candidate=advanced.get('simulated_margin_home')
+            if isinstance(candidate,(int,float)) and math.isfinite(candidate):
+                row['advanced_challenger']={
+                    'status':'ORIGINAL_FROZEN_RESEARCH_CANDIDATE',
+                    'version':advanced.get('version'),
+                    'projected_home_margin':float(candidate),
+                    'margin_error':round(float(candidate)-actual,5),
+                    'candidate_absolute_error':round(abs(float(candidate)-actual),5),
+                    'baseline_absolute_error':round(abs(pred-actual),5),
+                    'better_than_baseline_this_game':abs(float(candidate)-actual)<abs(pred-actual),
+                    'not_deployed':True}
         m=quotes.get(gid)
         if m is not None:
             if (m['home']!=p['home'] or m['away']!=p['away'] or
@@ -129,6 +143,12 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
         eligible_dir=[r['winner_direction_correct'] for r in scored if r['winner_direction_correct'] is not None]
         margin['winner_direction_accuracy_not_ats']=(round(sum(eligible_dir)/len(eligible_dir),4) if eligible_dir else None)
     else:margin={'games':0,'mae':None,'rmse':None,'bias':None,'winner_direction_accuracy_not_ats':None}
+    paired=[r['advanced_challenger'] for r in scored if 'advanced_challenger' in r]
+    advanced_forward={'status':'RESEARCH_ONLY_NEVER_AUTO_DEPLOY',
+                      'games_with_frozen_challenger':len(paired),
+                      'on_same_games_baseline_mae':(round(sum(p['baseline_absolute_error'] for p in paired)/len(paired),4) if paired else None),
+                      'on_same_games_advanced_mae':(round(sum(p['candidate_absolute_error'] for p in paired)/len(paired),4) if paired else None),
+                      'on_same_games_advanced_improves_mae':(sum(p['candidate_absolute_error'] for p in paired)<sum(p['baseline_absolute_error'] for p in paired) if paired else None)}
     ats=[r['ATS'] for r in scored if r['ATS']['status']=='OBSERVED_PREKICKOFF_ESPN_PROVISIONAL']
     graded=[q for q in ats if q['research_side']!='NO_EDGE']
     w=sum(q['correct_excluding_push_or_no_edge'] is True for q in graded)
@@ -142,6 +162,7 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
           'archived_forecast_games':len(forecasts),'graded_final_games':len(scored),
           'pending_games':len(pending),'pending':pending,
           'forward_margin':margin,
+          'advanced_challenger_forward':advanced_forward,
           'ats_provisional':{'complete_observed_quoted_games':len(ats),
             'research_decisions':len(graded),'wins':w,'losses':losses,'pushes':pushes,
             'cover_accuracy_excluding_pushes':round(w/(w+losses),5) if w+losses else None,

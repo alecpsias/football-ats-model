@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 
 from cfb.engine import CFB_RULES, simulate
+from cfb.advanced_scoring import simulate_challenger
 from cfb.matchups import matchup_signals
 from cfb.calibration import calibrate
 from cfb.pipeline import verify, normalize_pbp_teams, iso_utc
@@ -228,7 +229,25 @@ def replay(snapshot, out, runs=1500, min_games=3):
                     result=simulate(hproj,aproj,runs=runs,
                                     seed=int(g.game_id)%(2**32),allow_overtime=True)
                     item[field]=result['mean_margin_home']
-                item.update(matchup_signals(home,away,history))
+                signals=matchup_signals(home,away,history)
+                item.update(signals)
+                item['completed_prior_games_home']=len(history[home])
+                item['completed_prior_games_away']=len(history[away])
+                # Same inputs, same random seed, frozen feature definitions.
+                # The advanced challenger NEVER overrides the original baseline.
+                for ablation,field in (('all','advanced_candidate_margin'),
+                                       ('sos_only','advanced_sos_only_margin'),
+                                       ('context_only','advanced_context_only_margin')):
+                    hp=project(history[home],history[away],bool(g.neutral_site),'home',False)
+                    ap=project(history[away],history[home],bool(g.neutral_site),'away',False)
+                    challenger=simulate_challenger(hp,ap,signals,len(history[home]),
+                                      len(history[away]),runs=runs,
+                                      seed=int(g.game_id)%(2**32),mode=ablation)
+                    item[field]=(challenger['simulated_margin_home']
+                                 if challenger['simulation'] is not None
+                                 else item['baseline_margin'])
+                    if ablation=='all':
+                        item['advanced_candidate_status']=challenger['status']
                 preds.append(item)
             additions.extend(((home,h),(away,a)))
         for t,r in additions:
@@ -248,6 +267,11 @@ def replay(snapshot, out, runs=1500, min_games=3):
         'chronologically_evaluated_games':len(preds),
         'holdout_games':len(holdout),
         'holdout_baseline':baseline,'holdout_epa_challenger':challenger,
+        'holdout_advanced_challenger':metrics(holdout,'advanced_candidate_margin'),
+        'holdout_advanced_sos_only':metrics(holdout,'advanced_sos_only_margin'),
+        'holdout_advanced_context_only':metrics(holdout,'advanced_context_only_margin'),
+        'advanced_challenger_status':'RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED',
+        'advanced_eligible_with_opponent_epa':sum(r['advanced_candidate_status']=='AVAILABLE_UNCALIBRATED_RESEARCH_ONLY' for r in holdout),
         'holdout_constant_home_advantage':metrics(benchmark,'constant_home_margin'),
         'candidate_improves_holdout_mae':
             challenger['mae']<baseline['mae'] if holdout else None,

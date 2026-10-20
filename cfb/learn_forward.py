@@ -29,6 +29,11 @@ def observations(root):
             candidate={'game_id':gid,'kickoff_utc':kickoff.isoformat(),
                        'final_source_captured_at_utc':stamp.isoformat(),
                        'projected_margin':pred,'actual_margin':actual}
+            advanced=row.get('advanced_challenger')
+            if isinstance(advanced,dict) and advanced.get('status')=='ORIGINAL_FROZEN_RESEARCH_CANDIDATE':
+                v=advanced.get('projected_home_margin')
+                if isinstance(v,(float,int)) and math.isfinite(v):
+                    candidate['advanced_projected_margin']=float(v)
             if gid not in earliest or stamp<_date(earliest[gid]['final_source_captured_at_utc'],'first final source'):
                 earliest[gid]=candidate
     return sorted(earliest.values(),key=lambda z:(z['kickoff_utc'],z['game_id']))
@@ -65,10 +70,32 @@ def investigate(rows,min_games=120,gate_points=.5):
     out={'status':'INSUFFICIENT_GENUINE_FORWARD_GAMES','completed_forward_games':len(rows),
          'minimum_forward_games':min_games,'deploy_automatically':False,
          'selection':'requires >=0.5-point validation margin MAE gain; ATS still separately unvalidated'}
+    paired=[r for r in rows if 'advanced_projected_margin' in r]
+    out['advanced_challenger_paired_games']=len(paired)
+    out['advanced_challenger_status']='AWAITING_GENUINE_FORWARD_COMPARISON'
     if len(rows)<min_games:return out
     parts=_splits(rows)
     if parts is None:return {**out,'reason':'Insufficient separated chronological game-date groups'}
     train,val,test=parts
+    # Compare archived challengers on matching pregame/final games only.
+    # Gate uses validation results, never the untouched test block.
+    if all('advanced_projected_margin' in r for r in rows):
+        def _pair_mae(group,k):
+            err=np.array([r[k]-r['actual_margin'] for r in group],dtype=float)
+            return round(float(np.abs(err).mean()),4)
+        bval=_pair_mae(val,'projected_margin')
+        aval=_pair_mae(val,'advanced_projected_margin')
+        passes=aval+gate_points<=bval
+        out['advanced_challenger_validation']={
+            'paired_train_games':len(train),'paired_validation_games':len(val),
+            'paired_untouched_test_games':len(test),
+            'baseline_validation_mae':bval,'advanced_validation_mae':aval,
+            'validation_gate_points':gate_points,'passes_gate':passes,
+            'holdout_baseline_mae':_pair_mae(test,'projected_margin'),
+            'holdout_advanced_mae':_pair_mae(test,'advanced_projected_margin'),
+            'deployment':'MANUAL_APPROVAL_REQUIRED_NO_AUTOMATIC_PROMOTION'}
+        out['advanced_challenger_status']=('VALIDATION_GATE_PASSED_AWAITING_MANUAL_REVIEW'
+                                           if passes else 'NOT_BETTER_ON_VALIDATION')
     pred=np.array([r['projected_margin'] for r in train]);actual=np.array([r['actual_margin'] for r in train]);err=actual-pred
     bias=float(np.clip(err.mean(),-7,7))
     ridge=1000.;mu=float(pred.mean())

@@ -17,6 +17,7 @@ from pathlib import Path
 
 import pandas as pd
 from cfb.engine import simulate
+from cfb.advanced_scoring import simulate_challenger
 from cfb.market import _date
 from cfb.matchups import matchup_signals
 from cfb.matchup_cycle import _market, postgame as compare_postgame, markdown as legacy_markdown, normalized
@@ -215,10 +216,14 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
         qmap={str(g.game_id):q} if q else {}
         sim=simulate(hp,ap,runs=runs,seed=int(g.game_id)%(2**32),
                      spread_home=q['quote']['spread_home'] if q else None)
+        advanced=simulate_challenger(hp,ap,signals,len(histories[hid]),
+                     len(histories[aid]),runs=runs,seed=int(g.game_id)%(2**32))
         # _market validates fixture, source observation and model creation time.
         proxy={**result,'simulated_margin_home':sim['mean_margin_home']}
         market=_market(proxy,qmap)
         result.update({'status':'FRESH_PREGAME_PROJECTION_LOCKED',
+                       'advanced_research_challenger':advanced,
+                       'advanced_challenger_not_primary':True,
                        'home_projection':hp,'away_projection':ap,
                        'matchup_evidence':signals,'simulation':sim,
                        'stress_tests':sensitivity(hp,ap,g.game_id),
@@ -278,6 +283,21 @@ def review(saved, saved_sha, saved_file, snapshot):
     quotes={saved['game_id']:q} if q else {}
     report=compare_postgame(p,quotes,schedule,pbp,roster,cutoff.isoformat(),
                   hashlib.sha256((root/'manifest.json').read_bytes()).hexdigest())
+    # Compare the SHA-locked challenger from the pregame file, never rerun it.
+    advanced=saved.get('advanced_research_challenger')
+    if report.get('status')=='FINAL_REVIEW_RECORDED' and isinstance(advanced,dict) and advanced.get('status')=='AVAILABLE_UNCALIBRATED_RESEARCH_ONLY':
+        candidate=advanced.get('simulated_margin_home')
+        actual=report['observed_final']['home_margin']
+        if isinstance(candidate,(int,float)) and math.isfinite(float(candidate)):
+            primary=float(saved['simulated_margin_home'])
+            report['original_advanced_challenger_comparison']={
+                'status':'LOCKED_RESEARCH_CHALLENGER_EVALUATED',
+                'model_version':advanced.get('version'),
+                'frozen_projected_home_margin':float(candidate),
+                'actual_home_margin':float(actual),
+                'baseline_absolute_error':round(abs(primary-actual),5),
+                'advanced_absolute_error':round(abs(float(candidate)-actual),5),
+                'not_deployed':True}
     report.update({'schema':'cfb_fresh_requested_postgame_v1',
                    'original_user_requested_pregame_file':saved_file,
                    'original_user_requested_pregame_sha256':saved_sha,
@@ -319,8 +339,15 @@ def requested_learning(review_folder, current=None):
 
 def markdown(report):
     if report['mode']=='postgame':
-        return legacy_markdown(report)+('\nOriginal user-requested file: '+
+        output=legacy_markdown(report)+('\nOriginal user-requested file: '+
                    report['original_user_requested_pregame_file']+'\n')
+        c=report.get('original_advanced_challenger_comparison')
+        if c:
+            output+=('\n## Original research challenger comparison\n'
+                f"Baseline absolute margin error: {c['baseline_absolute_error']:.2f}\n"
+                f"Advanced challenger absolute margin error: {c['advanced_absolute_error']:.2f}\n"
+                'Based only on pregame-saved challenger. No model promotion.\n')
+        return output
     if report['status']!='FRESH_PREGAME_PROJECTION_LOCKED':
         return '# CFB fresh matchup — insufficient observed data\n\n'+(
             f"{report['away']} at {report['home']}; prior games: "
@@ -342,6 +369,18 @@ def markdown(report):
            f"**Market:** {quote}. Confidence not calibrated.",
            '', '## Current opponent-context team statistics', '',
            f"| Metric | {report['home']} | {report['away']} |",'|---|---:|---:|']
+    advanced=report.get('advanced_research_challenger',{})
+    if advanced.get('simulation') is not None:
+        lines += ['', '## Opponent-adjusted experimental challenger (NOT the primary pick)',
+                  f"**Challenger score:** {report['home']} {advanced['simulated_score_home']:.1f}, "
+                  f"{report['away']} {advanced['simulated_score_away']:.1f}",
+                  f"**Challenger home margin:** {advanced['simulated_margin_home']:+.2f}",
+                  'Uses leave-opponent-out pass/rush EPA, explosives, third down, QB-hurry proxy, '
+                  'red-zone finishing, and field position where recorded.',
+                  'Experimental coefficients are NOT validated; do not confuse this with the primary forecast.']
+    else:
+        lines += ['', '## Opponent-adjusted research challenger',
+                  'Not scored: '+str(advanced.get('status','NO_RESULT'))]
     for label,group,key in (
         ('Offensive pass EPA/play','offense','epa_pass'),
         ('Offensive rush EPA/play','offense','epa_rush'),

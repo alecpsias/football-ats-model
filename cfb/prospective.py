@@ -15,6 +15,7 @@ from pathlib import Path
 import pandas as pd
 from cfb.engine import simulate, CFB_RULES
 from cfb.matchups import matchup_signals
+from cfb.advanced_scoring import simulate_challenger
 from cfb.pipeline import verify, split_games, normalize_pbp_teams, iso_utc
 from cfb.research_backtest import observed_game, project
 
@@ -94,11 +95,16 @@ def freeze(snapshot, out, runs=3000, days=7, min_games=3, now=None,
             hp=project(histories[hid],histories[aid],neutral,'home',False)
             ap=project(histories[aid],histories[hid],neutral,'away',False)
             sim=simulate(hp,ap,runs=runs,seed=int(g.game_id)%(2**32))
+            signals=matchup_signals(hid,aid,histories)
+            advanced=simulate_challenger(hp,ap,signals,len(histories[hid]),
+                        len(histories[aid]),runs=runs,seed=int(g.game_id)%(2**32))
+            base.update({'advanced_research_challenger':advanced,
+                         'advanced_challenger_not_primary':True})
             base.update({'status':'FROZEN_CFB_RESEARCH_MARGIN_NO_ATS_GRADE',
                 'completed_prior_games_home':len(histories[hid]),
                 'completed_prior_games_away':len(histories[aid]),
                 'home_projection':hp,'away_projection':ap,
-                'matchup_evidence':matchup_signals(hid,aid,histories),
+                'matchup_evidence':signals,
                 'simulated_margin_home':sim['mean_margin_home'],
                 'simulated_score_home':sim['mean_score_home'],
                 'simulated_score_away':sim['mean_score_away'],
