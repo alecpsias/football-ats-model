@@ -11,6 +11,7 @@ import pandas as pd
 from cfb.pipeline import (
     CFBError, iso_utc, source_urls, verify, split_games, normalize_pbp_teams,
     team_features, missing_features, play_stats, require, capture, report, REQUIRED_PBP,
+    validate_pbp_columns, standardize_pbp_columns,
 )
 
 CUTOFF = '2026-10-19T12:00:00Z'
@@ -95,6 +96,44 @@ class TestCFBPipeline(unittest.TestCase):
 
     def test_missing_actual_provider_column_fails(self):
         with self.assertRaises(CFBError):split_games(self.schedule,self.pbp.drop(columns='yards_gained'),CUTOFF)
+
+    def test_real_2026_release_aliases_and_numeric_ids(self):
+        # Contract reconstructed from the ACTUAL 2026 schema log, not guesswork.
+        p=self.pbp.rename(columns={
+            'drive_id':'drive.id',
+            'yards_gained':'statYardage',
+            'yards_to_goal':'start.yardsToEndzone',
+        }).drop(columns=['home','away','turnover'])
+        # IDs are ESPN game-side IDs, unlike potentially abbreviated team names.
+        ids={100:(1,2),101:(1,3),102:(2,4),103:(1,2),104:(11,12),105:(1,2)}
+        p['pos_team_id']=p.apply(lambda r: ids[r.game_id][0] if 'A espn' in r.pos_team and r.game_id!=102
+          or r.game_id==102 and r.pos_team=='B espn'
+          or r.game_id==104 and r.pos_team=='FCS X'
+          or r.game_id in (100,101,103,105) and r.pos_team=='A espn'
+          else ids[r.game_id][1],axis=1)
+        # For the purpose of the numeric ID test, names may disagree with schedule.
+        p['def_pos_team_id']=p.apply(lambda r: ids[r.game_id][0]+ids[r.game_id][1]-r.pos_team_id,axis=1)
+        p['pos_team']='Provider Name That Does Not Match Schedule'
+        p['def_pos_team']='Other Provider Alias'
+        validate_pbp_columns(p.columns)
+        hist,_,old=split_games(self.schedule,p,CUTOFF)
+        mapped=normalize_pbp_teams(old,hist)
+        self.assertIn('drive_id',mapped)
+        self.assertIn('yards_gained',mapped)
+        self.assertIn('yards_to_goal',mapped)
+        self.assertEqual(set(mapped[mapped.game_id==100].pos_team_id),{1,2})
+        self.assertGreater(team_features(1,mapped)['offense']['plays'],0)
+
+    def test_numeric_ids_must_agree_with_schedule(self):
+        p=self.pbp.rename(columns={
+            'drive_id':'drive.id','yards_gained':'statYardage',
+            'yards_to_goal':'start.yardsToEndzone',
+        }).drop(columns=['home','away','turnover'])
+        # Valid-looking IDs for wrong schools are rejected instead of fuzzy matched.
+        p['pos_team_id']=9999
+        p['def_pos_team_id']=8888
+        hist,_,old=split_games(self.schedule,p,CUTOFF)
+        with self.assertRaises(CFBError):normalize_pbp_teams(old,hist)
 
     def test_null_missing_pressure_qb_rushing_and_fumble_rate(self):
         h,_,old=split_games(self.schedule,self.pbp,CUTOFF)

@@ -24,17 +24,27 @@ ASSETS = {
     'schedule': ('cfb_schedules', 'cfb_schedules_{season}.parquet'),
     'roster': ('espn_cfb_rosters', 'cfb_rosters_{season}.parquet'),
 }
-# Field lists grounded in sportsdataverse/cfbfastR-cfb-data producer source.
-# IMPORTANT: release PBP has team *names*, 'drive_id', 'yards_gained', not
-# the raw source's pos_team_id, drive.id, statYardage.
+# Provenance: October 20, 2026 GitHub Actions run 39427591820 inspected
+# the ACTUAL released Parquet schema (88,293 PBP rows, 505 PBP columns).
+# Important: it contains 'drive.id', 'statYardage', 'start.yardsToEndzone',
+# 'pos_team_id' and 'def_pos_team_id', NOT the earlier assumed normalized names.
+# Keep the output feature names stable; normalize exact documented aliases.
 REQUIRED_SCHEDULE = ('game_id', 'start_date', 'completed', 'home_id', 'away_id',
                      'home_team', 'away_team', 'fbs_participant', 'home_division',
                      'away_division', 'neutral_site', 'start_time_tbd')
 REQUIRED_PBP = ('game_id', 'game_play_number', 'pos_team', 'def_pos_team',
-                'home', 'away', 'drive_id', 'pass', 'rush', 'EPA', 'down',
-                'distance', 'yards_gained', 'yards_to_goal', 'sack', 'int',
+                'pass', 'rush', 'EPA', 'down', 'distance', 'sack', 'int',
                 'firstD_by_yards', 'firstD_by_penalty', 'rush_td', 'pass_td',
-                'offense_score_play', 'td_play', 'turnover')
+                'offense_score_play', 'td_play')
+# The released PBP uses the second entry in each tuple; early synthetic
+# fixtures used the first. Each group needs at least one REAL column.
+PBP_ALIASES = {
+    'drive_id': ('drive_id', 'drive.id'),
+    'yards_gained': ('yards_gained', 'statYardage'),
+    'yards_to_goal': ('yards_to_goal', 'start.yardsToEndzone'),
+}
+PBP_PROVIDER_IDS = ('pos_team_id', 'def_pos_team_id')
+PBP_PROVIDER_LABELS = ('home', 'away', 'pos_team', 'def_pos_team')
 
 class CFBError(ValueError):
     pass
@@ -110,6 +120,29 @@ def require(df, columns, where):
     if absent:
         raise CFBError(f'{where}: missing release columns {absent}')
 
+def validate_pbp_columns(columns, where='PBP'):
+    """Check both common fields and the actual 2026 release's alias groups."""
+    fields=set(columns)
+    problems=sorted(set(REQUIRED_PBP)-fields)
+    for canonical, aliases in PBP_ALIASES.items():
+        if not fields.intersection(aliases):
+            problems.append(f'{canonical}: need one of {aliases}')
+    if not set(PBP_PROVIDER_IDS).issubset(fields) and not set(PBP_PROVIDER_LABELS).issubset(fields):
+        problems.append('team identity: need numeric pos_team_id/def_pos_team_id or verified home/away labels')
+    if problems:
+        raise CFBError(f'{where}: missing or incompatible release columns {problems}')
+    return True
+
+def standardize_pbp_columns(pbp):
+    """Canonical output names without changing units or inventing source data."""
+    validate_pbp_columns(pbp.columns)
+    out=pbp.copy()
+    for canonical, aliases in PBP_ALIASES.items():
+        if canonical not in out.columns:
+            source=next(c for c in aliases if c in out.columns)
+            out[canonical]=out[source]
+    return out
+
 def flag(s):
     """Return False only for observed False; caller handles missing separately."""
     return s.fillna(False).eq(True)
@@ -132,7 +165,7 @@ def split_games(schedule, pbp, cutoff):
     The caller must verify the immutable capture manifest first.
     """
     require(schedule, REQUIRED_SCHEDULE, 'schedule')
-    require(pbp, REQUIRED_PBP, 'pbp')
+    validate_pbp_columns(pbp.columns, 'pbp')
     s = schedule.copy()
     if s['game_id'].isna().any() or s['game_id'].duplicated().any():
         raise CFBError('Invalid or duplicate schedule game_id')
@@ -150,33 +183,45 @@ def split_games(schedule, pbp, cutoff):
     return history, future, past_plays
 
 def normalize_pbp_teams(pbp, history):
-    """Join actual ESPN home/away labels to stable schedule IDs by game_id.
+    """Match by ESPN numeric team IDs; fallback to unambiguous fixture labels.
 
-    No fuzzy matches or team-name guessing. A vendor mismatch is an error, not
-    grounds to silently assign all yards/turnovers to the wrong school.
+    Never guess team aliases. Provider IDs are verified against the same game's
+    authoritative schedule IDs, so wrong-side feature attribution fails hard.
     """
-    require(pbp, REQUIRED_PBP, 'pbp')
-    if pbp.empty:
-        return pbp.assign(pos_team_id=pd.Series(dtype='Int64'), def_pos_team_id=pd.Series(dtype='Int64'))
-    # Kickoffs, punts and dead-ball plays may have no unambiguous possession team.
-    # They are not included in pass/rush efficiency, so restrict validation to
-    # play rows that actually contribute to the model.
-    plays = pbp.loc[flag(pbp['pass']) ^ flag(pbp['rush'])].copy()
-    ids = history[['game_id', 'home_id', 'away_id']].copy()
-    data = plays.merge(ids, on='game_id', how='left', validate='many_to_one', indicator=True)
-    if (data['_merge'] != 'both').any() or data[['home_id', 'away_id']].isna().any().any():
-        raise CFBError('PBP game without matching schedule game ID or team IDs')
-    if data[['home', 'away', 'pos_team', 'def_pos_team']].isna().any().any():
-        raise CFBError('Missing ESPN team identity')
-    # Only the SAME provider's 'home' and 'away' labels are compared with pos_team.
-    ph = data['pos_team'].eq(data['home'])
-    pa = data['pos_team'].eq(data['away'])
-    dh = data['def_pos_team'].eq(data['home'])
-    da = data['def_pos_team'].eq(data['away'])
-    if not ((ph ^ pa) & (dh ^ da) & ph.eq(da) & pa.eq(dh)).all():
-        raise CFBError('PBP team cannot be unambiguously mapped using ESPN home/away labels')
-    data['pos_team_id'] = data['home_id'].where(ph, data['away_id'])
-    data['def_pos_team_id'] = data['home_id'].where(dh, data['away_id'])
+    data=standardize_pbp_columns(pbp)
+    # Ignore non-pass/rush events for this first-stage statistical engine.
+    data=data.loc[flag(data['pass']) ^ flag(data['rush'])].copy()
+    if data.empty:
+        if 'pos_team_id' not in data:data['pos_team_id']=pd.Series(dtype='Int64')
+        if 'def_pos_team_id' not in data:data['def_pos_team_id']=pd.Series(dtype='Int64')
+        return data
+    # Avoid column collisions with legacy fixtures; real files' raw team IDs
+    # are named pos_team_id and def_pos_team_id, not home_id and away_id.
+    refs=history[['game_id','home_id','away_id']]
+    data=data.merge(refs,on='game_id',how='left',validate='many_to_one',indicator=True)
+    if (data['_merge']!='both').any() or data[['home_id','away_id']].isna().any().any():
+        raise CFBError('PBP game has no verified matching schedule or team IDs')
+    if set(PBP_PROVIDER_IDS).issubset(data.columns):
+        if data[list(PBP_PROVIDER_IDS)].isna().any().any():
+            raise CFBError('Null provider team ID on contributing pass/rush play')
+        ph=data['pos_team_id'].eq(data['home_id'])
+        pa=data['pos_team_id'].eq(data['away_id'])
+        dh=data['def_pos_team_id'].eq(data['home_id'])
+        da=data['def_pos_team_id'].eq(data['away_id'])
+        if not ((ph ^ pa) & (dh ^ da) & ph.eq(da) & pa.eq(dh)).all():
+            raise CFBError('Provider PBP team IDs disagree with same-game schedule IDs')
+    else:
+        # Legacy synthetic fixtures only; actual 2026 release includes IDs.
+        if data[list(PBP_PROVIDER_LABELS)].isna().any().any():
+            raise CFBError('Null team label on contributing pass/rush play')
+        ph=data['pos_team'].eq(data['home'])
+        pa=data['pos_team'].eq(data['away'])
+        dh=data['def_pos_team'].eq(data['home'])
+        da=data['def_pos_team'].eq(data['away'])
+        if not ((ph ^ pa) & (dh ^ da) & ph.eq(da) & pa.eq(dh)).all():
+            raise CFBError('PBP team cannot be mapped by exact synthetic fixture labels')
+        data['pos_team_id']=data['home_id'].where(ph,data['away_id'])
+        data['def_pos_team_id']=data['home_id'].where(dh,data['away_id'])
     return data.drop(columns=['_merge'])
 
 def play_stats(rows, kind):
@@ -312,7 +357,7 @@ def report(folder, output, window_days=7):
     schedule = pd.read_parquet(root/'schedule.parquet')
     pbp = pd.read_parquet(root/'pbp.parquet')
     require(schedule, REQUIRED_SCHEDULE, 'actual schedule file')
-    require(pbp, REQUIRED_PBP, 'actual PBP file')
+    validate_pbp_columns(pbp.columns, 'actual PBP file')
     history, future, eligible = split_games(schedule,pbp,cutoff)
     mapped = normalize_pbp_teams(eligible,history)
     out = Path(output)
@@ -369,8 +414,15 @@ def inspect(folder, output):
         pqfile=pq.ParquetFile(file)
         fields={f.name:str(f.type) for f in pqfile.schema_arrow}
         required=REQUIRED_PBP if kind=='pbp' else REQUIRED_SCHEDULE if kind=='schedule' else ()
+        missing=sorted(set(required)-set(fields))
+        if kind=='pbp':
+            for canonical,aliases in PBP_ALIASES.items():
+                if not set(fields).intersection(aliases):
+                    missing.append(f'{canonical}: need one of {aliases}')
+            if not set(PBP_PROVIDER_IDS).issubset(fields) and not set(PBP_PROVIDER_LABELS).issubset(fields):
+                missing.append('missing numeric IDs and unambiguous provider team labels')
         result['datasets'][kind]={'rows':int(pqfile.metadata.num_rows),
-            'columns':fields, 'missing_required':sorted(set(required)-set(fields)),
+            'columns':fields, 'missing_required':missing,
             'sha256':manifest['datasets'][kind]['sha256'],
             'captured_at_utc':manifest['datasets'][kind]['captured_at_utc']}
     result['status']=('MISSING_REQUIRED_COLUMNS' if any(x['missing_required'] for x in result['datasets'].values())
