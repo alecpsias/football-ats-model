@@ -90,6 +90,7 @@ jobs:
         run: |
           python -m cfb.research_backtest \
             --snapshot "$SNAPSHOT" \
+            --availability-dir cfb/availability \
             --out cfb_artifacts/historical_replay \
             --runs 1500
       - name: Diagnose CFB margin misses and test individual features
@@ -101,6 +102,7 @@ jobs:
         run: |
           python -m cfb.prospective \
             --snapshot "$SNAPSHOT" \
+            --availability-dir cfb/availability \
             --out cfb_artifacts/prospective_frozen \
             --runs 3000 --days 7 \
             --git-sha "$GITHUB_SHA" \
@@ -176,6 +178,7 @@ jobs:
             --reviews cfb/archive/reviews \
             --odds cfb/_market_disabled \
             --snapshot "$SNAPSHOT" \
+            --availability-dir cfb/availability \
             --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
             --out "cfb/archive/reviews/${GITHUB_RUN_ID}.json"
           mkdir -p cfb_artifacts/matchup_request
@@ -250,6 +253,7 @@ jobs:
             --team-a "$CFB_TEAM_A" --team-b "$CFB_TEAM_B" \
             --game-id "$CFB_GAME_ID" \
             --snapshot "$SNAPSHOT" \
+            --availability-dir cfb/availability \
             --odds cfb/_market_disabled \
             --reviews cfb/archive/reviews \
             --runs 5000 \
