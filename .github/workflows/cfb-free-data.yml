@@ -52,6 +52,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cfb-audit-${{ github.run_id }}-${{ github.run_attempt }}
-          path: .github/workflows/cfb-free-data.yml
+          path: cfb_artifacts/
           if-no-files-found: warn
           retention-days: 30
