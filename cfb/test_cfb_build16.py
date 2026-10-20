@@ -164,4 +164,38 @@ class Build16Tests(unittest.TestCase):
         self.assertIn("'build16_candidate_margin'",(Path(__file__).parent/'research_backtest.py').read_text())
         self.assertIn("'build16_projected_margin'",(Path(__file__).parent/'learn_forward.py').read_text())
 
+class Build16HistoricalReplayCompatibility(unittest.TestCase):
+    def test_calibration_and_diagnostics_accept_only_build16(self):
+        from cfb.calibration import calibrate
+        from cfb.diagnostics import investigate
+        from datetime import datetime, timedelta, timezone
+        start=datetime(2026,1,1,tzinfo=timezone.utc)
+        games=[]
+        for i in range(120):
+            baseline=float((i%11)-5)
+            games.append({'game_id':str(401800000+i),
+                          'kickoff':(start+timedelta(days=i)).isoformat(),
+                          'home':'Alpha','away':'Bravo',
+                          'actual_margin':float(2*baseline+1),
+                          'baseline_margin':baseline,
+                          'build16_candidate_margin':baseline+.25,
+                          'sos_margin_feature':None,
+                          'context_margin_feature':None})
+        result=calibrate(games)
+        self.assertEqual(result['status'],'CFB_MARGIN_RESEARCH_VALIDATION_ONLY_NOT_ATS_VALIDATED')
+        self.assertEqual(result['untouched_holdout_games'],24)
+        self.assertIn('holdout_build16_challenger',result)
+        self.assertNotIn('holdout_old_epa_challenger',result)
+        self.assertIn('build16_delta',result['coefficients'])
+        diagnostic=investigate(games)
+        self.assertEqual(diagnostic['status'],'CFB_RETROSPECTIVE_DIAGNOSTICS_NO_ATS_VALIDATION')
+        self.assertIn('build16_delta',diagnostic['feature_coverage'])
+        self.assertNotIn('epa_delta',diagnostic['feature_coverage'])
+
+    def test_unavailable_build16_not_misrepresented_as_zero_effect(self):
+        from cfb.calibration import _design
+        with self.assertRaises(ValueError):
+            _design([{'baseline_margin':3.0,'build16_candidate_margin':None}])
+
+
 if __name__=='__main__':unittest.main()

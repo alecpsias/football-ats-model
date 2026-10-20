@@ -8,15 +8,28 @@ from __future__ import annotations
 import math
 import numpy as np
 
-FIELDS=('baseline_margin','epa_delta','sos_margin_feature','context_margin_feature')
+FIELDS=('baseline_margin','build16_delta','sos_margin_feature','context_margin_feature')
 PRIOR=np.array([0.,1.,0.,0.,0.],dtype=float)
 STRENGTHS=(10.,30.,100.,300.,1000.)
+
+
+def _build16_margin(r):
+    """Use the single live challenger, with legacy fixture compatibility only."""
+    if 'build16_candidate_margin' in r:
+        value=r['build16_candidate_margin']
+    elif 'epa_candidate_margin' in r:
+        value=r['epa_candidate_margin']  # Legacy unit-test fixture only.
+    else:
+        raise ValueError('Missing paired Build 16 margin for calibration')
+    if value is None or not math.isfinite(float(value)):
+        raise ValueError('Invalid or unavailable paired challenger margin')
+    return float(value)
 
 
 def _design(rows):
     arr=[]
     for r in rows:
-        base=float(r['baseline_margin']);epa=float(r['epa_candidate_margin'])-base
+        base=float(r['baseline_margin']);epa=_build16_margin(r)-base
         vals=[base,epa,r.get('sos_margin_feature'),r.get('context_margin_feature')]
         if not all(math.isfinite(float(v)) for v in vals if v is not None):
             raise ValueError('Nonfinite CFB margin feature')
@@ -93,8 +106,8 @@ def calibrate(rows,min_games=100):
             'coefficients':dict(zip(('intercept',)+FIELDS,(round(float(v),8) for v in weights))),
             'holdout_selected':_metrics(yt,pred),
             'holdout_baseline':_metrics(yt,Xt@PRIOR),
-            'holdout_old_epa_challenger':_metrics(yt,
-                    np.asarray([float(r['epa_candidate_margin']) for r in rows[second:]])),
+            'holdout_build16_challenger':_metrics(yt,
+                    np.asarray([_build16_margin(r) for r in rows[second:]])),
             'warnings':['RESEARCH ONLY: later-captured source is not historical as-of proof',
                         'Margin accuracy is not ATS accuracy',
                         'Do not tune coefficients using untouched holdout games',

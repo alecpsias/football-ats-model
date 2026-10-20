@@ -306,7 +306,9 @@ def replay(snapshot, out, runs=1500, min_games=3):
             'Build16 parameters uncalibrated; do not tune to previously examined holdout.',
             'Missing complete pressure/penalty/special teams data are never synthesized.'
         ]}
-    calibrated=calibrate(preds)
+    # Calibrate on the SAME eligible baseline/Build16 pairs; never impute a
+    # missing challenger as a zero-valued effect or revive retired variants.
+    calibrated=calibrate([r for r in preds if r['build16_candidate_margin'] is not None])
     summary['margin_calibration']=calibrated
     summary['feature_definitions']={
         'sos_margin_feature':'Leave-opponent-out pass/rush EPA differential using only preceding games',

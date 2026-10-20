@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 from cfb.calibration import _cut
 
-FEATURES = ('epa_delta', 'sos_margin_feature', 'context_margin_feature',
+FEATURES = ('build16_delta', 'sos_margin_feature', 'context_margin_feature',
             'sos_pass_epa_differential', 'sos_rush_epa_differential')
 
 
@@ -24,8 +24,9 @@ def _metric(y, p):
 
 def _feature(r, name):
     try:
-        value = (float(r['epa_candidate_margin'])-float(r['baseline_margin'])
-                 if name == 'epa_delta' else r.get(name))
+        value = ((float(r['build16_candidate_margin'] if 'build16_candidate_margin' in r
+                          else r['epa_candidate_margin'])-float(r['baseline_margin']))
+                 if name == 'build16_delta' else r.get(name))
         if value is None or not math.isfinite(float(value)):
             return None
         return float(value)
