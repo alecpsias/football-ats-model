@@ -216,12 +216,10 @@ class TestCFBPipeline(unittest.TestCase):
         result=normalize_pbp_teams(pd.concat([old,pd.DataFrame([invalid])],ignore_index=True),hist)
         self.assertEqual(len(result),len(old))
 
-    def test_strict_model_when_parent_available(self):
-        try:
-            from cfb.strict_forecast import forecast
-            from model import InputError
-        except ImportError:
-            self.skipTest('parent NFL/CFB model.py not installed in standalone test')
-        with self.assertRaises(InputError):forecast({'league':'CFB'})
+    def test_standalone_cfb_wrapper_fails_closed(self):
+        from cfb.strict_forecast import forecast
+        from cfb.engine import CFBEngineError
+        with self.assertRaises(CFBEngineError):
+            forecast({'league':'CFB'})
 
 if __name__ == '__main__': unittest.main()
