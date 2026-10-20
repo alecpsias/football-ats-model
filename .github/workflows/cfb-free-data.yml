@@ -13,7 +13,12 @@ on:
     - cron: '19 12 * 8-12 1,3,5'
 
 permissions:
-  contents: read
+  contents: write
+
+# Append-only archive writes must never cancel each other.
+concurrency:
+  group: cfb-archive-writes
+  cancel-in-progress: false
 
 jobs:
   cfb-snapshot:
@@ -66,6 +71,43 @@ jobs:
             --runs 3000 --days 7 \
             --git-sha "$GITHUB_SHA" \
             --github-run-id "$GITHUB_RUN_ID"
+      - name: Restore original October 20 frozen forecasts (unchanged)
+        run: |
+          python -m cfb.archive seed \
+            --source cfb/39445851316.zip \
+            --out cfb/archive/forecasts
+      - name: Package frozen original forecast bytes for durable archive
+        run: |
+          python -m cfb.archive pack \
+            --frozen cfb_artifacts/prospective_frozen \
+            --out cfb/archive/forecasts
+      - name: Collect freely observed ESPN spread and prices (if present)
+        run: |
+          python -m cfb.free_odds capture \
+            --forecasts cfb/archive/forecasts \
+            --out cfb/archive/odds \
+            --run-id "$GITHUB_RUN_ID" --days 7
+      - name: Grade completed frozen games using actual observed final scores
+        run: |
+          python -m cfb.forward_monitor \
+            --forecasts cfb/archive/forecasts \
+            --odds cfb/archive/odds \
+            --schedule "$SNAPSHOT/schedule.parquet" \
+            --manifest "$SNAPSHOT/manifest.json" \
+            --source-archive "cfb/archive/finals/${GITHUB_RUN_ID}.zip" \
+            --out "cfb/archive/grades/${GITHUB_RUN_ID}.json"
+          mkdir -p cfb_artifacts/forward_audit
+          cp "cfb/archive/grades/${GITHUB_RUN_ID}.json" cfb_artifacts/forward_audit/latest.json
+      - name: Publish append-only archives to GitHub (fails if write access absent)
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cfb/archive/forecasts cfb/archive/odds cfb/archive/finals cfb/archive/grades
+          git diff --cached --quiet && { echo "Nothing to archive"; exit 0; }
+          git commit -m "Archive CFB forecasts, source-observed odds and final-score audit ${GITHUB_RUN_ID}"
+          git pull --rebase origin main
+          git push origin HEAD:main
       - name: Prepare FREE pregame spread log template (not a quote)
         run: |
           python -m cfb.market template \
