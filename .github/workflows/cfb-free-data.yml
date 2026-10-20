@@ -1,0 +1,57 @@
+name: CFB free-data snapshot and schema audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      season:
+        description: CFB season to collect (default 2026)
+        required: true
+        type: string
+        default: '2026'
+  schedule:
+    # Mon/Wed/Fri around 12:19 UTC during college football season.
+    - cron: '19 12 * 8-12 1,3,5'
+
+permissions:
+  contents: read
+
+jobs:
+  cfb-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout NFL/CFB repository
+        uses: actions/checkout@v4
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free-data dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Reproducible CFB unit tests
+        run: python -m unittest discover -s tests -p 'test_cfb_pipeline.py' -v
+      - name: Collect immutable 2026 source data
+        env:
+          CFB_SEASON: ${{ inputs.season || '2026' }}
+        run: |
+          set -euo pipefail
+          SNAPSHOT="cfb_artifacts/snapshot_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}"
+          echo "SNAPSHOT=$SNAPSHOT" >> "$GITHUB_ENV"
+          python -m cfb.pipeline collect --season "$CFB_SEASON" --out "$SNAPSHOT"
+          python -m cfb.pipeline verify --snapshot "$SNAPSHOT"
+      - name: Audit real Parquet schemas before processing
+        run: |
+          set -euo pipefail
+          python -m cfb.pipeline inspect --snapshot "$SNAPSHOT" --out cfb_artifacts/actual_schema.json
+      - name: Generate strict pregame evidence only
+        run: |
+          set -euo pipefail
+          python -m cfb.pipeline report --snapshot "$SNAPSHOT" --out cfb_artifacts/evidence --days 7
+      - name: Upload checksums, schemas, and evidence for audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-audit-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .github/workflows/cfb-free-data.yml
+          if-no-files-found: warn
+          retention-days: 30
