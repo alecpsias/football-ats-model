@@ -17,6 +17,8 @@ import numpy as np
 import pandas as pd
 
 from cfb.engine import CFB_RULES, simulate
+from cfb.matchups import matchup_signals
+from cfb.calibration import calibrate
 from cfb.pipeline import verify, normalize_pbp_teams, iso_utc
 
 
@@ -63,12 +65,65 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids):
             qb_rush_epa = (float(matched.EPA.mean())
                            if len(matched) and matched.EPA.notna().all() else None)
 
-    return {'points':float(points),'conceded':float(conceded),
+    def event_count(df, indicator, subset=None):
+        if indicator not in df: return (None, None)
+        sample=df if subset is None else df.loc[df[subset].fillna(False).eq(True)]
+        if sample.empty or sample[indicator].isna().any(): return (None, None)
+        return (int(sample[indicator].eq(True).sum()), int(len(sample)))
+
+    def explosive(df, kind):
+        subset=df.loc[df[kind].fillna(False).eq(True)]
+        if subset.empty:return None,None
+        if 'yards_gained' not in subset or subset.yards_gained.isna().any():return None,None
+        y=pd.to_numeric(subset.yards_gained,errors='coerce')
+        if y.isna().any():return None,None
+        return int((y >= (20 if kind=='pass' else 10)).sum()),int(len(y))
+
+    pe,pn2=explosive(off,'pass'); re,rn2=explosive(off,'rush')
+    dp_e,dp_n=explosive(opp,'pass');dr_e,dr_n=explosive(opp,'rush')
+    hc,hn=event_count(off,'qb_hurry','pass')
+    dhc,dhn=event_count(opp,'qb_hurry','pass')
+    third=off.loc[off.down.eq(3)]; dthird=opp.loc[opp.down.eq(3)]
+    def third_rate(df):
+        required=('firstD_by_yards','firstD_by_penalty','rush_td','pass_td')
+        if df.empty or any(c not in df or df[c].isna().any() for c in required):return None,None
+        x=df[list(required)].eq(True).any(axis=1)
+        return int(x.sum()),int(len(x))
+    tc,tn=third_rate(third);dtc,dtn=third_rate(dthird)
+    # Recorded starting position and QB rushing remain optional, descriptive.
+    starts=off.sort_values('game_play_number').drop_duplicates('drive_id')
+    field_position=None
+    if 'yards_to_goal' in starts and len(starts):
+        vals=pd.to_numeric(starts.yards_to_goal,errors='coerce')
+        if vals.notna().all():field_position=float((100-vals).mean())
+    rz=off.loc[pd.to_numeric(off.yards_to_goal,errors='coerce').le(20)] if 'yards_to_goal' in off else off.iloc[:0]
+    redzone_drives=int(rz.drive_id.nunique()) if not rz.empty else 0
+    rz_td=int(rz.loc[rz.offense_score_play.eq(True)&rz.td_play.eq(True),'drive_id'].nunique()) if len(rz) else 0
+    drzone=opp.loc[pd.to_numeric(opp.yards_to_goal,errors='coerce').le(20)] if 'yards_to_goal' in opp else opp.iloc[:0]
+    faced_rz=int(drzone.drive_id.nunique()) if len(drzone) else 0
+    conceded_rz_tds=int(drzone.loc[drzone.offense_score_play.eq(True)&drzone.td_play.eq(True),'drive_id'].nunique()) if len(drzone) else 0
+
+    return {'opponent_id':int(opponent),
+            'points':float(points),'conceded':float(conceded),
             'drives':int(drives),'faced':int(faced),
             'off_pass_sum':op,'off_pass_n':pn,'off_rush_sum':or_,'off_rush_n':rn,
             'def_pass_sum':dp,'def_pass_n':dpn,'def_rush_sum':dr,'def_rush_n':drn,
             'interceptions':interceptions,'fumbles_lost':lost,
-            'qb_rushes':qb_rushes,'qb_rush_epa':qb_rush_epa}
+            'qb_rushes':qb_rushes,'qb_rush_epa':qb_rush_epa,
+            'pass_explosive_sum':pe,'pass_explosive_n':pn2,
+            'rush_explosive_sum':re,'rush_explosive_n':rn2,
+            'def_pass_explosive_sum':dp_e,'def_pass_explosive_n':dp_n,
+            'def_rush_explosive_sum':dr_e,'def_rush_explosive_n':dr_n,
+            'qb_hurries_sum':hc,'qb_hurries_n':hn,
+            'def_qb_hurries_sum':dhc,'def_qb_hurries_n':dhn,
+            'third_conversions_sum':tc,'third_conversions_n':tn,
+            'def_third_conversions_sum':dtc,'def_third_conversions_n':dtn,
+            'start_field_position':field_position,
+            'redzone_trips':redzone_drives,'redzone_tds':rz_td,
+            'def_redzone_trips':faced_rz,'def_redzone_tds':conceded_rz_tds,
+            'redzone_tds_sum':rz_td,'redzone_tds_n':redzone_drives,
+            'def_redzone_tds_sum':conceded_rz_tds,'def_redzone_tds_n':faced_rz}
+
 
 
 def project(team, opponent, neutral, side, use_epa):
@@ -142,8 +197,16 @@ def replay(snapshot, out, runs=1500, min_games=3):
     qb_ids={int(t):set(g.athlete_id.dropna()) for t,g in
             roster.loc[roster.position_abbreviation.eq('QB')].groupby('team_id')}
     history=defaultdict(list)
+    pending=[]
     preds=[]
     for kickoff, group in games.groupby('_kickoff',sort=True):
+        # Conservatively avoid using an earlier *kickoff* as if that game's
+        # final were already known. Its outcome becomes eligible a full 24h
+        # after kickoff; actual publish/final timestamps are not archived.
+        mature=[(ready,team,result) for ready,team,result in pending if ready<=kickoff]
+        pending=[item for item in pending if item[0]>kickoff]
+        for _,team,result in mature:
+            history[team].append(result)
         # Entire kickoff cluster is predicted before adding any same-time result.
         additions=[]
         for _,g in group.iterrows():
@@ -165,10 +228,11 @@ def replay(snapshot, out, runs=1500, min_games=3):
                     result=simulate(hproj,aproj,runs=runs,
                                     seed=int(g.game_id)%(2**32),allow_overtime=True)
                     item[field]=result['mean_margin_home']
+                item.update(matchup_signals(home,away,history))
                 preds.append(item)
             additions.extend(((home,h),(away,a)))
         for t,r in additions:
-            history[t].append(r)
+            pending.append((kickoff+pd.Timedelta(hours=24),t,r))
     preds.sort(key=lambda x:(x['kickoff'],x['game_id']))
     split=int(len(preds)*.7)
     while 1<split<len(preds) and preds[split-1]['kickoff']==preds[split]['kickoff']:
@@ -192,10 +256,21 @@ def replay(snapshot, out, runs=1500, min_games=3):
             'No market spreads or wager grades used; winner direction is NOT ATS accuracy.',
             'No future-game scores used in previous-matchup feature averages.',
             '2026 season results do not validate next-season predictions.',
+            'Historical game outcomes embargoed for 24 hours after kickoff; actual final publication times unavailable.',
             'CFB scoring coefficients and overtime outcomes are uncalibrated.',
             'QB roster evidence may have later updates; used only for descriptive tracking.'
         ]}
+    calibrated=calibrate(preds)
+    summary['margin_calibration']=calibrated
+    summary['feature_definitions']={
+        'sos_margin_feature':'Leave-opponent-out pass/rush EPA differential using only preceding games',
+        'context_margin_feature':'Observed explosive, third-down and QB-hurry paired rates; not a fitted effect',
+        'history_embargo':'Previous games are excluded until 24h after kickoff',
+        'qb_hurry':'QB hurry is not total defensive pressure',
+        'field_position':'Scrimmage drive-start average; omits some non-scrimmage drives'
+    }
     target=Path(out);target.mkdir(parents=True,exist_ok=True)
+    (target/'calibration.json').write_text(json.dumps(calibrated,indent=2)+'\n')
     (target/'margin_replay.json').write_text(json.dumps(preds,indent=2)+'\n')
     (target/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
     print(json.dumps(summary,indent=2))

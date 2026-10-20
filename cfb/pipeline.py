@@ -293,8 +293,8 @@ def opponent_averages(team, off, defense, all_plays):
             'opp_off_pass_epa_avg': result['off_pass'],
             'opp_off_rush_epa_avg': result['off_rush']}
 
-def team_features(team_id, pbp):
-    """Observed stats only. Missing pressure, personnel and QB rushing stay null."""
+def team_features(team_id, pbp, roster=None):
+    """Observed stats only; optional QB identity verified against the roster."""
     require(pbp, ('pos_team_id','def_pos_team_id'), 'mapped pbp')
     clean = pbp.loc[flag(pbp['pass']) ^ flag(pbp['rush'])].copy()
     offense = clean.loc[clean['pos_team_id'] == team_id]
@@ -311,8 +311,28 @@ def team_features(team_id, pbp):
             return None
         return float((flag(part['firstD_by_yards']) | flag(part['firstD_by_penalty']) |
                       flag(part['rush_td']) | flag(part['pass_td'])).mean())
-    # Don't interpret 'turnover' as lost fumble: it also includes interceptions.
-    # ESPN released schema has 'fumble_vec' (not equivalent to LOST fumbles).
+    # The actual 2026 PBP contains pos_fumble_lost. A fumble indicator alone
+    # is NOT equivalent to lost fumbles; fail closed if it is absent or null.
+    fumble_lost = boolean_rate(offense, 'pos_fumble_lost')
+    fumble_recovery = boolean_rate(defense, 'pos_fumble_lost')
+    qb_count = qb_epa = None
+    qb_ids = set()
+    if (roster is not None and all(c in roster for c in
+        ('team_id','position_abbreviation','athlete_id'))):
+        qb = roster.loc[roster['team_id'].eq(team_id) &
+                        roster['position_abbreviation'].eq('QB')]
+        qb_ids = set(qb['athlete_id'].dropna())
+    if qb_ids and 'rusher_player_id' in offense and games > 0:
+        rushes = orr.copy()
+        # An unidentified runner could be a QB scramble. Never treat those
+        # plays as known non-QB rushes.
+        if not rushes.empty and rushes['rusher_player_id'].notna().all():
+            qb_rushes = rushes.loc[rushes['rusher_player_id'].isin(qb_ids)]
+            qb_count = float(len(qb_rushes)/games)
+            qb_epa = mean(qb_rushes['EPA']) if len(qb_rushes) else None
+    # Hurries are a partial observed disruption stat, not full pressure rate.
+    hurry_allowed = boolean_rate(op, 'qb_hurry')
+    hurry_generated = boolean_rate(dp, 'qb_hurry')
     features = {
       'offense': {'games': games or None,'plays': len(offense) or None,
         'epa_pass':p['epa'],'epa_rush':r['epa'],
@@ -320,24 +340,26 @@ def team_features(team_id, pbp):
         'success_pass':p['success'],'success_rush':r['success'],
         'explosive_pass_rate':p['explosive'],'explosive_rush_rate':r['explosive'],
         'pressure_allowed':None,'sack_allowed':boolean_rate(op,'sack'),
-        'interception_rate':boolean_rate(op,'int'),'fumble_lost_rate':None,
+        'interception_rate':boolean_rate(op,'int'),'fumble_lost_rate':fumble_lost,
         'redzone_td_rate':od['redzone_td_rate'],'redzone_trips':od['redzone_trips'],
         'third_down_rate':third(offense),'drives_per_game':od['drives_per_game'],
         'plays_per_drive':od['plays_per_drive'],
-        'qb_rushes_per_game':None,'qb_rush_epa':None},
+        'qb_rushes_per_game':qb_count,'qb_rush_epa':qb_epa},
       'defense': {'plays':len(defense) or None,
         'epa_pass_allowed':pd_['epa'],'epa_rush_allowed':rd_['epa'],
         'success_pass_allowed':pd_['success'],'success_rush_allowed':rd_['success'],
         'explosive_pass_allowed':pd_['explosive'],'explosive_rush_allowed':rd_['explosive'],
         'pressure_generated':None,'sack_generated':boolean_rate(dp,'sack'),
         'interception_rate_forced':boolean_rate(dp,'int'),
-        'fumble_recovery_rate':None,'redzone_td_allowed':dd['redzone_td_rate'],
+        'fumble_recovery_rate':fumble_recovery,'redzone_td_allowed':dd['redzone_td_rate'],
         'redzone_trips_faced':dd['redzone_trips'],'third_down_allowed':third(defense),
         'drives_faced_per_game':dd['drives_per_game'],
         'plays_per_drive_allowed':dd['plays_per_drive']},
       'schedule':opponent_averages(team_id,offense,defense,clean),
       'context':{'avg_start_yardline':od['avg_start_yardline'],
-        'penalty_epa_per_game':None,'special_teams_epa_per_game':None}}
+        'penalty_epa_per_game':None,'special_teams_epa_per_game':None,
+        'observed_qb_hurry_allowed_rate_not_total_pressure':hurry_allowed,
+        'observed_qb_hurry_generated_rate_not_total_pressure':hurry_generated}}
     return features
 
 def missing_features(obj, prefix=''):
@@ -356,6 +378,7 @@ def report(folder, output, window_days=7):
     root = Path(folder)
     schedule = pd.read_parquet(root/'schedule.parquet')
     pbp = pd.read_parquet(root/'pbp.parquet')
+    roster = pd.read_parquet(root/'roster.parquet')
     require(schedule, REQUIRED_SCHEDULE, 'actual schedule file')
     validate_pbp_columns(pbp.columns, 'actual PBP file')
     history, future, eligible = split_games(schedule,pbp,cutoff)
@@ -369,7 +392,7 @@ def report(folder, output, window_days=7):
             continue
         for team in (game['home_id'],game['away_id']):
             if team not in teams:
-                teams[team] = team_features(team,mapped)
+                teams[team] = team_features(team,mapped,roster=roster)
         home,away = teams[game['home_id']],teams[game['away_id']]
         obj = {'schema':'cfb_pregame_evidence_v2','status':'INCOMPLETE_CORE_INPUTS_NO_ATS_PICK',
           'game_id':str(game['game_id']),'kickoff_utc':game['_kickoff'].isoformat(),
@@ -387,6 +410,9 @@ def report(folder, output, window_days=7):
           'market_status':'NO_TIMESTAMPED_VERIFIED_QUOTE',
           'source_sha256':{k:manifest['datasets'][k]['sha256'] for k in ASSETS},
           'historical_games_used':int(len(history)),
+          'missing_source_notes':['Observed QB hurries are not complete pressure',
+             'Penalty-only and special-teams-only plays not attributed by this scrimmage extractor',
+             'Roster identities are measured as of snapshot capture, not historically backdated'],
           'limitations':['Model grade and ATS probability not computed',
                          'Scrimmage-only drive count may omit non-scrimmage drives',
                          '2026 snapshot cannot be retrospectively used as-of a prior game',
