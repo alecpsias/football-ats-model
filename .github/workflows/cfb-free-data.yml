@@ -90,7 +90,6 @@ jobs:
         run: |
           python -m cfb.research_backtest \
             --snapshot "$SNAPSHOT" \
-            --availability-dir cfb/availability \
             --out cfb_artifacts/historical_replay \
             --runs 1500
       - name: Diagnose CFB margin misses and test individual features
@@ -102,7 +101,6 @@ jobs:
         run: |
           python -m cfb.prospective \
             --snapshot "$SNAPSHOT" \
-            --availability-dir cfb/availability \
             --out cfb_artifacts/prospective_frozen \
             --runs 3000 --days 7 \
             --git-sha "$GITHUB_SHA" \
