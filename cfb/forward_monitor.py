@@ -109,6 +109,19 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                     'baseline_absolute_error':round(abs(pred-actual),5),
                     'margin_p10_p90_covered':(float(interval[0])<=actual<=float(interval[2]) if len(interval)==3 else None),
                     'not_deployed':True,'resimulated_after_kickoff':False}
+        # Only evaluate challengers stored in the earliest original frozen record.
+        for key,field in (('integrated_scoring_research_challenger','integrated_scoring_challenger'),
+                          ('integrated_scoring_plus_script_research','integrated_script_challenger')):
+            z=p.get(key)
+            if isinstance(z,dict) and z.get('status')=='AVAILABLE_UNFITTED_INTEGRATED_RESEARCH_ONLY':
+                cand=z.get('mean_margin_home')
+                if isinstance(cand,(int,float)) and math.isfinite(float(cand)):
+                    row[field]={
+                        'status':'ORIGINAL_FROZEN_INTEGRATED_RESEARCH_CANDIDATE',
+                        'version':z.get('version'),'projected_home_margin':float(cand),
+                        'baseline_absolute_error':round(abs(pred-actual),5),
+                        'candidate_absolute_error':round(abs(float(cand)-actual),5),
+                        'not_primary':True,'recomputed_after_kickoff':False}
         # Personnel cases were frozen as counterfactual sensitivities. Without
         # independently confirmed pregame starter assignments they cannot be
         # selected with hindsight and scored as an honest forward prediction.
@@ -199,6 +212,28 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
           'forward_margin':margin,
           'advanced_challenger_forward':advanced_forward,
           'game_script_challenger_forward':script_forward,
+          'integrated_scoring_forward':{
+              'paired_games':sum('integrated_scoring_challenger' in r for r in scored),
+              'not_primary':True,
+              'paired_baseline_mae':(round(sum(r['integrated_scoring_challenger']['baseline_absolute_error']
+                  for r in scored if 'integrated_scoring_challenger' in r)/
+                  sum('integrated_scoring_challenger' in r for r in scored),5)
+                  if any('integrated_scoring_challenger' in r for r in scored) else None),
+              'paired_integrated_mae':(round(sum(r['integrated_scoring_challenger']['candidate_absolute_error']
+                  for r in scored if 'integrated_scoring_challenger' in r)/
+                  sum('integrated_scoring_challenger' in r for r in scored),5)
+                  if any('integrated_scoring_challenger' in r for r in scored) else None)},
+          'integrated_script_forward':{
+              'paired_games':sum('integrated_script_challenger' in r for r in scored),
+              'not_primary':True,
+              'paired_baseline_mae':(round(sum(r['integrated_script_challenger']['baseline_absolute_error']
+                  for r in scored if 'integrated_script_challenger' in r)/
+                  sum('integrated_script_challenger' in r for r in scored),5)
+                  if any('integrated_script_challenger' in r for r in scored) else None),
+              'paired_integrated_mae':(round(sum(r['integrated_script_challenger']['candidate_absolute_error']
+                  for r in scored if 'integrated_script_challenger' in r)/
+                  sum('integrated_script_challenger' in r for r in scored),5)
+                  if any('integrated_script_challenger' in r for r in scored) else None)},
           'personnel_conditional_forward':personnel_forward,
           'ats_provisional':{'complete_observed_quoted_games':len(ats),
             'research_decisions':len(graded),'wins':w,'losses':losses,'pushes':pushes,

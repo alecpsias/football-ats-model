@@ -19,6 +19,7 @@ import pandas as pd
 from cfb.engine import CFB_RULES, simulate
 from cfb.advanced_scoring import simulate_challenger
 from cfb.game_script import simulate_script
+from cfb.integrated_scoring import simulate_integrated
 from cfb.matchups import matchup_signals
 from cfb.calibration import calibrate
 from cfb.pipeline import verify, normalize_pbp_teams, iso_utc
@@ -83,6 +84,27 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids):
 
     pe,pn2=explosive(off,'pass'); re,rn2=explosive(off,'rush')
     dp_e,dp_n=explosive(opp,'pass');dr_e,dr_n=explosive(opp,'rush')
+    def success(df, kind):
+        z=df.loc[df[kind].fillna(False).eq(True)]
+        if z.empty or not {'down','distance','yards_gained'}.issubset(z.columns):
+            return None,None
+        down=pd.to_numeric(z.down,errors='coerce')
+        dist=pd.to_numeric(z.distance,errors='coerce')
+        gain=pd.to_numeric(z.yards_gained,errors='coerce')
+        if down.isna().any() or dist.isna().any() or gain.isna().any():
+            return None,None
+        threshold=dist.where(down>=3,dist*.7).where(down!=1,dist*.5)
+        return int((gain>=threshold).sum()),int(len(z))
+    ps,pns=success(off,'pass'); rs,rns=success(off,'rush')
+    dps,dpns=success(opp,'pass'); drs,drns=success(opp,'rush')
+    # Explicit source-backed *counts*: interception and lost fumble opportunities,
+    # offensive sacks allowed and defensive sacks made; no fillna=0 on nulls.
+    int_s,int_n=event_count(off,'int','pass')
+    dint_s,dint_n=event_count(opp,'int','pass')
+    fum_s,fum_n=event_count(off,'pos_fumble_lost')
+    dfum_s,dfum_n=event_count(opp,'pos_fumble_lost')
+    sack_s,sack_n=event_count(off,'sack','pass')
+    dsack_s,dsack_n=event_count(opp,'sack','pass')
     hc,hn=event_count(off,'qb_hurry','pass')
     dhc,dhn=event_count(opp,'qb_hurry','pass')
     third=off.loc[off.down.eq(3)]; dthird=opp.loc[opp.down.eq(3)]
@@ -111,11 +133,20 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids):
             'off_pass_sum':op,'off_pass_n':pn,'off_rush_sum':or_,'off_rush_n':rn,
             'def_pass_sum':dp,'def_pass_n':dpn,'def_rush_sum':dr,'def_rush_n':drn,
             'interceptions':interceptions,'fumbles_lost':lost,
+            'int_sum':int_s,'int_n':int_n,'def_int_sum':dint_s,'def_int_n':dint_n,
+            'fumble_sum':fum_s,'fumble_n':fum_n,
+            'def_fumble_sum':dfum_s,'def_fumble_n':dfum_n,
+            'sack_sum':sack_s,'sack_n':sack_n,
+            'def_sack_sum':dsack_s,'def_sack_n':dsack_n,
             'qb_rushes':qb_rushes,'qb_rush_epa':qb_rush_epa,
             'pass_explosive_sum':pe,'pass_explosive_n':pn2,
             'rush_explosive_sum':re,'rush_explosive_n':rn2,
             'def_pass_explosive_sum':dp_e,'def_pass_explosive_n':dp_n,
             'def_rush_explosive_sum':dr_e,'def_rush_explosive_n':dr_n,
+            'pass_success_sum':ps,'pass_success_n':pns,
+            'rush_success_sum':rs,'rush_success_n':rns,
+            'def_pass_success_sum':dps,'def_pass_success_n':dpns,
+            'def_rush_success_sum':drs,'def_rush_success_n':drns,
             'qb_hurries_sum':hc,'qb_hurries_n':hn,
             'def_qb_hurries_sum':dhc,'def_qb_hurries_n':dhn,
             'third_conversions_sum':tc,'third_conversions_n':tn,
@@ -239,6 +270,18 @@ def replay(snapshot, out, runs=1500, min_games=3):
                 item['game_script_candidate_p10_p90']=[script['margin_p10_p50_p90'][0],script['margin_p10_p50_p90'][2]]
                 item['game_script_candidate_win_probability_raw']=script['home_win_probability_raw']
                 item['game_script_candidate_version']=script['version']
+                integrated=simulate_integrated(home,away,history,bool(g.neutral_site),
+                    runs=runs,seed=int(g.game_id)%(2**32))
+                combined=simulate_integrated(home,away,history,bool(g.neutral_site),
+                    runs=runs,seed=int(g.game_id)%(2**32),use_script=True)
+                item['integrated_scoring_status']=integrated['status']
+                item['integrated_script_status']=combined['status']
+                # No-lookahead missingness: excluded from paired comparison,
+                # never silently replaced by a baseline forecast.
+                item['integrated_scoring_candidate_margin']=(integrated.get('mean_margin_home')
+                    if integrated.get('simulation') is not None else None)
+                item['integrated_script_candidate_margin']=(combined.get('mean_margin_home')
+                    if combined.get('simulation') is not None else None)
                 item.update(signals)
                 item['completed_prior_games_home']=len(history[home])
                 item['completed_prior_games_away']=len(history[away])
@@ -278,6 +321,19 @@ def replay(snapshot, out, runs=1500, min_games=3):
         'holdout_baseline':baseline,'holdout_epa_challenger':challenger,
         'holdout_advanced_challenger':metrics(holdout,'advanced_candidate_margin'),
         'holdout_game_script_challenger':metrics(holdout,'game_script_candidate_margin'),
+        'integrated_scoring_candidate':{
+            'status':'RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED',
+            'eligible_holdout_games':sum(r['integrated_scoring_candidate_margin'] is not None for r in holdout),
+            'unavailable_holdout_games':sum(r['integrated_scoring_candidate_margin'] is None for r in holdout),
+            'paired_baseline':metrics([r for r in holdout if r['integrated_scoring_candidate_margin'] is not None],'baseline_margin'),
+            'paired_integrated':metrics([r for r in holdout if r['integrated_scoring_candidate_margin'] is not None],'integrated_scoring_candidate_margin'),
+            'not_primary':True},
+        'integrated_scoring_plus_script_candidate':{
+            'status':'RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED',
+            'eligible_holdout_games':sum(r['integrated_script_candidate_margin'] is not None for r in holdout),
+            'paired_baseline':metrics([r for r in holdout if r['integrated_script_candidate_margin'] is not None],'baseline_margin'),
+            'paired_integrated_plus_script':metrics([r for r in holdout if r['integrated_script_candidate_margin'] is not None],'integrated_script_candidate_margin'),
+            'not_primary':True},
         'game_script_interval_p10_p90_coverage':(round(sum(
             r['game_script_candidate_p10_p90'][0]<=r['actual_margin']<=r['game_script_candidate_p10_p90'][1]
             for r in holdout)/len(holdout),4) if holdout else None),

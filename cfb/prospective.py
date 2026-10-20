@@ -17,6 +17,7 @@ from cfb.engine import simulate, CFB_RULES
 from cfb.matchups import matchup_signals
 from cfb.advanced_scoring import simulate_challenger
 from cfb.game_script import simulate_script
+from cfb.integrated_scoring import simulate_integrated
 from cfb.personnel import quarterback_usage, load_official_statuses
 from cfb.personnel_effects import (quarterback_effects, skill_player_exposures,
                                    simulate_personnel_scenarios, other_position_availability)
@@ -102,6 +103,10 @@ def freeze(snapshot, out, runs=3000, days=7, min_games=3, now=None,
             signals=matchup_signals(hid,aid,histories)
             advanced=simulate_challenger(hp,ap,signals,len(histories[hid]),
                         len(histories[aid]),runs=runs,seed=int(g.game_id)%(2**32))
+            integrated=simulate_integrated(hid,aid,histories,neutral,
+                        runs=runs,seed=int(g.game_id)%(2**32))
+            integrated_script=simulate_integrated(hid,aid,histories,neutral,
+                        runs=runs,seed=int(g.game_id)%(2**32),use_script=True)
             script=simulate_script(hp,ap,histories[hid],histories[aid],
                         runs=runs,seed=int(g.game_id)%(2**32))
             # Prepared from the *same* pre-kickoff history as the primary model.
@@ -115,7 +120,10 @@ def freeze(snapshot, out, runs=3000, days=7, min_games=3, now=None,
                    'away':skill_player_exposures(mapped,history,roster,aid,statuses)}
             scenario=simulate_personnel_scenarios(hp,ap,pe['home'],pe['away'],
                 runs=runs,seed=int(g.game_id)%(2**32))
-            base.update({'game_script_research_challenger':script,
+            base.update({'integrated_scoring_research_challenger':integrated,
+                         'integrated_scoring_plus_script_research':integrated_script,
+                         'integrated_challengers_not_primary':True,
+                         'game_script_research_challenger':script,
                          'game_script_challenger_not_primary':True,
                          'advanced_research_challenger':advanced,
                          'advanced_challenger_not_primary':True,

@@ -34,6 +34,13 @@ def observations(root):
                 v=advanced.get('projected_home_margin')
                 if isinstance(v,(float,int)) and math.isfinite(v):
                     candidate['advanced_projected_margin']=float(v)
+            for key,field in (('integrated_scoring_challenger','integrated_projected_margin'),
+                              ('integrated_script_challenger','integrated_script_projected_margin')):
+                item=row.get(key)
+                if isinstance(item,dict) and item.get('status')=='ORIGINAL_FROZEN_INTEGRATED_RESEARCH_CANDIDATE':
+                    v=item.get('projected_home_margin')
+                    if isinstance(v,(float,int)) and math.isfinite(v):
+                        candidate[field]=float(v)
             if gid not in earliest or stamp<_date(earliest[gid]['final_source_captured_at_utc'],'first final source'):
                 earliest[gid]=candidate
     return sorted(earliest.values(),key=lambda z:(z['kickoff_utc'],z['game_id']))
@@ -73,6 +80,9 @@ def investigate(rows,min_games=120,gate_points=.5):
     paired=[r for r in rows if 'advanced_projected_margin' in r]
     out['advanced_challenger_paired_games']=len(paired)
     out['advanced_challenger_status']='AWAITING_GENUINE_FORWARD_COMPARISON'
+    for key in ('integrated_projected_margin','integrated_script_projected_margin'):
+        out[key+'_paired_games']=sum(key in r for r in rows)
+        out[key+'_status']='AWAITING_GENUINE_FORWARD_COMPARISON'
     if len(rows)<min_games:return out
     parts=_splits(rows)
     if parts is None:return {**out,'reason':'Insufficient separated chronological game-date groups'}
@@ -96,6 +106,27 @@ def investigate(rows,min_games=120,gate_points=.5):
             'deployment':'MANUAL_APPROVAL_REQUIRED_NO_AUTOMATIC_PROMOTION'}
         out['advanced_challenger_status']=('VALIDATION_GATE_PASSED_AWAITING_MANUAL_REVIEW'
                                            if passes else 'NOT_BETTER_ON_VALIDATION')
+    # Manual-validation gates for ORIGINAL frozen Build15 candidates.
+    # Availability can differ by game: only compare paired observations.
+    for key in ('integrated_projected_margin','integrated_script_projected_margin'):
+        a=[r for r in val if key in r]
+        t=[r for r in test if key in r]
+        if len(a)<20 or len(t)<20:
+            out[key+'_status']='INSUFFICIENT_PAIRED_VALIDATION_AND_TEST_GAMES'
+            continue
+        def _mae(group,name):
+            return round(sum(abs(r[name]-r['actual_margin']) for r in group)/len(group),4)
+        b=_mae(a,'projected_margin');c=_mae(a,key)
+        out[key+'_validation']={
+            'paired_validation_games':len(a),'paired_holdout_games':len(t),
+            'baseline_validation_mae':b,'candidate_validation_mae':c,
+            'validation_gain':round(b-c,4),'passes_validation_gate':(b-c)>=gate_points,
+            'holdout_baseline_mae':_mae(t,'projected_margin'),
+            'holdout_candidate_mae':_mae(t,key),
+            'auto_promoted':False,
+            'status':'REQUIRES_MANUAL_REVIEW_NO_ATS_VALIDATION'}
+        out[key+'_status']=('VALIDATION_GATE_PASSED_AWAITING_MANUAL_REVIEW'
+            if b-c>=gate_points else 'NOT_BETTER_ON_VALIDATION')
     pred=np.array([r['projected_margin'] for r in train]);actual=np.array([r['actual_margin'] for r in train]);err=actual-pred
     bias=float(np.clip(err.mean(),-7,7))
     ridge=1000.;mu=float(pred.mean())

@@ -19,6 +19,7 @@ import pandas as pd
 from cfb.engine import simulate
 from cfb.advanced_scoring import simulate_challenger
 from cfb.game_script import simulate_script, adverse_scripts
+from cfb.integrated_scoring import simulate_integrated
 from cfb.market import _date
 from cfb.matchups import matchup_signals
 from cfb.matchup_cycle import _market, postgame as compare_postgame, markdown as legacy_markdown, normalized
@@ -231,6 +232,12 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
                      spread_home=q['quote']['spread_home'] if q else None)
         advanced=simulate_challenger(hp,ap,signals,len(histories[hid]),
                      len(histories[aid]),runs=runs,seed=int(g.game_id)%(2**32))
+        integrated=simulate_integrated(hid,aid,histories,neutral,
+                     runs=runs,seed=int(g.game_id)%(2**32),
+                     spread_home=q['quote']['spread_home'] if q else None)
+        integrated_script=simulate_integrated(hid,aid,histories,neutral,
+                     runs=runs,seed=int(g.game_id)%(2**32),use_script=True,
+                     spread_home=q['quote']['spread_home'] if q else None)
         script=simulate_script(hp,ap,histories[hid],histories[aid],runs=runs,
                      seed=int(g.game_id)%(2**32),
                      spread_home=q['quote']['spread_home'] if q else None)
@@ -244,6 +251,9 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
         result.update({'status':'FRESH_PREGAME_PROJECTION_LOCKED',
                        'game_script_adverse_sensitivity':scripts_stress,
                        'game_script_research_challenger':script,
+                       'integrated_scoring_research_challenger':integrated,
+                       'integrated_scoring_plus_script_research':integrated_script,
+                       'integrated_challengers_not_primary':True,
                        'game_script_challenger_not_primary':True,
                        'advanced_research_challenger':advanced,
                        'advanced_challenger_not_primary':True,
@@ -338,6 +348,20 @@ def review(saved, saved_sha, saved_file, snapshot):
                 'game_script_absolute_error':round(abs(float(cand)-actual),5),
                 'inside_candidate_p10_p90':(float(interval[0])<=actual<=float(interval[2]) if len(interval)==3 else None),
                 'recomputed_after_game':False,'not_deployed':True}
+    # Compare only the original pregame archived integrated scoring estimates.
+    if report.get('status')=='FINAL_REVIEW_RECORDED':
+        for key,outkey in (('integrated_scoring_research_challenger','original_integrated_scoring_comparison'),
+                            ('integrated_scoring_plus_script_research','original_integrated_script_comparison')):
+            z=saved.get(key)
+            if isinstance(z,dict) and z.get('status')=='AVAILABLE_UNFITTED_INTEGRATED_RESEARCH_ONLY':
+                cand=z.get('mean_margin_home')
+                if isinstance(cand,(int,float)) and math.isfinite(float(cand)):
+                    actual=float(report['observed_final']['home_margin'])
+                    primary=float(saved['simulated_margin_home'])
+                    report[outkey]={'version':z.get('version'),'frozen_projected_home_margin':float(cand),
+                         'actual_home_margin':actual,'baseline_absolute_error':round(abs(primary-actual),5),
+                         'integrated_absolute_error':round(abs(float(cand)-actual),5),
+                         'recomputed_after_game':False,'not_primary':True}
     # Frozen conditional personnel scenarios are not picks: the model did not
     # predict or attest who started. Record what was known, never retro-select a
     # matching alternate after observing the box score.
@@ -409,6 +433,12 @@ def markdown(report):
                 f"Baseline margin error: {g['baseline_absolute_error']:.2f}\n"
                 f"Script challenger margin error: {g['game_script_absolute_error']:.2f}\n"
                 'Compared using the original pregame record only. No automatic promotion.\n')
+        for k in ('original_integrated_scoring_comparison','original_integrated_script_comparison'):
+            c=report.get(k)
+            if c:
+                output+=(f"\n## {k.replace('_',' ').title()} (frozen only)\n"
+                         f"Baseline margin error: {c['baseline_absolute_error']:.2f}; "
+                         f"integrated error: {c['integrated_absolute_error']:.2f}.\n")
         return output
     if report['status']!='FRESH_PREGAME_PROJECTION_LOCKED':
         return '# CFB fresh matchup — insufficient observed data\n\n'+(
@@ -443,6 +473,20 @@ def markdown(report):
     else:
         lines += ['', '## Opponent-adjusted research challenger',
                   'Not scored: '+str(advanced.get('status','NO_RESULT'))]
+    integrated=report.get('integrated_scoring_research_challenger') or {}
+    if integrated.get('simulation') is not None:
+        lines += ['', '## Integrated NFL-style CFB scoring challenger (research only)',
+                  f"Integrated score: {report['home']} {integrated['mean_score_home']:.1f}, "
+                  f"{report['away']} {integrated['mean_score_away']:.1f}; "
+                  f"home margin {integrated['mean_margin_home']:+.2f}",
+                  'Opponent-adjusted passing/rushing EPA drives scoring levels; '
+                  'limited situational residuals and matched turnover effects. Unfitted.']
+    else:lines += ['', '## Integrated CFB scoring challenger',
+                  'Not scored: '+str(integrated.get('status','NOT_RUN'))]
+    plus=report.get('integrated_scoring_plus_script_research') or {}
+    if plus.get('simulation') is not None:
+        lines += ['', '### Integrated scoring + Build 14 game script (research only)',
+                  f"Combined home margin {plus['mean_margin_home']:+.2f}. Not the primary pick."]
     script=report.get('game_script_research_challenger') or {}
     if script.get('status')=='UNFITTED_GAME_SCRIPT_CHALLENGER_NOT_PRIMARY':
         lines += ['', '## Game-script distribution challenger (NOT the primary forecast)',
