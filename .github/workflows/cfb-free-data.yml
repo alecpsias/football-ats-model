@@ -1,6 +1,8 @@
 name: CFB free-data snapshot and schema audit
 
 on:
+  issues:
+    types: [opened]
   push:
     branches: [main]
     paths:
@@ -8,6 +10,7 @@ on:
       - 'cfb/**'
       - '!cfb/archive/**'
       - 'requirements-cfb.txt'
+      - 'cfb/issue_request.py'
 
   workflow_dispatch:
     inputs:
@@ -43,6 +46,7 @@ on:
 
 permissions:
   contents: write
+  issues: read
 
 # Append-only archive writes must never cancel each other.
 concurrency:
@@ -51,6 +55,7 @@ concurrency:
 
 jobs:
   cfb-snapshot:
+    if: ${{ github.event_name != 'issues' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -111,6 +116,7 @@ jobs:
             --frozen cfb_artifacts/prospective_frozen \
             --out cfb/archive/forecasts
       - name: Recover valid pregame odds from the original Oct 20 captured raw ESPN bytes
+        if: ${{ vars.CFB_CAPTURE_ODDS == 'true' }}
         run: |
           if test -f cfb/archive/odds/recovered/39452026663.zip; then
             python -m cfb.free_odds verify cfb/archive/odds/recovered/39452026663.zip
@@ -121,6 +127,7 @@ jobs:
               --out cfb/archive/odds/recovered/39452026663.zip
           fi
       - name: Collect freely observed ESPN spread and prices (if present)
+        if: ${{ vars.CFB_CAPTURE_ODDS == 'true' }}
         run: |
           python -m cfb.free_odds capture \
             --forecasts cfb/archive/forecasts \
@@ -167,7 +174,7 @@ jobs:
             --team-a "$CFB_TEAM_A" --team-b "$CFB_TEAM_B" \
             --game-id "$CFB_GAME_ID" \
             --reviews cfb/archive/reviews \
-            --odds cfb/archive/odds \
+            --odds cfb/_market_disabled \
             --snapshot "$SNAPSHOT" \
             --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
             --out "cfb/archive/reviews/${GITHUB_RUN_ID}.json"
@@ -185,11 +192,13 @@ jobs:
           git pull --rebase origin main
           git push origin HEAD:main
       - name: Prepare FREE pregame spread log template (not a quote)
+        if: ${{ vars.CFB_CAPTURE_ODDS == 'true' }}
         run: |
           python -m cfb.market template \
             --index cfb_artifacts/evidence/index.json \
             --out cfb_artifacts/pregame_market_template.csv
       - name: Grade ATS only with supplied timestamped free-source captures
+        if: ${{ vars.CFB_CAPTURE_ODDS == 'true' }}
         run: |
           python -m cfb.market grade \
             --replay cfb_artifacts/historical_replay/margin_replay.json \
@@ -202,5 +211,67 @@ jobs:
         with:
           name: cfb-audit-${{ github.run_id }}-${{ github.run_attempt }}
           path: cfb_artifacts/
+          if-no-files-found: warn
+          retention-days: 90
+
+
+  requested-matchup-from-issue:
+    # Only the repository owner's explicitly structured CFB issue may launch this job.
+    # Other issues cannot cause a data download or repository write.
+    if: ${{ github.event_name == 'issues' && github.event.action == 'opened' && github.event.issue.title == 'CFB Matchup Request' && github.event.issue.user.login == github.repository_owner }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout CFB repository
+        uses: actions/checkout@v4
+      - name: Configure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install FREE CFB dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Verify issue matches a safe request schema
+        run: |
+          python -m cfb.issue_request --event "$GITHUB_EVENT_PATH" --env-file "$GITHUB_ENV"
+      - name: Collect CURRENT CFB statistics
+        run: |
+          set -euo pipefail
+          # College-football season is the prior calendar year during Jan-June.
+          SEASON=$(python -c 'import datetime; n=datetime.datetime.now(datetime.timezone.utc); print(n.year if n.month >= 7 else n.year-1)')
+          SNAPSHOT="cfb_artifacts/request_snapshot_${GITHUB_RUN_ID}"
+          echo "SNAPSHOT=$SNAPSHOT" >> "$GITHUB_ENV"
+          python -m cfb.pipeline collect --season "$SEASON" --out "$SNAPSHOT"
+          python -m cfb.pipeline verify --snapshot "$SNAPSHOT"
+      - name: Conduct fresh model pregame or saved-original postgame analysis
+        run: |
+          set -euo pipefail
+          python -m cfb.fresh_matchup \
+            --mode "$CFB_MODE" \
+            --team-a "$CFB_TEAM_A" --team-b "$CFB_TEAM_B" \
+            --game-id "$CFB_GAME_ID" \
+            --snapshot "$SNAPSHOT" \
+            --odds cfb/_market_disabled \
+            --reviews cfb/archive/reviews \
+            --runs 5000 \
+            --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
+            --out "cfb/archive/reviews/${GITHUB_RUN_ID}.json"
+          mkdir -p cfb_artifacts/matchup_request
+          cp "cfb/archive/reviews/${GITHUB_RUN_ID}.json" cfb_artifacts/matchup_request/latest.json
+          cp "cfb/archive/reviews/${GITHUB_RUN_ID}.md" cfb_artifacts/matchup_request/latest.md
+      - name: Permanently save this requested matchup investigation
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cfb/archive/reviews
+          git commit -m "Archive requested CFB ${CFB_MODE} analysis ${GITHUB_RUN_ID}"
+          git pull --rebase origin main
+          git push origin HEAD:main
+      - name: Publish readable analysis artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-request-${{ github.run_id }}
+          path: cfb_artifacts/matchup_request/
           if-no-files-found: warn
           retention-days: 90
