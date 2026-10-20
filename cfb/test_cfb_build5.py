@@ -158,6 +158,15 @@ class Build5Tests(unittest.TestCase):
             q['captured_at_utc']='2026-10-19T12:11:00Z'
             with (base/'quotes.csv').open('w',newline='') as f:
                 w=csv.DictWriter(f,fieldnames=FIELDS);w.writeheader();w.writerow(q)
+            # Captured after the frozen margin, yet before kickoff: allowed.
+            after=grade(base/'preds',base/'quotes.csv',base/'final.csv')
+            self.assertEqual(after['games_graded'],1)
+            self.assertEqual(after['games'][0]['ats_comparison_first_possible_at_utc'],
+                             '2026-10-19T12:11:00+00:00')
+            # Capturing after kickoff remains forbidden by the free quote validator.
+            q['captured_at_utc']='2026-10-26T12:11:00Z'
+            with (base/'quotes.csv').open('w',newline='') as f:
+                w=csv.DictWriter(f,fieldnames=FIELDS);w.writeheader();w.writerow(q)
             with self.assertRaises(CFBMarketError):grade(base/'preds',base/'quotes.csv',base/'final.csv')
 
 if __name__=='__main__':unittest.main()

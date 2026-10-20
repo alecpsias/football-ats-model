@@ -85,10 +85,14 @@ def grade(archive, quotes_csv, results_csv):
             raise CFBMarketError('CFB matchup team mismatch '+gid)
         kickoff=_date(p['kickoff_utc'],'forecast kickoff')
         if q['kickoff_time']!=kickoff:raise CFBMarketError('Market kickoff mismatch '+gid)
-        # Free pregame market must have been *captured* by model snapshot time;
-        # recording a post-prediction quote retroactively is forbidden here.
-        if _date(q['captured_at_utc'],'market capture')>_date(p['prediction_generated_at_utc'],'forecast generation'):
-            raise CFBMarketError('Market quote captured after forecast '+gid)
+        # A line first captured after the frozen margin projection is valid
+        # for research if still PREKICKOFF. The ATS comparison is anchored
+        # at quote capture, not retrospectively claimed for forecast time.
+        observed=_date(q['captured_at_utc'],'market capture')
+        prediction_time=_date(p['prediction_generated_at_utc'],'forecast generation')
+        decision_time=max(prediction_time,observed)
+        if decision_time>=kickoff:
+            raise CFBMarketError('Quote and projection not jointly available before kickoff '+gid)
         if _date(r['final_observed_at_utc'],'final observed time')<=kickoff:
             raise ValueError('Claimed final result observed before game kickoff')
         pred=float(p['simulated_margin_home'])+float(q['spread_home'])
@@ -99,6 +103,7 @@ def grade(archive, quotes_csv, results_csv):
         pnl=0 if side==0 or outcome==0 else (_odds_profit(odds) if side==outcome else -1)
         graded.append({'game_id':gid,'home':p['home'],'away':p['away'],
             'predicted_margin':p['simulated_margin_home'], 'spread_home':q['spread_home'],
+            'ats_comparison_first_possible_at_utc':decision_time.isoformat(),
             'actual_margin':int(r['home_points'])-int(r['away_points']),
             'predicted_ats_margin':round(pred,3),'actual_ats_margin':round(actual,3),
             'decision':'home' if side>0 else 'away' if side<0 else 'no_edge',
