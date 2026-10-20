@@ -53,6 +53,19 @@ jobs:
             --snapshot "$SNAPSHOT" \
             --out cfb_artifacts/historical_replay \
             --runs 1500
+      - name: Diagnose CFB margin misses and test individual features
+        run: |
+          python -m cfb.diagnostics \
+            --replay cfb_artifacts/historical_replay/margin_replay.json \
+            --out cfb_artifacts/historical_replay/diagnostics.json
+      - name: Freeze genuine pregame CFB research forecasts
+        run: |
+          python -m cfb.prospective \
+            --snapshot "$SNAPSHOT" \
+            --out cfb_artifacts/prospective_frozen \
+            --runs 3000 --days 7 \
+            --git-sha "$GITHUB_SHA" \
+            --github-run-id "$GITHUB_RUN_ID"
       - name: Prepare FREE pregame spread log template (not a quote)
         run: |
           python -m cfb.market template \
@@ -72,4 +85,4 @@ jobs:
           name: cfb-audit-${{ github.run_id }}-${{ github.run_attempt }}
           path: cfb_artifacts/
           if-no-files-found: warn
-          retention-days: 30
+          retention-days: 90
