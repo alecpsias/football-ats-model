@@ -96,6 +96,16 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                     'baseline_absolute_error':round(abs(pred-actual),5),
                     'better_than_baseline_this_game':abs(float(candidate)-actual)<abs(pred-actual),
                     'not_deployed':True}
+        # Personnel cases were frozen as counterfactual sensitivities. Without
+        # independently confirmed pregame starter assignments they cannot be
+        # selected with hindsight and scored as an honest forward prediction.
+        pe=p.get('conditional_personnel_scenarios')
+        if isinstance(pe,dict):
+            row['conditional_personnel_research']={
+                'status':'FROZEN_COUNTERFACTUAL_NOT_A_PREDICTION',
+                'scenario_count':len(pe.get('scenarios',[])),
+                'main_prediction_unchanged':True,
+                'not_included_in_forward_mae':True}
         m=quotes.get(gid)
         if m is not None:
             if (m['home']!=p['home'] or m['away']!=p['away'] or
@@ -149,6 +159,10 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                       'on_same_games_baseline_mae':(round(sum(p['baseline_absolute_error'] for p in paired)/len(paired),4) if paired else None),
                       'on_same_games_advanced_mae':(round(sum(p['candidate_absolute_error'] for p in paired)/len(paired),4) if paired else None),
                       'on_same_games_advanced_improves_mae':(sum(p['candidate_absolute_error'] for p in paired)<sum(p['baseline_absolute_error'] for p in paired) if paired else None)}
+    personnel_forward={'status':'NOT_GRADED_UNCONFIRMED_PREGAME_STARTERS',
+        'games_with_frozen_conditional_evidence':sum('conditional_personnel_research' in r for r in scored),
+        'games_with_conditional_scenarios':sum(r.get('conditional_personnel_research',{}).get('scenario_count',0)>0 for r in scored),
+        'prospective_personnel_accuracy_claims':False}
     ats=[r['ATS'] for r in scored if r['ATS']['status']=='OBSERVED_PREKICKOFF_ESPN_PROVISIONAL']
     graded=[q for q in ats if q['research_side']!='NO_EDGE']
     w=sum(q['correct_excluding_push_or_no_edge'] is True for q in graded)
@@ -163,6 +177,7 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
           'pending_games':len(pending),'pending':pending,
           'forward_margin':margin,
           'advanced_challenger_forward':advanced_forward,
+          'personnel_conditional_forward':personnel_forward,
           'ats_provisional':{'complete_observed_quoted_games':len(ats),
             'research_decisions':len(graded),'wins':w,'losses':losses,'pushes':pushes,
             'cover_accuracy_excluding_pushes':round(w/(w+losses),5) if w+losses else None,

@@ -27,6 +27,8 @@ from cfb.research_backtest import observed_game, project
 from cfb.free_odds import verify_odds_archive
 from cfb.learn_forward import investigate
 from cfb.personnel import quarterback_usage, load_official_statuses, correlate_availability
+from cfb.personnel_effects import (quarterback_effects, skill_player_exposures,
+                                   simulate_personnel_scenarios, other_position_availability)
 
 SCHEMA='cfb_fresh_requested_matchup_v1'
 
@@ -171,6 +173,12 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
         kickoff.isoformat(),stamp.isoformat(),expected_teams=[str(hid),str(aid)])
     risks={'home':correlate_availability(qbs['home'],availability),
            'away':correlate_availability(qbs['away'],availability)}
+    qb_effects={'home':quarterback_effects(mapped,eligible,roster,hid,qbs['home'],availability),
+                'away':quarterback_effects(mapped,eligible,roster,aid,qbs['away'],availability)}
+    skill_exposures={'home':skill_player_exposures(mapped,eligible,roster,hid,availability),
+                     'away':skill_player_exposures(mapped,eligible,roster,aid,availability)}
+    other_availability={'home':other_position_availability(roster,availability,hid),
+                        'away':other_position_availability(roster,availability,aid)}
     manifest_sha=hashlib.sha256((root/'manifest.json').read_bytes()).hexdigest()
     result={'schema':SCHEMA,'mode':'pregame',
         'status':'INSUFFICIENT_PRIOR_OBSERVATIONS_NO_PREDICTION',
@@ -197,6 +205,10 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
         'quarterback_participation':qbs,
         'availability_evidence':availability,
         'quarterback_availability_risks':risks,
+        'empirical_qb_replacement_evidence':qb_effects,
+        'skill_player_availability_exposure':skill_exposures,
+        'other_position_availability':other_availability,
+        'conditional_personnel_scenarios':None,
         'personnel_adjustment_to_model_points':None,
         'market':{'status':'NO_SOURCE_OBSERVED_PREKICKOFF_SPREAD','ats_research_side':None},
         'locked_market_evidence':None,
@@ -218,12 +230,15 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
                      spread_home=q['quote']['spread_home'] if q else None)
         advanced=simulate_challenger(hp,ap,signals,len(histories[hid]),
                      len(histories[aid]),runs=runs,seed=int(g.game_id)%(2**32))
+        personnel=simulate_personnel_scenarios(hp,ap,qb_effects['home'],qb_effects['away'],
+                     runs=runs,seed=int(g.game_id)%(2**32))
         # _market validates fixture, source observation and model creation time.
         proxy={**result,'simulated_margin_home':sim['mean_margin_home']}
         market=_market(proxy,qmap)
         result.update({'status':'FRESH_PREGAME_PROJECTION_LOCKED',
                        'advanced_research_challenger':advanced,
                        'advanced_challenger_not_primary':True,
+                       'conditional_personnel_scenarios':personnel,
                        'home_projection':hp,'away_projection':ap,
                        'matchup_evidence':signals,'simulation':sim,
                        'stress_tests':sensitivity(hp,ap,g.game_id),
@@ -298,6 +313,17 @@ def review(saved, saved_sha, saved_file, snapshot):
                 'baseline_absolute_error':round(abs(primary-actual),5),
                 'advanced_absolute_error':round(abs(float(candidate)-actual),5),
                 'not_deployed':True}
+    # Frozen conditional personnel scenarios are not picks: the model did not
+    # predict or attest who started. Record what was known, never retro-select a
+    # matching alternate after observing the box score.
+    evidence=saved.get('conditional_personnel_scenarios')
+    if isinstance(evidence,dict):
+        report['original_personnel_scenarios']={
+            'status':'PRE_GAME_CONDITIONAL_ONLY_NOT_GRADED_AS_FORECAST',
+            'version':evidence.get('version'),
+            'scenario_count':len(evidence.get('scenarios',[])),
+            'personnel_score_recomputed_after_game':False,
+            'requires_proven_pregame_starting_lineup_to_measure_forecast_accuracy':True}
     report.update({'schema':'cfb_fresh_requested_postgame_v1',
                    'original_user_requested_pregame_file':saved_file,
                    'original_user_requested_pregame_sha256':saved_sha,
@@ -341,6 +367,11 @@ def markdown(report):
     if report['mode']=='postgame':
         output=legacy_markdown(report)+('\nOriginal user-requested file: '+
                    report['original_user_requested_pregame_file']+'\n')
+        p=report.get('original_personnel_scenarios')
+        if p:
+            output+=('\n## Frozen personnel scenarios\n'
+                      f"{p['scenario_count']} conditional QB scenario(s) archived. "
+                      'Not graded as predictions because next-game starters were unverified.\n')
         c=report.get('original_advanced_challenger_comparison')
         if c:
             output+=('\n## Original research challenger comparison\n'
@@ -381,6 +412,26 @@ def markdown(report):
     else:
         lines += ['', '## Opponent-adjusted research challenger',
                   'Not scored: '+str(advanced.get('status','NO_RESULT'))]
+    personnel=report.get('conditional_personnel_scenarios') or {}
+    lines += ['', '## Personnel replacement evidence (conditional, NOT the primary forecast)']
+    for side in ('home','away'):
+        x=(report.get('empirical_qb_replacement_evidence') or {}).get(side,{})
+        if x.get('scenario'):
+            s=x['scenario']
+            lines.append(f"{report[side]}: IF {s['candidate_qb']} replaces recent volume leader "
+                         f"{s['reference_qb']}, estimated PPD shift "
+                         f"{s['estimated_change_in_points_per_drive']:+.3f} (research only)")
+        else: lines.append(f"{report[side]}: no qualified replacement comparison "
+                          f"({x.get('reason',x.get('status'))})")
+    for case in personnel.get('scenarios',[]):
+        lines.append(f"IF {case['candidate_qb']} assumes QB role: conditional home margin "
+                     f"{case['candidate_home_margin']:+.2f}; NOT a starter forecast")
+    for side in ('home','away'):
+        flagged=(report.get('other_position_availability') or {}).get(side,{}).get('players',[])
+        for player in flagged:
+            lines.append(f"Reported {report[side]} {player['position']} {player['name']}: "
+                         f"{player['reported_status']} (source not independently verified; "
+                         'point impact not estimated)')
     for label,group,key in (
         ('Offensive pass EPA/play','offense','epa_pass'),
         ('Offensive rush EPA/play','offense','epa_rush'),

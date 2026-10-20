@@ -16,6 +16,9 @@ import pandas as pd
 from cfb.engine import simulate, CFB_RULES
 from cfb.matchups import matchup_signals
 from cfb.advanced_scoring import simulate_challenger
+from cfb.personnel import quarterback_usage, load_official_statuses
+from cfb.personnel_effects import (quarterback_effects, skill_player_exposures,
+                                   simulate_personnel_scenarios, other_position_availability)
 from cfb.pipeline import verify, split_games, normalize_pbp_teams, iso_utc
 from cfb.research_backtest import observed_game, project
 
@@ -25,7 +28,7 @@ def _json_bytes(obj):
 
 
 def freeze(snapshot, out, runs=3000, days=7, min_games=3, now=None,
-           git_sha=None, workflow_run_id=None):
+           git_sha=None, workflow_run_id=None, availability_root=None):
     """Generate a frozen RESEARCH forecast artifact for each eligible future game.
 
     For a game with insufficient past-game records, create a frozen PASS record
@@ -98,8 +101,28 @@ def freeze(snapshot, out, runs=3000, days=7, min_games=3, now=None,
             signals=matchup_signals(hid,aid,histories)
             advanced=simulate_challenger(hp,ap,signals,len(histories[hid]),
                         len(histories[aid]),runs=runs,seed=int(g.game_id)%(2**32))
+            # Prepared from the *same* pre-kickoff history as the primary model.
+            qbs={'home':quarterback_usage(mapped,roster,history,hid),
+                 'away':quarterback_usage(mapped,roster,history,aid)}
+            statuses=load_official_statuses(availability_root,str(g.game_id),
+                g['_kickoff'].isoformat(),stamp.isoformat(),expected_teams=[str(hid),str(aid)])
+            pe={'home':quarterback_effects(mapped,history,roster,hid,qbs['home'],statuses),
+                'away':quarterback_effects(mapped,history,roster,aid,qbs['away'],statuses)}
+            skill={'home':skill_player_exposures(mapped,history,roster,hid,statuses),
+                   'away':skill_player_exposures(mapped,history,roster,aid,statuses)}
+            scenario=simulate_personnel_scenarios(hp,ap,pe['home'],pe['away'],
+                runs=runs,seed=int(g.game_id)%(2**32))
             base.update({'advanced_research_challenger':advanced,
-                         'advanced_challenger_not_primary':True})
+                         'advanced_challenger_not_primary':True,
+                         'quarterback_participation':qbs,
+                         'availability_evidence':statuses,
+                         'empirical_qb_replacement_evidence':pe,
+                         'skill_player_availability_exposure':skill,
+                         'other_position_availability':{
+                             'home':other_position_availability(roster,statuses,hid),
+                             'away':other_position_availability(roster,statuses,aid)},
+                         'conditional_personnel_scenarios':scenario,
+                         'personnel_adjustment_to_model_points':None})
             base.update({'status':'FROZEN_CFB_RESEARCH_MARGIN_NO_ATS_GRADE',
                 'completed_prior_games_home':len(histories[hid]),
                 'completed_prior_games_away':len(histories[aid]),
@@ -143,8 +166,10 @@ def main():
     p.add_argument('--snapshot',required=True);p.add_argument('--out',required=True)
     p.add_argument('--runs',type=int,default=3000);p.add_argument('--days',type=int,default=7)
     p.add_argument('--git-sha');p.add_argument('--github-run-id')
+    p.add_argument('--availability-dir',default='cfb/availability')
     args=p.parse_args()
     result=freeze(args.snapshot,args.out,args.runs,args.days,
-        git_sha=args.git_sha,workflow_run_id=args.github_run_id)
+        git_sha=args.git_sha,workflow_run_id=args.github_run_id,
+        availability_root=args.availability_dir)
     print(json.dumps({k:v for k,v in result.items() if k!='predictions'},indent=2))
 if __name__=='__main__':main()
