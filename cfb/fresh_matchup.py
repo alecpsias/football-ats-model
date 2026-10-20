@@ -25,6 +25,7 @@ from cfb.pipeline import (verify, split_games, normalize_pbp_teams, team_feature
 from cfb.research_backtest import observed_game, project
 from cfb.free_odds import verify_odds_archive
 from cfb.learn_forward import investigate
+from cfb.personnel import quarterback_usage, load_official_statuses, correlate_availability
 
 SCHEMA='cfb_fresh_requested_matchup_v1'
 
@@ -134,7 +135,8 @@ def sensitivity(hp, ap, game_id, runs=500):
 
 
 def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000,
-            min_games=3, now=None, github_run_id=None, git_sha=None):
+            min_games=3, now=None, github_run_id=None, git_sha=None,
+            availability_root=None):
     """Run a FRESH two-team model investigation from latest captured data.
 
     Does not access a frozen forecast archive at all. Source must have been
@@ -162,6 +164,12 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
     # Full current observed evidence is recomputed now, never drawn from old model output.
     home_stats=team_features(hid,mapped,roster=roster)
     away_stats=team_features(aid,mapped,roster=roster)
+    qbs={'home':quarterback_usage(mapped,roster,eligible,hid),
+         'away':quarterback_usage(mapped,roster,eligible,aid)}
+    availability=load_official_statuses(availability_root,str(g.game_id),
+        kickoff.isoformat(),stamp.isoformat(),expected_teams=[str(hid),str(aid)])
+    risks={'home':correlate_availability(qbs['home'],availability),
+           'away':correlate_availability(qbs['away'],availability)}
     manifest_sha=hashlib.sha256((root/'manifest.json').read_bytes()).hexdigest()
     result={'schema':SCHEMA,'mode':'pregame',
         'status':'INSUFFICIENT_PRIOR_OBSERVATIONS_NO_PREDICTION',
@@ -185,9 +193,15 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
         'missing_statistical_fields':{'home':missing_features(home_stats),
                                        'away':missing_features(away_stats)},
         'injuries_verified':False,'ATS_calibrated':False,'grade':'NOT_CALIBRATED',
+        'quarterback_participation':qbs,
+        'availability_evidence':availability,
+        'quarterback_availability_risks':risks,
+        'personnel_adjustment_to_model_points':None,
         'market':{'status':'NO_SOURCE_OBSERVED_PREKICKOFF_SPREAD','ats_research_side':None},
         'locked_market_evidence':None,
-        'limitations':['Unverified current injuries and projected lineups are NOT incorporated',
+        'limitations':['Quarterback usage measured from prior games; next-game starters are NOT verified',
+          'Only source-backed optional availability snapshots are displayed; no uncalibrated injury point deductions',
+          'Unverified current injuries and projected lineups are NOT incorporated',
           'Full pressure, special teams and penalty effects are missing/incomplete',
           'Prior-game row publication times are not independently proven by a later snapshot',
           'Possession model is uncalibrated; score estimates and ATS difference are research only',
@@ -344,12 +358,40 @@ def markdown(report):
         ('Pass-defense success allowed','defense','success_pass_allowed'),
         ('Rush-defense success allowed','defense','success_rush_allowed')):
         lines.append(f"| {label} | {show(h[group].get(key))} | {show(a[group].get(key))} |")
+    lines += ['', '## Quarterback involvement — NOT a confirmed depth chart', '']
+    for side in ('home','away'):
+        team=report[side]
+        qbr=report.get('quarterback_participation',{}).get(side,{})
+        lines.append(f'### {team}')
+        if qbr.get('status')!='QB_PARTICIPATION_OBSERVED_NOT_STARTER_CONFIRMED':
+            lines.append('Unavailable: '+str(qbr.get('status')))
+        else:
+            lines.append(f"Identified QB pass-play coverage: {qbr.get('identified_roster_qb_pass_play_coverage')}; "
+                         'passer leader is NOT confirmed starter.')
+            for qb in qbr.get('quarterbacks',[])[:3]:
+                lines.append(f"- {qb['name']} ({qb['athlete_id']}): last "
+                             f"{qbr['recent_games_window']} games: "
+                             f"{qb['recent_recorded_pass_plays']} pass plays, "
+                             f"share {qb['recent_share_of_all_team_pass_plays']}, "
+                             f"mean EPA {qb['recent_pass_play_epa_avg']}, "
+                             f"QB rushes {qb['recorded_qb_rushes']}")
+    av=report.get('availability_evidence',{})
+    lines += ['', '## Availability source evidence', '',
+              'Report status: '+str(av.get('status'))]
+    if av.get('source_url'):lines.append('Source URL: '+av['source_url'])
+    for player in av.get('players',[]):
+        lines.append(f"- {player['name']}: {player['status']} "
+                     '(literal text in user-supplied source snapshot; original capture not independently attested)')
+    for side in ('home','away'):
+        for risk in report.get('quarterback_availability_risks',{}).get(side,[]):
+            lines.append(f"**QB risk:** {risk['name']} {risk['status']}; "
+                         'point impact unknown, not silently adjusted.')
     lines += ['', '## Opponent-adjusted signals', '',
               'Detailed matchup interactions and source-derived schedules are in the JSON.',
               '', '## Stress checks (hypothetical, not likely outcomes)', '']
     for t in report['stress_tests']['scenarios']:
         lines.append(f"- {t['scenario']}: projected home margin {t['mean_home_margin']:+.1f}")
-    lines += ['', '**Known gaps:** Verified current injuries and lineups, full pressure, '
+    lines += ['', '**Known gaps:** Verified current starting QBs and full injury reports, pressure, '
               'special teams, penalties, and calibrated ATS probability are not integrated.',
               '', 'The model has calculated a NEW score projection; it did not look up an earlier prediction.']
     return '\n'.join(lines)+'\n'
@@ -359,6 +401,7 @@ def run(args):
     if args.mode=='pregame':
         data=analyze(args.snapshot,args.team_a,args.team_b,args.game_id,
                      odds_root=args.odds,runs=args.runs,min_games=args.min_games,
+                     availability_root=getattr(args,'availability_dir',None),
                      github_run_id=args.github_run_id,git_sha=args.git_sha)
     else:
         p,sha,file=select_saved_request(args.reviews,args.team_a,args.team_b,args.game_id)
@@ -386,6 +429,7 @@ def main():
     ap.add_argument('--game-id');ap.add_argument('--snapshot',required=True)
     ap.add_argument('--reviews',default='cfb/archive/reviews')
     ap.add_argument('--odds',default='cfb/archive/odds')
+    ap.add_argument('--availability-dir',default='cfb/availability')
     ap.add_argument('--out',required=True)
     ap.add_argument('--runs',type=int,default=3000)
     ap.add_argument('--min-games',type=int,default=3)
