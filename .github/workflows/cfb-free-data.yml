@@ -53,6 +53,18 @@ jobs:
             --snapshot "$SNAPSHOT" \
             --out cfb_artifacts/historical_replay \
             --runs 1500
+      - name: Prepare FREE pregame spread log template (not a quote)
+        run: |
+          python -m cfb.market template \
+            --index cfb_artifacts/evidence/index.json \
+            --out cfb_artifacts/pregame_market_template.csv
+      - name: Grade ATS only with supplied timestamped free-source captures
+        run: |
+          python -m cfb.market grade \
+            --replay cfb_artifacts/historical_replay/margin_replay.json \
+            --calibration cfb_artifacts/historical_replay/calibration.json \
+            --quotes cfb/quotes/pregame-2026.csv \
+            --out cfb_artifacts/historical_replay/ats_audit.json
       - name: Upload checksums, schemas, and evidence for audit
         if: always()
         uses: actions/upload-artifact@v4
