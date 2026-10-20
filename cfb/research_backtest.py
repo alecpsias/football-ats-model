@@ -18,6 +18,7 @@ import pandas as pd
 
 from cfb.engine import CFB_RULES, simulate
 from cfb.advanced_scoring import simulate_challenger
+from cfb.game_script import simulate_script
 from cfb.matchups import matchup_signals
 from cfb.calibration import calibrate
 from cfb.pipeline import verify, normalize_pbp_teams, iso_utc
@@ -230,6 +231,14 @@ def replay(snapshot, out, runs=1500, min_games=3):
                                     seed=int(g.game_id)%(2**32),allow_overtime=True)
                     item[field]=result['mean_margin_home']
                 signals=matchup_signals(home,away,history)
+                s_hp=project(history[home],history[away],bool(g.neutral_site),'home',False)
+                s_ap=project(history[away],history[home],bool(g.neutral_site),'away',False)
+                script=simulate_script(s_hp,s_ap,history[home],history[away],
+                    runs=runs,seed=int(g.game_id)%(2**32))
+                item['game_script_candidate_margin']=script['mean_margin_home']
+                item['game_script_candidate_p10_p90']=[script['margin_p10_p50_p90'][0],script['margin_p10_p50_p90'][2]]
+                item['game_script_candidate_win_probability_raw']=script['home_win_probability_raw']
+                item['game_script_candidate_version']=script['version']
                 item.update(signals)
                 item['completed_prior_games_home']=len(history[home])
                 item['completed_prior_games_away']=len(history[away])
@@ -268,6 +277,11 @@ def replay(snapshot, out, runs=1500, min_games=3):
         'holdout_games':len(holdout),
         'holdout_baseline':baseline,'holdout_epa_challenger':challenger,
         'holdout_advanced_challenger':metrics(holdout,'advanced_candidate_margin'),
+        'holdout_game_script_challenger':metrics(holdout,'game_script_candidate_margin'),
+        'game_script_interval_p10_p90_coverage':(round(sum(
+            r['game_script_candidate_p10_p90'][0]<=r['actual_margin']<=r['game_script_candidate_p10_p90'][1]
+            for r in holdout)/len(holdout),4) if holdout else None),
+        'game_script_challenger_status':'RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED',
         'holdout_advanced_sos_only':metrics(holdout,'advanced_sos_only_margin'),
         'holdout_advanced_context_only':metrics(holdout,'advanced_context_only_margin'),
         'advanced_challenger_status':'RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED',

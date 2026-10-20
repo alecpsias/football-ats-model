@@ -18,6 +18,7 @@ from pathlib import Path
 import pandas as pd
 from cfb.engine import simulate
 from cfb.advanced_scoring import simulate_challenger
+from cfb.game_script import simulate_script, adverse_scripts
 from cfb.market import _date
 from cfb.matchups import matchup_signals
 from cfb.matchup_cycle import _market, postgame as compare_postgame, markdown as legacy_markdown, normalized
@@ -230,12 +231,20 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
                      spread_home=q['quote']['spread_home'] if q else None)
         advanced=simulate_challenger(hp,ap,signals,len(histories[hid]),
                      len(histories[aid]),runs=runs,seed=int(g.game_id)%(2**32))
+        script=simulate_script(hp,ap,histories[hid],histories[aid],runs=runs,
+                     seed=int(g.game_id)%(2**32),
+                     spread_home=q['quote']['spread_home'] if q else None)
         personnel=simulate_personnel_scenarios(hp,ap,qb_effects['home'],qb_effects['away'],
                      runs=runs,seed=int(g.game_id)%(2**32))
         # _market validates fixture, source observation and model creation time.
         proxy={**result,'simulated_margin_home':sim['mean_margin_home']}
         market=_market(proxy,qmap)
+        scripts_stress=adverse_scripts(hp,ap,histories[hid],histories[aid],
+                    runs=max(100,min(600,runs//5)),seed=int(g.game_id)%(2**32))
         result.update({'status':'FRESH_PREGAME_PROJECTION_LOCKED',
+                       'game_script_adverse_sensitivity':scripts_stress,
+                       'game_script_research_challenger':script,
+                       'game_script_challenger_not_primary':True,
                        'advanced_research_challenger':advanced,
                        'advanced_challenger_not_primary':True,
                        'conditional_personnel_scenarios':personnel,
@@ -313,6 +322,22 @@ def review(saved, saved_sha, saved_file, snapshot):
                 'baseline_absolute_error':round(abs(primary-actual),5),
                 'advanced_absolute_error':round(abs(float(candidate)-actual),5),
                 'not_deployed':True}
+    script=saved.get('game_script_research_challenger')
+    if report.get('status')=='FINAL_REVIEW_RECORDED' and isinstance(script,dict) and script.get('status')=='UNFITTED_GAME_SCRIPT_CHALLENGER_NOT_PRIMARY':
+        cand=script.get('mean_margin_home')
+        if isinstance(cand,(int,float)) and math.isfinite(float(cand)):
+            actual=float(report['observed_final']['home_margin'])
+            primary=float(saved['simulated_margin_home'])
+            interval=script.get('margin_p10_p50_p90') or []
+            report['original_game_script_comparison']={
+                'status':'ORIGINAL_FROZEN_CANDIDATE_EVALUATED',
+                'version':script.get('version'),
+                'frozen_projected_home_margin':float(cand),
+                'actual_home_margin':actual,
+                'baseline_absolute_error':round(abs(primary-actual),5),
+                'game_script_absolute_error':round(abs(float(cand)-actual),5),
+                'inside_candidate_p10_p90':(float(interval[0])<=actual<=float(interval[2]) if len(interval)==3 else None),
+                'recomputed_after_game':False,'not_deployed':True}
     # Frozen conditional personnel scenarios are not picks: the model did not
     # predict or attest who started. Record what was known, never retro-select a
     # matching alternate after observing the box score.
@@ -378,6 +403,12 @@ def markdown(report):
                 f"Baseline absolute margin error: {c['baseline_absolute_error']:.2f}\n"
                 f"Advanced challenger absolute margin error: {c['advanced_absolute_error']:.2f}\n"
                 'Based only on pregame-saved challenger. No model promotion.\n')
+        g=report.get('original_game_script_comparison')
+        if g:
+            output+=('\n## Original game-script research challenger\n'
+                f"Baseline margin error: {g['baseline_absolute_error']:.2f}\n"
+                f"Script challenger margin error: {g['game_script_absolute_error']:.2f}\n"
+                'Compared using the original pregame record only. No automatic promotion.\n')
         return output
     if report['status']!='FRESH_PREGAME_PROJECTION_LOCKED':
         return '# CFB fresh matchup — insufficient observed data\n\n'+(
@@ -412,6 +443,22 @@ def markdown(report):
     else:
         lines += ['', '## Opponent-adjusted research challenger',
                   'Not scored: '+str(advanced.get('status','NO_RESULT'))]
+    script=report.get('game_script_research_challenger') or {}
+    if script.get('status')=='UNFITTED_GAME_SCRIPT_CHALLENGER_NOT_PRIMARY':
+        lines += ['', '## Game-script distribution challenger (NOT the primary forecast)',
+                  f"Script projected score: {report['home']} {script['mean_score_home']:.1f}, "
+                  f"{report['away']} {script['mean_score_away']:.1f}",
+                  f"Script home margin: {script['mean_margin_home']:+.2f}; "
+                  f"p10/p50/p90 {script['margin_p10_p50_p90']}",
+                  'Possession volatility, turnover short fields, shared scoring conditions, '
+                  'and hypothetical halftime clock response. Unfitted; research only.']
+        for name,item in script.get('scenario_distributions',{}).items():
+            lines.append(f"- {name}: {item['share']:.1%} of draws, conditional home margin {item['mean_home_margin']}")
+    stress=report.get('game_script_adverse_sensitivity') or {}
+    if stress.get('scenarios'):
+        lines += ['', '### Conditional game-script stress tests (not probabilities)']
+        for name,scenario in stress['scenarios'].items():
+            lines.append(f"- {name}: home margin {scenario['mean_home_margin']:+.2f}")
     personnel=report.get('conditional_personnel_scenarios') or {}
     lines += ['', '## Personnel replacement evidence (conditional, NOT the primary forecast)']
     for side in ('home','away'):
