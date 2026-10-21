@@ -98,10 +98,7 @@ class StatefulCandidateTests(unittest.TestCase):
                 kickoff_utc="2026-10-18T20:00:00Z",
                 data_as_of_utc="2026-10-18T17:00:00Z",
                 projected_home_margin=4.0, score_home=24, score_away=20,
-                mechanism_research={"candidate": dict(
-                    mean_margin_home=3., score_home=25., score_away=22.,
-                    promoted_to_primary=False)},
-                stateful_research={"candidate": dict(
+                challenger={"version":"0.10.0","candidate": dict(
                     mean_margin_home=5., score_home=23., score_away=18.,
                     promoted_to_primary=False)},
             )
@@ -111,15 +108,16 @@ class StatefulCandidateTests(unittest.TestCase):
                 result=6., gameday="2026-10-18", gametime="16:00")])
             e = evaluate([f], scores)
             self.assertEqual(e["completed_games"], 1)
-            self.assertEqual(e["stateful_completed_games"], 1)
-            self.assertEqual(e["stateful_mae_margin"], 1)
-            self.assertEqual(e["stateful_mae_total"], 1)
-            self.assertEqual(e["base_mae_home_score"], 1)
-            self.assertEqual(e["base_mae_away_score"], 3)
+            self.assertEqual(e["current_challenger"]["challenger_games"], 1)
+            self.assertEqual(e["current_challenger"]["challenger_mae_margin"], 1)
+            self.assertEqual(e["current_challenger"]["challenger_mae_total"], 1)
+            self.assertEqual(e["all_baseline"]["baseline_mae_home_score"], 1)
+            self.assertEqual(e["all_baseline"]["baseline_mae_away_score"], 3)
+            self.assertEqual(e["archived_challenger_versions"], {})
             self.assertEqual(e["ats_record"], "NOT_MEASURED_NO_VALIDATED_PRICED_SIGNED_LINES")
-            pred["stateful_research"]["candidate"]["promoted_to_primary"] = True
+            pred["challenger"]["candidate"]["promoted_to_primary"] = True
             f.write_text(json.dumps(pred))
-            with self.assertRaisesRegex(InputError, "incorrectly promoted"):
+            with self.assertRaisesRegex(InputError, "must never silently replace"):
                 evaluate([f], scores)
 
 
