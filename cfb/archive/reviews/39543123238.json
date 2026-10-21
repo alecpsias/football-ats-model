@@ -1,0 +1,1287 @@
+{
+  "ATS_calibrated": false,
+  "analysis_source": "NEW_VERIFIED_CAPTURED_CFB_STATS_NOT_ARCHIVED_PREDICTION",
+  "availability_evidence": {
+    "effects_applied_to_score": false,
+    "players": [],
+    "source_verified": false,
+    "status": "NO_OFFICIAL_REPORT_CAPTURE",
+    "unconfirmed_players": []
+  },
+  "away": "New Mexico State",
+  "away_id": "166",
+  "away_projection": {
+    "_ppd": 1.9860186025408348,
+    "_td": 0.64,
+    "_to": 0.1511111111111111,
+    "expected_drives": 12.083333333333332
+  },
+  "build16_challenger": {
+    "ATS_calibrated": false,
+    "adverse_sensitivity": {
+      "counterfactuals": {
+        "away_scoring_stall": {
+          "mean_away_score": 21.105,
+          "mean_home_margin": 5.567,
+          "mean_home_score": 26.672,
+          "scenario_inputs": {
+            "efficiency_shift_away": -0.35
+          }
+        },
+        "away_turnover_swing": {
+          "mean_away_score": 24.823,
+          "mean_home_margin": 2.41,
+          "mean_home_score": 27.233,
+          "scenario_inputs": {
+            "turnover_shift_away": 0.07
+          }
+        },
+        "fewer_possessions": {
+          "mean_away_score": 22.398,
+          "mean_home_margin": 1.465,
+          "mean_home_score": 23.863,
+          "scenario_inputs": {
+            "tempo_shift": -1.5
+          }
+        },
+        "home_scoring_stall": {
+          "mean_away_score": 25.067,
+          "mean_home_margin": -1.597,
+          "mean_home_score": 23.47,
+          "scenario_inputs": {
+            "efficiency_shift_home": -0.35
+          }
+        },
+        "home_turnover_swing": {
+          "mean_away_score": 25.163,
+          "mean_home_margin": 1.907,
+          "mean_home_score": 27.07,
+          "scenario_inputs": {
+            "turnover_shift_home": 0.07
+          }
+        },
+        "more_possessions": {
+          "mean_away_score": 28.352,
+          "mean_home_margin": 1.895,
+          "mean_home_score": 30.247,
+          "scenario_inputs": {
+            "tempo_shift": 1.5
+          }
+        }
+      },
+      "not_fitted": true
+    },
+    "away": {
+      "coefficients_empirically_fitted": false,
+      "components": {
+        "baseline_ppd_anchor": 1.986019,
+        "epa_blend_weight": 0.363291,
+        "epa_ppd_level": 2.269757,
+        "field_goal_empirical_rate": 0.666667,
+        "field_goal_regression_residual_ppd": 0.006171,
+        "field_goal_shrunk_rate": 0.702222,
+        "field_position_residual_ppd": 0.009732,
+        "home_field_ppd": -0.09931,
+        "matched_interception_rate": 0.031831,
+        "matched_lost_fumble_rate": 0.005621,
+        "matched_passing": {
+          "epa_level_weight": 0.358974,
+          "kind": "pass",
+          "matched_epa_raw": -0.142912,
+          "matched_epa_shrunk": -0.03885,
+          "plays_effective": 168.0
+        },
+        "matched_rushing": {
+          "epa_level_weight": 0.368421,
+          "kind": "rush",
+          "matched_epa_raw": 0.050283,
+          "matched_epa_shrunk": 0.014079,
+          "plays_effective": 175.0
+        },
+        "matched_start_field_samples": 70.0,
+        "matchup_start_field_position": 27.20143,
+        "opponent_allowed_start_field_position": 28.36,
+        "own_start_field_position": 26.04286,
+        "pass_explosive_matched_rate": 0.094979,
+        "pass_explosive_residual_ppd": -0.000189,
+        "pass_share_observed": 0.543081,
+        "pass_success_matched_rate": 0.396988,
+        "pass_success_residual_ppd": -7.9e-05,
+        "plays_per_drive_observed": 5.47143,
+        "qb_rushing_residual_ppd": 0.011198,
+        "red_zone_residual_ppd": -0.003332,
+        "red_zone_td_matched": 0.577186,
+        "rush_explosive_matched_rate": 0.144893,
+        "rush_explosive_residual_ppd": -7.6e-05,
+        "rush_success_matched_rate": 0.444021,
+        "rush_success_residual_ppd": -1e-06,
+        "sack_rate_matched": 0.06499,
+        "sack_residual_ppd": 0.001253,
+        "special_teams_observed": {
+          "field_goals_attempted": 9,
+          "field_goals_made": 6,
+          "kickoff_return_yards_per_observed_return": 24.7429,
+          "net_punt_yards_per_punt": 2.0,
+          "punt_kickoff_scoring_policy": "FIELD_POSITION_CAPTURED_ON_DRIVE_STARTS_NO_DUPLICATE_EPA"
+        },
+        "third_down_matched": 0.149334,
+        "third_down_residual_ppd": -0.08,
+        "turnover_source": "OFFENSE_VERSUS_OPPONENT_DEFENSE"
+      },
+      "limitations": [
+        "Hypothetical parameter values; no prospective evidence for accuracy",
+        "Matched EPA/drive levels are blended, not added to baseline EPA",
+        "Only source-observed sacks included; no full pass-pressure dataset",
+        "EPA and situational events overlap; residuals small and bounded",
+        "No contemporaneous injury/source lineup verification"
+      ],
+      "missing_features": [
+        "full_pressure_rate_not_source_backed",
+        "charting_based_special_teams_epa_unavailable",
+        "penalty_epa_unavailable",
+        "confirmed_next_game_lineup_unavailable"
+      ],
+      "primary_forecast_modified": false,
+      "projection": {
+        "_ppd": 1.9978612343620132,
+        "_td": 0.6351307843137255,
+        "_to": 0.11780171382979598,
+        "expected_drives": 12.083333333333332
+      },
+      "status": "AVAILABLE_UNFITTED_INTEGRATED_SCORING_RESEARCH_ONLY",
+      "version": "cfb-integrated-scoring-research-v2-field-special"
+    },
+    "fitted": false,
+    "home": {
+      "coefficients_empirically_fitted": false,
+      "components": {
+        "baseline_ppd_anchor": 2.082906,
+        "epa_blend_weight": 0.381809,
+        "epa_ppd_level": 2.212628,
+        "field_goal_empirical_rate": 0.571429,
+        "field_goal_regression_residual_ppd": 0.013661,
+        "field_goal_shrunk_rate": 0.6784,
+        "field_position_residual_ppd": 0.017054,
+        "home_field_ppd": 0.09863,
+        "matched_interception_rate": 0.025062,
+        "matched_lost_fumble_rate": 0.003566,
+        "matched_passing": {
+          "epa_level_weight": 0.40239,
+          "kind": "pass",
+          "matched_epa_raw": -0.044715,
+          "matched_epa_shrunk": -0.013853,
+          "plays_effective": 202.0
+        },
+        "matched_rushing": {
+          "epa_level_weight": 0.353448,
+          "kind": "rush",
+          "matched_epa_raw": -0.160593,
+          "matched_epa_shrunk": -0.042895,
+          "plays_effective": 164.0
+        },
+        "matched_start_field_samples": 72.0,
+        "matchup_start_field_position": 29.5137,
+        "opponent_allowed_start_field_position": 31.51389,
+        "own_start_field_position": 27.51351,
+        "pass_explosive_matched_rate": 0.090099,
+        "pass_explosive_residual_ppd": -0.00012,
+        "pass_share_observed": 0.579487,
+        "pass_success_matched_rate": 0.409775,
+        "pass_success_residual_ppd": -4e-06,
+        "plays_per_drive_observed": 5.27027,
+        "qb_rushing_residual_ppd": 0.002094,
+        "red_zone_residual_ppd": 0.001041,
+        "red_zone_td_matched": 0.594002,
+        "rush_explosive_matched_rate": 0.125625,
+        "rush_explosive_residual_ppd": -9e-06,
+        "rush_success_matched_rate": 0.4308,
+        "rush_success_residual_ppd": -3e-06,
+        "sack_rate_matched": 0.07015,
+        "sack_residual_ppd": -3.8e-05,
+        "special_teams_observed": {
+          "field_goals_attempted": 7,
+          "field_goals_made": 4,
+          "kickoff_return_yards_per_observed_return": 23.2667,
+          "net_punt_yards_per_punt": 4.1316,
+          "punt_kickoff_scoring_policy": "FIELD_POSITION_CAPTURED_ON_DRIVE_STARTS_NO_DUPLICATE_EPA"
+        },
+        "third_down_matched": 0.154385,
+        "third_down_residual_ppd": -0.08,
+        "turnover_source": "OFFENSE_VERSUS_OPPONENT_DEFENSE"
+      },
+      "limitations": [
+        "Hypothetical parameter values; no prospective evidence for accuracy",
+        "Matched EPA/drive levels are blended, not added to baseline EPA",
+        "Only source-observed sacks included; no full pass-pressure dataset",
+        "EPA and situational events overlap; residuals small and bounded",
+        "No contemporaneous injury/source lineup verification"
+      ],
+      "missing_features": [
+        "full_pressure_rate_not_source_backed",
+        "charting_based_special_teams_epa_unavailable",
+        "penalty_epa_unavailable",
+        "confirmed_next_game_lineup_unavailable"
+      ],
+      "primary_forecast_modified": false,
+      "projection": {
+        "_ppd": 2.1238276385497765,
+        "_td": 0.6415207661290323,
+        "_to": 0.09093378670756302,
+        "expected_drives": 12.166666666666668
+      },
+      "status": "AVAILABLE_UNFITTED_INTEGRATED_SCORING_RESEARCH_ONLY",
+      "version": "cfb-integrated-scoring-research-v2-field-special"
+    },
+    "margin_p10_p50_p90": [
+      -20.0,
+      3.0,
+      22.0
+    ],
+    "mean_margin_home": 1.557,
+    "mean_score_away": 25.184,
+    "mean_score_home": 26.741,
+    "mechanism_evidence": {
+      "assumptions": {
+        "disruption_scoring_policy": "No incremental scoring coefficient until independent evidence",
+        "pass_state_response": "shrunken observed frequencies, not estimated causal elasticities",
+        "recorded_disruption_adjustment_ppd": 0.0,
+        "third_distance_residual": "bounded <=0.055 PPD per offense, not fitted",
+        "turnover_following_field_ppd_per_yard": 0.018
+      },
+      "away": {
+        "neutral_pass_rate": 0.543081,
+        "pass_states": {
+          "attempts": 383,
+          "by_state": {
+            "leading_9_plus": 0.467631,
+            "trailing_9_plus": 0.643047,
+            "within_8": 0.543081
+          },
+          "status": "OBSERVED_SHRUNK"
+        },
+        "recorded_disruption": {
+          "defense_generated_rate": 0.184524,
+          "defense_pass_or_sack_plays": 168,
+          "defense_prior_games": 6,
+          "defense_recorded_events": 31,
+          "defense_recorded_non_sack_hurries": 19,
+          "fitted_incremental_scoring_effect": false,
+          "limitations": [
+            "Not a charted pressure rate or all dropbacks",
+            "Unreported hurries may be mislabeled as clean pockets",
+            "No fitted incremental scoring effect; diagnostic only"
+          ],
+          "offense_allowed_rate": 0.100962,
+          "offense_pass_or_sack_plays": 208,
+          "offense_prior_games": 6,
+          "offense_recorded_events": 21,
+          "offense_recorded_non_sack_hurries": 10,
+          "recorded_disruption_match_rate": 0.14018,
+          "recorded_non_sack_hurry_match_rate": 0.078592,
+          "scoring_adjustment_ppd": 0.0,
+          "status": "OBSERVED_DESCRIPTIVE_ONLY_NOT_CHARTED_PRESSURE",
+          "version": "cfb-build16-recorded-disruption-v1"
+        },
+        "situational_scoring": {
+          "ATS_calibrated": false,
+          "applied_finishing_delta_ppd": 0.008287,
+          "delta_ppd": 0.001405,
+          "delta_td_share": 0.005773,
+          "finishing": {
+            "defense_opportunities_faced": 29,
+            "delta_td_share": 0.005773,
+            "matched_td_rate": 0.395044,
+            "offense_opportunities": 29,
+            "status": "OBSERVED_UNFITTED"
+          },
+          "fitted": false,
+          "fourth_down": {
+            "delta_ppd": 0.0,
+            "status": "UNAVAILABLE"
+          },
+          "limitations": [
+            "Empirical counts, uncalibrated conversion-to-points coefficients",
+            "Situational events overlap EPA/PPD; effects capped",
+            "Finishing changes TD-to-FG composition only",
+            "Only non-third-down first downs from penalties counted"
+          ],
+          "penalty_first_down": {
+            "defense_plays_faced": 305,
+            "delta_ppd": 0.001405,
+            "matched_awarded_rate": 0.004276,
+            "offense_plays": 305,
+            "status": "OBSERVED_UNFITTED"
+          },
+          "status": "OBSERVED_BOUNDED_UNFITTED",
+          "version": "cfb-situational-scoring-research-v1"
+        },
+        "third": {
+          "def_attempts": 85,
+          "distance_mix": {
+            "long_7_plus": 0.46296,
+            "medium_3_6": 0.35185,
+            "short_1_2": 0.18519
+          },
+          "matched_by_distance": {
+            "long_7_plus": 0.19783,
+            "medium_3_6": 0.23333,
+            "short_1_2": 0.31023
+          },
+          "off_attempts": 78,
+          "residual_ppd": 0.049084,
+          "status": "OBSERVED_SHRUNK"
+        }
+      },
+      "home": {
+        "neutral_pass_rate": 0.579487,
+        "pass_states": {
+          "attempts": 390,
+          "by_state": {
+            "leading_9_plus": 0.4651,
+            "trailing_9_plus": 0.542763,
+            "within_8": 0.579487
+          },
+          "status": "OBSERVED_SHRUNK"
+        },
+        "recorded_disruption": {
+          "defense_generated_rate": 0.148515,
+          "defense_pass_or_sack_plays": 202,
+          "defense_prior_games": 6,
+          "defense_recorded_events": 30,
+          "defense_recorded_non_sack_hurries": 15,
+          "fitted_incremental_scoring_effect": false,
+          "limitations": [
+            "Not a charted pressure rate or all dropbacks",
+            "Unreported hurries may be mislabeled as clean pockets",
+            "No fitted incremental scoring effect; diagnostic only"
+          ],
+          "offense_allowed_rate": 0.163717,
+          "offense_pass_or_sack_plays": 226,
+          "offense_prior_games": 6,
+          "offense_recorded_events": 37,
+          "offense_recorded_non_sack_hurries": 22,
+          "recorded_disruption_match_rate": 0.156344,
+          "recorded_non_sack_hurry_match_rate": 0.086148,
+          "scoring_adjustment_ppd": 0.0,
+          "status": "OBSERVED_DESCRIPTIVE_ONLY_NOT_CHARTED_PRESSURE",
+          "version": "cfb-build16-recorded-disruption-v1"
+        },
+        "situational_scoring": {
+          "ATS_calibrated": false,
+          "applied_finishing_delta_ppd": 0.003125,
+          "delta_ppd": -0.010486,
+          "delta_td_share": 0.002057,
+          "finishing": {
+            "defense_opportunities_faced": 36,
+            "delta_td_share": 0.002057,
+            "matched_td_rate": 0.400041,
+            "offense_opportunities": 27,
+            "status": "OBSERVED_UNFITTED"
+          },
+          "fitted": false,
+          "fourth_down": {
+            "delta_ppd": 0.0,
+            "status": "UNAVAILABLE"
+          },
+          "limitations": [
+            "Empirical counts, uncalibrated conversion-to-points coefficients",
+            "Situational events overlap EPA/PPD; effects capped",
+            "Finishing changes TD-to-FG composition only",
+            "Only non-third-down first downs from penalties counted"
+          ],
+          "penalty_first_down": {
+            "defense_plays_faced": 316,
+            "delta_ppd": -0.010486,
+            "matched_awarded_rate": 0.0188,
+            "offense_plays": 301,
+            "status": "OBSERVED_UNFITTED"
+          },
+          "status": "OBSERVED_BOUNDED_UNFITTED",
+          "version": "cfb-situational-scoring-research-v1"
+        },
+        "third": {
+          "def_attempts": 86,
+          "distance_mix": {
+            "long_7_plus": 0.42857,
+            "medium_3_6": 0.35294,
+            "short_1_2": 0.21849
+          },
+          "matched_by_distance": {
+            "long_7_plus": 0.18264,
+            "medium_3_6": 0.2344,
+            "short_1_2": 0.3407
+          },
+          "off_attempts": 89,
+          "residual_ppd": 0.048584,
+          "status": "OBSERVED_SHRUNK"
+        }
+      },
+      "situational_scoring_policy": "BOUNDED_UNFITTED_RESEARCH_NOT_ATS_CALIBRATED",
+      "turnover_field": {
+        "following_start_by_turnover_zone": {
+          "opponent_40_or_closer": [
+            17.0,
+            19.0,
+            20.0,
+            36.0,
+            38.0,
+            37.0
+          ],
+          "outside_opponent_40": [
+            86.0,
+            60.0,
+            23.0,
+            39.0,
+            45.0,
+            83.0,
+            47.0,
+            93.0,
+            55.0
+          ]
+        },
+        "samples": 15,
+        "status": "OBSERVED",
+        "turnover_zone_counts": {
+          "opponent_40_or_closer": 6,
+          "outside_opponent_40": 11
+        }
+      },
+      "version": "cfb-build16-unified-situational-v1"
+    },
+    "not_primary": true,
+    "simulation": {
+      "ATS_calibrated": false,
+      "away_cover_probability_raw": null,
+      "build16_mechanisms_enabled": true,
+      "clock_response_enabled": true,
+      "historical_variance_evidence": {
+        "assumptions": [
+          "Historical drive counts include imperfect PBP drive reconstruction",
+          "Beta per-game turnover propensities are a sensitivity model, not measured persistence",
+          "Game efficiency SD mixes opponent quality and within-game variation",
+          "17-point halftime lead / 0.35 clock response is an explicit uncalibrated assumption"
+        ],
+        "away_game_efficiency_ppd_sd": 0.44448,
+        "away_turnover_beta_concentration": 72.599,
+        "distribution_coefficients_fitted": false,
+        "expected_drives_away": 12.083333333333332,
+        "expected_drives_home": 12.166666666666668,
+        "games_away": 6,
+        "games_home": 6,
+        "home_game_efficiency_ppd_sd": 0.44883,
+        "home_turnover_beta_concentration": 110.0,
+        "observed_turnover_games_away": 6,
+        "observed_turnover_games_home": 6,
+        "shared_drives_sd": 1.5771,
+        "version": "cfb-game-script-research-v1"
+      },
+      "home_cover_probability_raw": null,
+      "home_win_probability_raw": 0.542,
+      "limitations": [
+        "Unfitted dispersion / turnover / clock-feedback assumptions; NOT a trained prediction",
+        "Scores depend on opponent-agnostic historical volatility; only baseline means are matched",
+        "PBP possession counts may omit special-teams events and partial drives",
+        "Two teams receive paired regulation drive counts: incomplete clock/possession accounting",
+        "Final team scores include possible non-offensive points; drive PPD reconstruction is imperfect",
+        "Scoring overdispersion includes opponent-strength noise and may widen tails too much",
+        "Observed final and final lineup from target game are never inputs",
+        "Probabilities are raw and uncalibrated: no standalone ATS recommendation"
+      ],
+      "margin_p10_p50_p90": [
+        -20.0,
+        3.0,
+        22.0
+      ],
+      "margin_standard_deviation": 16.279,
+      "mean_margin_home": 1.557,
+      "mean_score_away": 25.184,
+      "mean_score_home": 26.741,
+      "mean_total": 51.924,
+      "median_margin_home": 3.0,
+      "not_auto_deployed": true,
+      "over_probability_raw": null,
+      "overtime_summary": {
+        "ot1": 191,
+        "ot2": 72,
+        "ot3_or_later": 23,
+        "regulation_ties": 191,
+        "unresolved_after_limit": 0
+      },
+      "scenario_distributions": {
+        "away_scoring_stall": {
+          "mean_away_score": 9.484,
+          "mean_home_margin": 17.025,
+          "mean_home_score": 26.509,
+          "share": 0.1988,
+          "simulations": 994
+        },
+        "away_two_more_turnovers": {
+          "mean_away_score": 21.355,
+          "mean_home_margin": 8.63,
+          "mean_home_score": 29.985,
+          "share": 0.231,
+          "simulations": 1155
+        },
+        "fast_possessions": {
+          "mean_away_score": 29.965,
+          "mean_home_margin": 1.934,
+          "mean_home_score": 31.9,
+          "share": 0.1892,
+          "simulations": 946
+        },
+        "home_scoring_stall": {
+          "mean_away_score": 24.693,
+          "mean_home_margin": -14.584,
+          "mean_home_score": 10.108,
+          "share": 0.1752,
+          "simulations": 876
+        },
+        "home_two_more_turnovers": {
+          "mean_away_score": 28.701,
+          "mean_home_margin": -5.944,
+          "mean_home_score": 22.756,
+          "share": 0.1116,
+          "simulations": 558
+        },
+        "runaway_clock_sensitivity_triggered": {
+          "mean_away_score": 25.58,
+          "mean_home_margin": 2.473,
+          "mean_home_score": 28.053,
+          "share": 0.0486,
+          "simulations": 243
+        },
+        "slow_possessions": {
+          "mean_away_score": 20.027,
+          "mean_home_margin": 1.535,
+          "mean_home_score": 21.562,
+          "share": 0.1492,
+          "simulations": 746
+        }
+      },
+      "seed": 401871070,
+      "simulated_regulation_drives_per_side": 12.076,
+      "simulated_turnovers_away": 1.443,
+      "simulated_turnovers_home": 1.061,
+      "simulations": 5000,
+      "status": "UNFITTED_GAME_SCRIPT_CHALLENGER_NOT_PRIMARY",
+      "stress_input": {
+        "efficiency_shift_away": 0.0,
+        "efficiency_shift_home": 0.0,
+        "tempo_shift": 0.0,
+        "turnover_shift_away": 0.0,
+        "turnover_shift_home": 0.0
+      },
+      "under_probability_raw": null,
+      "version": "cfb-game-script-research-v1"
+    },
+    "status": "AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY",
+    "version": "cfb-build16-unified-situational-v1"
+  },
+  "build16_not_primary": true,
+  "completed_prior_games_away": 6,
+  "completed_prior_games_home": 6,
+  "conditional_personnel_scenarios": {
+    "baseline_same_seed_margin": 2.035,
+    "not_auto_deployed": true,
+    "requires_verified_lineup_for_predictive_grading": true,
+    "scenarios": [
+      {
+        "availability_basis": "UNCONFIRMED_STARTER_OR_ABSENCE",
+        "candidate_home_margin": 0.611,
+        "candidate_qb": "T. Hedden",
+        "candidate_qb_id": "5224084",
+        "candidate_score_away": 25.069,
+        "candidate_score_home": 25.681,
+        "condition": "IF_CANDIDATE_TAKES_REPLACEMENT_QB_ROLE",
+        "conditional_only": true,
+        "frozen_reference_report_status": null,
+        "home_margin_change_vs_same_seed_baseline": -1.424,
+        "no_verified_coverage_or_accuracy_claim": true,
+        "not_pre_game_starting_qb_prediction": true,
+        "reference_qb": "A. Damante",
+        "team_side": "away"
+      }
+    ],
+    "status": "CONDITIONAL_SENSITIVITY_ONLY_NOT_A_PRIMARY_FORECAST",
+    "version": "cfb-personnel-replacement-research-v1"
+  },
+  "current_observed_statistics": {
+    "away": {
+      "context": {
+        "avg_start_yardline": 26.042857142857144,
+        "observed_qb_hurry_allowed_rate_not_total_pressure": 0.04807692307692308,
+        "observed_qb_hurry_generated_rate_not_total_pressure": 0.07920792079207921,
+        "penalty_epa_per_game": null,
+        "special_teams_epa_per_game": null
+      },
+      "defense": {
+        "drives_faced_per_game": 12.0,
+        "epa_pass_allowed": 0.029153148210284734,
+        "epa_rush_allowed": -0.11353069387376308,
+        "explosive_pass_allowed": 0.09405940594059406,
+        "explosive_rush_allowed": 0.125,
+        "fumble_recovery_rate": 0.0024875621890547263,
+        "interception_rate_forced": 0.024752475247524754,
+        "plays": 402,
+        "plays_per_drive_allowed": 5.583333333333333,
+        "pressure_generated": null,
+        "redzone_td_allowed": 0.5925925925925926,
+        "redzone_trips_faced": 27,
+        "sack_generated": 0.07425742574257425,
+        "success_pass_allowed": 0.400990099009901,
+        "success_rush_allowed": 0.41,
+        "third_down_allowed": 0.05813953488372093
+      },
+      "offense": {
+        "drives_per_game": 11.666666666666666,
+        "epa_pass": -0.024826245812269356,
+        "epa_rush": 0.053231902356658665,
+        "explosive_pass_rate": 0.10576923076923077,
+        "explosive_rush_rate": 0.14857142857142858,
+        "fumble_lost_rate": 0.007832898172323759,
+        "games": 6,
+        "interception_rate": 0.038461538461538464,
+        "pass_rate": 0.5430809399477807,
+        "plays": 383,
+        "plays_per_drive": 5.4714285714285715,
+        "pressure_allowed": null,
+        "qb_rush_epa": null,
+        "qb_rushes_per_game": null,
+        "redzone_td_rate": 0.5333333333333333,
+        "redzone_trips": 15,
+        "sack_allowed": 0.052884615384615384,
+        "success_pass": 0.40865384615384615,
+        "success_rush": 0.4342857142857143,
+        "third_down_rate": 0.05128205128205128
+      },
+      "schedule": {
+        "opp_def_pass_epa_allowed_avg": 0.02105209683513604,
+        "opp_def_rush_epa_allowed_avg": 0.05648174890061145,
+        "opp_off_pass_epa_avg": -0.023515129787882675,
+        "opp_off_rush_epa_avg": 0.009397561590928836
+      }
+    },
+    "home": {
+      "context": {
+        "avg_start_yardline": 27.513513513513512,
+        "observed_qb_hurry_allowed_rate_not_total_pressure": 0.10619469026548672,
+        "observed_qb_hurry_generated_rate_not_total_pressure": 0.1130952380952381,
+        "penalty_epa_per_game": null,
+        "special_teams_epa_per_game": null
+      },
+      "defense": {
+        "drives_faced_per_game": 12.5,
+        "epa_pass_allowed": -0.2456614056690818,
+        "epa_rush_allowed": 0.0794042803951212,
+        "explosive_pass_allowed": 0.07142857142857142,
+        "explosive_rush_allowed": 0.17117117117117117,
+        "fumble_recovery_rate": 0.002564102564102564,
+        "interception_rate_forced": 0.02976190476190476,
+        "plays": 390,
+        "plays_per_drive_allowed": 5.2,
+        "pressure_generated": null,
+        "redzone_td_allowed": 0.625,
+        "redzone_trips_faced": 16,
+        "sack_generated": 0.07142857142857142,
+        "success_pass_allowed": 0.3273809523809524,
+        "success_rush_allowed": 0.44594594594594594,
+        "third_down_allowed": 0.058823529411764705
+      },
+      "offense": {
+        "drives_per_game": 12.333333333333334,
+        "epa_pass": -0.08042954238115159,
+        "epa_rush": -0.11245651134267086,
+        "explosive_pass_rate": 0.07079646017699115,
+        "explosive_rush_rate": 0.13414634146341464,
+        "fumble_lost_rate": 0.002564102564102564,
+        "games": 6,
+        "interception_rate": 0.022123893805309734,
+        "pass_rate": 0.5794871794871795,
+        "plays": 390,
+        "plays_per_drive": 5.27027027027027,
+        "pressure_allowed": null,
+        "qb_rush_epa": null,
+        "qb_rushes_per_game": null,
+        "redzone_td_rate": 0.6153846153846154,
+        "redzone_trips": 13,
+        "sack_allowed": 0.06637168141592921,
+        "success_pass": 0.38495575221238937,
+        "success_rush": 0.4268292682926829,
+        "third_down_rate": 0.07865168539325842
+      },
+      "schedule": {
+        "opp_def_pass_epa_allowed_avg": 0.061668188429941526,
+        "opp_def_rush_epa_allowed_avg": 0.0858012099187048,
+        "opp_off_pass_epa_avg": -0.005716714170821657,
+        "opp_off_rush_epa_avg": -0.024411019951478107
+      }
+    }
+  },
+  "empirical_qb_replacement_evidence": {
+    "away": {
+      "baseline_auto_adjusted": false,
+      "not_calibrated": true,
+      "prior_game_ids": [
+        "401864570",
+        "401864578",
+        "401864579",
+        "401870790",
+        "401871049",
+        "401871066"
+      ],
+      "scenario": {
+        "availability_basis": "UNCONFIRMED_STARTER_OR_ABSENCE",
+        "candidate_pass_play_epa": 0.00917,
+        "candidate_pass_play_sample": 132,
+        "candidate_qb": "T. Hedden",
+        "candidate_qb_id": "5224084",
+        "conditional": "IF_CANDIDATE_TAKES_REPLACEMENT_QB_ROLE",
+        "confounding": "Not a causal QB-value estimate; teammates/opponents, game scripts and play calling differ",
+        "estimated_change_in_points_per_drive": 0.117301,
+        "not_game_day_starter_confirmation": true,
+        "not_primary_model": true,
+        "observed_epa_difference_per_pass_play": 0.08685,
+        "passing_component_change_in_ppd": 0.117301,
+        "qb_rushing_evidence": {
+          "alternate_mean_rush_epa": -0.1675,
+          "alternate_recorded_qb_rushes": 9,
+          "leader_mean_rush_epa": 0.5828,
+          "leader_recorded_qb_rushes": 8,
+          "status": "NOT_PROJECTED_INSUFFICIENT_QB_RUSH_SAMPLE"
+        },
+        "reference_pass_play_epa": -0.07767,
+        "reference_pass_play_sample": 75,
+        "reference_qb": "A. Damante",
+        "reference_qb_id": "5152503",
+        "report_source_verified": false,
+        "reported_reference_status": null,
+        "rushing_component_change_in_ppd": 0.0,
+        "shared_prior_game_ids": [
+          "401864579",
+          "401870790",
+          "401871066"
+        ],
+        "shrink_factor": 0.454545,
+        "shrunk_bounded_pass_epa_difference": 0.039476,
+        "team_pass_plays_per_recorded_drive": 2.97143
+      },
+      "status": "EMPIRICAL_CONDITIONAL_SCENARIO_UNCALIBRATED",
+      "team_id": "166",
+      "version": "cfb-personnel-replacement-research-v1"
+    },
+    "home": {
+      "baseline_auto_adjusted": false,
+      "minimum_alternate_pass_plays": 20,
+      "not_calibrated": true,
+      "reason": "No alternate with minimum observed passing sample",
+      "scenario": null,
+      "status": "UNAVAILABLE_NOT_ENOUGH_REPLACEMENT_EVIDENCE",
+      "team_id": "2534",
+      "version": "cfb-personnel-replacement-research-v1"
+    }
+  },
+  "game_id": "401871070",
+  "git_commit_sha": "794027e695c077ef2ce7658e1b76b5cf566f28fa",
+  "github_run_id": "39543123238",
+  "grade": "NOT_CALIBRATED",
+  "historical_games_eligible_after_24h_embargo": 510,
+  "home": "Sam Houston",
+  "home_id": "2534",
+  "home_projection": {
+    "_ppd": 2.0829058841486465,
+    "_td": 0.64,
+    "_to": 0.09148936170212765,
+    "expected_drives": 12.166666666666668
+  },
+  "injuries_verified": false,
+  "kickoff_utc": "2026-10-22T00:00:00+00:00",
+  "limitations": [
+    "Quarterback usage measured from prior games; next-game starters are NOT verified",
+    "Only source-backed optional availability snapshots are displayed; no uncalibrated injury point deductions",
+    "Unverified current injuries and projected lineups are NOT incorporated",
+    "Full pressure, charted special-teams EPA and penalties remain missing; source-backed kicks and matched field position are included in Build16 where available",
+    "Prior-game row publication times are not independently proven by a later snapshot",
+    "Possession model is uncalibrated; score estimates and ATS difference are research only",
+    "No result or forecast from the target game was used as a model input"
+  ],
+  "locked_market_evidence": null,
+  "market": {
+    "ats_research_side": null,
+    "confidence": "NOT_CALIBRATED",
+    "status": "NO_VALID_FROZEN_PREKICKOFF_MARKET_OBSERVATION"
+  },
+  "matchup_evidence": {
+    "context_margin_feature": 0.25638,
+    "limitations": [
+      "SOS requires opponents with separate prior games; missing SOS remains null",
+      "QB hurries are NOT a full pressure rate",
+      "Context feature scales are uncalibrated until trained"
+    ],
+    "observed_context": {
+      "field_position": 0.892533,
+      "pass_explosive": -0.006171,
+      "qb_hurries_allowed": 0.012115,
+      "qb_rushing_usage": null,
+      "redzone_td_rate": 0.056072,
+      "rush_explosive": -0.030298,
+      "third_down": 0.013343
+    },
+    "sos_margin_feature": -2.03342,
+    "sos_pass_epa_differential": 0.09819679066636991,
+    "sos_rush_epa_differential": -0.21087571526435706
+  },
+  "missing_statistical_fields": {
+    "away": [
+      "offense.pressure_allowed",
+      "offense.qb_rushes_per_game",
+      "offense.qb_rush_epa",
+      "defense.pressure_generated",
+      "context.penalty_epa_per_game",
+      "context.special_teams_epa_per_game"
+    ],
+    "home": [
+      "offense.pressure_allowed",
+      "offense.qb_rushes_per_game",
+      "offense.qb_rush_epa",
+      "defense.pressure_generated",
+      "context.penalty_epa_per_game",
+      "context.special_teams_epa_per_game"
+    ]
+  },
+  "mode": "pregame",
+  "model_projected_winner": "Sam Houston",
+  "model_variant": "UNMODIFIED_UNCALIBRATED_CFB_BASELINE",
+  "neutral_site": false,
+  "other_position_availability": {
+    "away": {
+      "missing_position_snap_data": [
+        "offensive line blocking",
+        "individual pass rush",
+        "coverage matchup",
+        "verified lineup"
+      ],
+      "no_report_does_not_mean_healthy": true,
+      "players": [],
+      "status": "REPORT_STATUS_ONLY_NO_PLAYER_LEVEL_EFFECT_ESTIMATE"
+    },
+    "home": {
+      "missing_position_snap_data": [
+        "offensive line blocking",
+        "individual pass rush",
+        "coverage matchup",
+        "verified lineup"
+      ],
+      "no_report_does_not_mean_healthy": true,
+      "players": [],
+      "status": "REPORT_STATUS_ONLY_NO_PLAYER_LEVEL_EFFECT_ESTIMATE"
+    }
+  },
+  "personnel_adjustment_to_model_points": null,
+  "prediction_generated_at_utc": "2026-10-21T04:16:41.332787+00:00",
+  "prior_game_ids_away": [
+    "401864570",
+    "401864578",
+    "401864579",
+    "401870790",
+    "401871049",
+    "401871066"
+  ],
+  "prior_game_ids_home": [
+    "401856805",
+    "401862707",
+    "401870763",
+    "401870764",
+    "401870766",
+    "401871068"
+  ],
+  "quarterback_availability_risks": {
+    "away": [],
+    "home": []
+  },
+  "quarterback_participation": {
+    "away": {
+      "caution": "Recent passer volume is descriptive; cannot confirm next-game starter or medical availability.",
+      "identified_roster_qb_pass_play_coverage": 0.9952,
+      "leader_by_recent_pass_play_volume": "5152503",
+      "leader_is_confirmed_starter": false,
+      "passer_id_not_matched_to_roster_count": 1,
+      "prior_games": 6,
+      "quarterbacks": [
+        {
+          "athlete_id": "5152503",
+          "last_recorded_pass_game_id": "401871066",
+          "name": "A. Damante",
+          "pass_play_epa_avg": -0.0777,
+          "prior_games_with_recorded_pass_play": 4,
+          "qb_rush_epa_avg": 0.5828,
+          "recent_pass_play_epa_avg": -0.158,
+          "recent_recorded_pass_plays": 72,
+          "recent_share_of_all_team_pass_plays": 0.7059,
+          "recorded_qb_rushes": 8,
+          "total_recorded_pass_plays": 75
+        },
+        {
+          "athlete_id": "5224084",
+          "last_recorded_pass_game_id": "401871066",
+          "name": "T. Hedden",
+          "pass_play_epa_avg": 0.0092,
+          "prior_games_with_recorded_pass_play": 5,
+          "qb_rush_epa_avg": -0.1675,
+          "recent_pass_play_epa_avg": -0.4893,
+          "recent_recorded_pass_plays": 30,
+          "recent_share_of_all_team_pass_plays": 0.2941,
+          "recorded_qb_rushes": 9,
+          "total_recorded_pass_plays": 132
+        }
+      ],
+      "recent_games_window": 3,
+      "recent_prior_game_ids": [
+        "401864579",
+        "401871049",
+        "401871066"
+      ],
+      "status": "QB_PARTICIPATION_OBSERVED_NOT_STARTER_CONFIRMED",
+      "team_id": "166",
+      "total_recorded_team_pass_plays": 208,
+      "unidentified_pass_play_count": 0
+    },
+    "home": {
+      "caution": "Recent passer volume is descriptive; cannot confirm next-game starter or medical availability.",
+      "identified_roster_qb_pass_play_coverage": 1.0,
+      "leader_by_recent_pass_play_volume": "5148427",
+      "leader_is_confirmed_starter": false,
+      "passer_id_not_matched_to_roster_count": 0,
+      "prior_games": 6,
+      "quarterbacks": [
+        {
+          "athlete_id": "5148427",
+          "last_recorded_pass_game_id": "401871068",
+          "name": "L. Locke",
+          "pass_play_epa_avg": -0.0594,
+          "prior_games_with_recorded_pass_play": 6,
+          "qb_rush_epa_avg": -0.26,
+          "recent_pass_play_epa_avg": -0.3843,
+          "recent_recorded_pass_plays": 104,
+          "recent_share_of_all_team_pass_plays": 0.9905,
+          "recorded_qb_rushes": 24,
+          "total_recorded_pass_plays": 221
+        },
+        {
+          "athlete_id": "5384797",
+          "last_recorded_pass_game_id": "401856805",
+          "name": "B. Holloway",
+          "pass_play_epa_avg": -1.0104,
+          "prior_games_with_recorded_pass_play": 2,
+          "qb_rush_epa_avg": 0.6513,
+          "recent_pass_play_epa_avg": -5.9909,
+          "recent_recorded_pass_plays": 1,
+          "recent_share_of_all_team_pass_plays": 0.0095,
+          "recorded_qb_rushes": 10,
+          "total_recorded_pass_plays": 5
+        }
+      ],
+      "recent_games_window": 3,
+      "recent_prior_game_ids": [
+        "401856805",
+        "401870766",
+        "401871068"
+      ],
+      "status": "QB_PARTICIPATION_OBSERVED_NOT_STARTER_CONFIRMED",
+      "team_id": "2534",
+      "total_recorded_team_pass_plays": 226,
+      "unidentified_pass_play_count": 0
+    }
+  },
+  "schema": "cfb_fresh_requested_matchup_v1",
+  "simulated_margin_home": 2.035,
+  "simulated_score_away": 23.665,
+  "simulated_score_home": 25.699,
+  "simulation": {
+    "away_cover_probability_raw": null,
+    "engine": "cfb.engine.v1",
+    "home_cover_probability_raw": null,
+    "home_win_probability_raw": 0.5544,
+    "limitations": [
+      "Possessions and short fields approximated",
+      "Uncalibrated priors/TD distribution",
+      "NCAA overtime follows correct round structure but approximates drive outcomes",
+      "No situational coaching clock or play-by-play details",
+      "No ATS calibration or verified pregame market quote"
+    ],
+    "margin_p10_p50_p90": [
+      -17.0,
+      3.0,
+      21.0
+    ],
+    "margin_standard_deviation": 14.724,
+    "mean_margin_home": 2.035,
+    "mean_score_away": 23.665,
+    "mean_score_home": 25.699,
+    "mean_total": 49.364,
+    "median_margin_home": 3.0,
+    "over_probability_raw": null,
+    "overtime_summary": {
+      "ot1": 225,
+      "ot2": 106,
+      "ot3_or_later": 44,
+      "regulation_ties": 225,
+      "unresolved_after_limit": 0
+    },
+    "push_probability_raw": null,
+    "seed": 401871070,
+    "simulations": 5000,
+    "status": "CFB_RESEARCH_UNCALIBRATED_NO_WAGER_GRADE",
+    "under_probability_raw": null
+  },
+  "skill_player_availability_exposure": {
+    "away": {
+      "eligible_prior_games": 6,
+      "missing_report_is_not_healthy": true,
+      "players": [
+        {
+          "athlete_id": "5220253",
+          "name": "J. Jones",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 4,
+          "recent_rushes": 49,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.5765,
+          "share_of_identified_recent_targets": 0.0465
+        },
+        {
+          "athlete_id": "5076584",
+          "name": "TJ Washington Jr.",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 9,
+          "recent_rushes": 23,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.2706,
+          "share_of_identified_recent_targets": 0.1047
+        },
+        {
+          "athlete_id": "4869443",
+          "name": "TK King",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 21,
+          "recent_rushes": 1,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0118,
+          "share_of_identified_recent_targets": 0.2442
+        },
+        {
+          "athlete_id": "5301984",
+          "name": "J. Thomas",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 17,
+          "recent_rushes": 0,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0,
+          "share_of_identified_recent_targets": 0.1977
+        },
+        {
+          "athlete_id": "5295460",
+          "name": "AJ Williams III",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 11,
+          "recent_rushes": 0,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0,
+          "share_of_identified_recent_targets": 0.1279
+        },
+        {
+          "athlete_id": "5152503",
+          "name": "A. Damante",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 1,
+          "recent_rushes": 7,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0824,
+          "share_of_identified_recent_targets": 0.0116
+        },
+        {
+          "athlete_id": "5156057",
+          "name": "M. Libman",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 7,
+          "recent_rushes": 0,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0,
+          "share_of_identified_recent_targets": 0.0814
+        },
+        {
+          "athlete_id": "5219270",
+          "name": "L. Ravare",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 4,
+          "recent_rushes": 0,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0,
+          "share_of_identified_recent_targets": 0.0465
+        }
+      ],
+      "recent_prior_game_ids": [
+        "401864579",
+        "401871049",
+        "401871066"
+      ],
+      "status": "DESCRIPTIVE_ONLY_NO_SKILL_PLAYER_SCORE_ADJUSTMENT"
+    },
+    "home": {
+      "eligible_prior_games": 6,
+      "missing_report_is_not_healthy": true,
+      "players": [
+        {
+          "athlete_id": "5384799",
+          "name": "MJ Dowdy",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 0,
+          "recent_rushes": 25,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.3289,
+          "share_of_identified_recent_targets": 0.0
+        },
+        {
+          "athlete_id": "4680018",
+          "name": "A. McCaskill",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 5,
+          "recent_rushes": 18,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.2368,
+          "share_of_identified_recent_targets": 0.0532
+        },
+        {
+          "athlete_id": "5104888",
+          "name": "G. O'Neill",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 21,
+          "recent_rushes": 0,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0,
+          "share_of_identified_recent_targets": 0.2234
+        },
+        {
+          "athlete_id": "5160209",
+          "name": "L. Brown",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 8,
+          "recent_rushes": 13,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.1711,
+          "share_of_identified_recent_targets": 0.0851
+        },
+        {
+          "athlete_id": "4895711",
+          "name": "C. Reed",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 19,
+          "recent_rushes": 0,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0,
+          "share_of_identified_recent_targets": 0.2021
+        },
+        {
+          "athlete_id": "5142319",
+          "name": "K. Berry-Johnson",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 14,
+          "recent_rushes": 1,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0132,
+          "share_of_identified_recent_targets": 0.1489
+        },
+        {
+          "athlete_id": "5296832",
+          "name": "T. Burns Jr.",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 13,
+          "recent_rushes": 0,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0,
+          "share_of_identified_recent_targets": 0.1383
+        },
+        {
+          "athlete_id": "5148427",
+          "name": "L. Locke",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 0,
+          "recent_rushes": 11,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.1447,
+          "share_of_identified_recent_targets": 0.0
+        },
+        {
+          "athlete_id": "5227793",
+          "name": "J. Parker Jr.",
+          "not_verified_starter": true,
+          "point_adjustment": null,
+          "recent_identified_targets": 5,
+          "recent_rushes": 6,
+          "reported_availability": null,
+          "share_of_identified_recent_rushes": 0.0789,
+          "share_of_identified_recent_targets": 0.0532
+        }
+      ],
+      "recent_prior_game_ids": [
+        "401856805",
+        "401870766",
+        "401871068"
+      ],
+      "status": "DESCRIPTIVE_ONLY_NO_SKILL_PLAYER_SCORE_ADJUSTMENT"
+    }
+  },
+  "source_manifest_sha256": "99fcde834d29b005e386202aebbe10c0d5e91b4d0d83afcb69ea8b58b9444aec",
+  "source_sha256": {
+    "pbp": "1a0909469c9e90f1d25ce361edf0da0be13f19e8e22093dea12bc127e9630570",
+    "roster": "defb103d75fcda38dc755b748c1521b46e441f272f7809b0a5e347e1547ca9e0",
+    "schedule": "9b970cff51bda692cc9d00eab06c73d63ae8e6bceac29301ff33c309f9e462bc"
+  },
+  "source_snapshot_at_utc": "2026-10-21T04:16:40.377314+00:00",
+  "status": "FRESH_PREGAME_PROJECTION_LOCKED",
+  "stress_tests": {
+    "definition": "One fewer possession each, or illustrative 10% PPD deviation",
+    "scenarios": [
+      {
+        "mean_away_score": 22.014,
+        "mean_home_margin": 0.74,
+        "mean_home_score": 22.754,
+        "scenario": "one_fewer_possession_each"
+      },
+      {
+        "mean_away_score": 25.514,
+        "mean_home_margin": 0.202,
+        "mean_home_score": 25.716,
+        "scenario": "away_ppd_ten_percent_better"
+      },
+      {
+        "mean_away_score": 22.686,
+        "mean_home_margin": 0.302,
+        "mean_home_score": 22.988,
+        "scenario": "home_ppd_ten_percent_worse"
+      },
+      {
+        "mean_away_score": 23.772,
+        "mean_home_margin": 4.364,
+        "mean_home_score": 28.136,
+        "scenario": "home_ppd_ten_percent_better"
+      }
+    ],
+    "status": "HYPOTHETICAL_SENSITIVITY_ONLY_NOT_CALIBRATED"
+  }
+}
