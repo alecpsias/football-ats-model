@@ -220,7 +220,7 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000
         'limitations':['Quarterback usage measured from prior games; next-game starters are NOT verified',
           'Only source-backed optional availability snapshots are displayed; no uncalibrated injury point deductions',
           'Unverified current injuries and projected lineups are NOT incorporated',
-          'Full pressure, special teams and penalty effects are missing/incomplete',
+          'Full pressure, charted special-teams EPA and penalties remain missing; source-backed kicks and matched field position are included in Build16 where available',
           'Prior-game row publication times are not independently proven by a later snapshot',
           'Possession model is uncalibrated; score estimates and ATS difference are research only',
           'No result or forecast from the target game was used as a model input']}
@@ -521,7 +521,29 @@ def markdown(report):
         ('Pass-defense success allowed','defense','success_pass_allowed'),
         ('Rush-defense success allowed','defense','success_rush_allowed')):
         lines.append(f"| {label} | {show(h[group].get(key))} | {show(a[group].get(key))} |")
-    lines += ['', '## Quarterback involvement — NOT a confirmed depth chart', '']
+    lines += ['', '## Field position and special-teams evidence — Build 16 only', '']
+    for side in ('home','away'):
+        comp=((build16.get(side) or {}).get('components') or {})
+        st=comp.get('special_teams_observed') or {}
+        lines.append(f"{report[side]}: prior drive starts " +
+          show(comp.get('own_start_field_position')) +
+          "; opponent allowed starts " +
+          show(comp.get('opponent_allowed_start_field_position')) +
+          "; opponent-adjusted field PPD residual " +
+          show(comp.get('field_position_residual_ppd')))
+        lines.append(f"Verified prior kicks, {report[side]}: FG " +
+          str(st.get('field_goals_made')) + "/" +
+          str(st.get('field_goals_attempted')) +
+          "; observed net punt yards/punt " +
+          show(st.get('net_punt_yards_per_punt')) +
+          "; observed kickoff return yards/return " +
+          show(st.get('kickoff_return_yards_per_observed_return')) +
+          "; regressed FG PPD residual " +
+          show(comp.get('field_goal_regression_residual_ppd')))
+    lines += ['', 'Punts and returns influence scoring only through verified observed starts; '
+               'their raw yardage is not counted a second time. Missing source fields '
+               'remain unavailable. These coefficients are not calibrated.',
+               '', '## Quarterback involvement — NOT a confirmed depth chart', '']
     for side in ('home','away'):
         team=report[side]
         qbr=report.get('quarterback_participation',{}).get(side,{})
@@ -555,7 +577,7 @@ def markdown(report):
     for t in report['stress_tests']['scenarios']:
         lines.append(f"- {t['scenario']}: projected home margin {t['mean_home_margin']:+.1f}")
     lines += ['', '**Known gaps:** Verified current starting QBs and full injury reports, pressure, '
-              'special teams, penalties, and calibrated ATS probability are not integrated.',
+              'charted special-teams EPA, penalty EPA, and calibrated ATS probability remain unavailable. Source-backed FG and starting field effects are an uncalibrated Build16 component.',
               '', 'The model has calculated a NEW score projection; it did not look up an earlier prediction.']
     return '\n'.join(lines)+'\n'
 
