@@ -20,6 +20,7 @@ from cfb.engine import CFB_RULES, simulate
 from cfb.advanced_scoring import simulate_challenger
 from cfb.game_script import simulate_script
 from cfb.mechanism_build16 import simulate_build16, observe_game_context
+from cfb.disruption import observed_disruption
 from cfb.matchups import matchup_signals
 from cfb.calibration import calibrate
 from cfb.pipeline import verify, normalize_pbp_teams, iso_utc
@@ -129,6 +130,8 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids):
 
     return {'opponent_id':int(opponent),
             'mechanism':observe_game_context(plays,team,opponent),
+            'disruption_off':observed_disruption(plays,team),
+            'disruption_def':observed_disruption(plays,opponent),
             'points':float(points),'conceded':float(conceded),
             'drives':int(drives),'faced':int(faced),
             'off_pass_sum':op,'off_pass_n':pn,'off_rush_sum':or_,'off_rush_n':rn,

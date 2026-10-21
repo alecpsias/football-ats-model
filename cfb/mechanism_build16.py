@@ -12,6 +12,7 @@ import pandas as pd
 
 from cfb.integrated_scoring import project_integrated
 from cfb.game_script import simulate_script
+from cfb.disruption import matchup_disruption
 
 VERSION='cfb-build16-unified-situational-v1'
 BUCKETS=('short_1_2','medium_3_6','long_7_plus')
@@ -184,16 +185,20 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
     # downs) remain descriptive until independently estimated as residuals.
     return {'version':VERSION,
      'home':{'third':third(h,a,home_projection),'pass_states':pass_states(h,hneutral),
-             'neutral_pass_rate':round(float(hneutral),6)},
+             'neutral_pass_rate':round(float(hneutral),6),
+             'recorded_disruption':matchup_disruption(h,a)},
      'away':{'third':third(a,h,away_projection),'pass_states':pass_states(a,aneutral),
-             'neutral_pass_rate':round(float(aneutral),6)},
+             'neutral_pass_rate':round(float(aneutral),6),
+             'recorded_disruption':matchup_disruption(a,h)},
      'turnover_field':fields(h,a),
      'unscored_descriptive':{'scoring_opportunity_outcomes':'OBSERVED_WHEN_AVAILABLE_NO_FITTED_EFFECT',
           'fourth_down':'OBSERVED_WHEN_AVAILABLE_NO_FITTED_EFFECT',
           'penalty_automatic_first_down':'OBSERVED_WHEN_AVAILABLE_NO_FITTED_EFFECT'},
      'assumptions':{'third_distance_residual':'bounded <=0.055 PPD per offense, not fitted',
                     'pass_state_response':'shrunken observed frequencies, not estimated causal elasticities',
-                    'turnover_following_field_ppd_per_yard':0.018}}
+                    'turnover_following_field_ppd_per_yard':0.018,
+                    'recorded_disruption_adjustment_ppd':0.0,
+                    'disruption_scoring_policy':'No incremental scoring coefficient until independent evidence'}}
 
 
 def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0):

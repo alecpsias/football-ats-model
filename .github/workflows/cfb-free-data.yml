@@ -82,6 +82,9 @@ jobs:
         run: |
           set -euo pipefail
           python -m cfb.pipeline inspect --snapshot "$SNAPSHOT" --out cfb_artifacts/actual_schema.json
+      - name: Audit 2026 recorded QB hurries and sacks (not charted pressure)
+        run: |
+          python -m cfb.disruption --snapshot "$SNAPSHOT" --out cfb_artifacts/recorded_disruption_audit.json
       - name: Generate strict pregame evidence only
         run: |
           set -euo pipefail
