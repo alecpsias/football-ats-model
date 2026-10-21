@@ -15,7 +15,7 @@ from nflverse_connector import verify
 from integrate_advanced_features import build_overlay, attach_overlay, verified_snapshot
 from collect_extra_metrics import parse_stamp
 from model import MODEL_RULES, InputError, validate_team, projection, simulate
-from mechanism_research import extract_mechanisms, candidate_simulation
+from mechanism_research import extract_mechanisms
 from nfl_stateful_candidate import stateful_candidate_simulation
 
 # All source capture and forecast generation must occur before the normal
@@ -133,33 +133,26 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
     h=projection(g['home'],g['away'],r,'home',.5*hfa)
     a=projection(g['away'],g['home'],r,'away',-.5*hfa)
     sim=simulate(h,a,r,None,None,runs,seed)
-    # v0.9 research branch uses the SAME pre-cutoff data, but is not promoted
-    # to the production forecast until genuine forward/out-of-sample validation.
+    # Exactly one ACTIVE challenger: update this implementation in place in
+    # future versions. v0.9 mechanisms are retained as features, not as a
+    # competing simulated forecast. The baseline above remains untouched.
     if pbp is None or schedule is None:
         manifest=json.loads((snapshot/'manifest.json').read_text())
         if pbp is None:pbp=load_table(snapshot/manifest['datasets']['pbp']['local_file'])
         if schedule is None:schedule=load_table(snapshot/manifest['datasets']['schedule']['local_file'])
+    challenger_candidate=None
+    challenger_profile=None
+    challenger_status='UNAVAILABLE_RESEARCH_ONLY'
+    challenger_reason=None
     try:
-        mechanism_profile=extract_mechanisms(pbp,schedule,cutoff,(g['home']['name'],g['away']['name']))
-        mechanism_candidate=candidate_simulation(h,a,mechanism_profile,r,runs,seed)
-        mechanism_status='AVAILABLE_RESEARCH_ONLY'
-        mechanism_reason=None
-    except InputError as exc:
-        # Optional candidate cannot block a verified core projection.
-        mechanism_profile=None;mechanism_candidate=None
-        mechanism_status='UNAVAILABLE_RESEARCH_ONLY';mechanism_reason=str(exc)
-    # New v0.10 challenger cannot alter either frozen v0.8.1 baseline or v0.9.
-    stateful_candidate=None
-    stateful_status='UNAVAILABLE_RESEARCH_ONLY'
-    stateful_reason=mechanism_reason
-    if mechanism_profile is not None:
-        try:
-            stateful_candidate=stateful_candidate_simulation(
-                h,a,mechanism_profile,r,runs,seed)
-            stateful_status='AVAILABLE_RESEARCH_ONLY'
-            stateful_reason=None
-        except (InputError, ValueError, KeyError, ArithmeticError) as exc:
-            stateful_reason=str(exc)
+        challenger_profile=extract_mechanisms(
+            pbp,schedule,cutoff,(g['home']['name'],g['away']['name']))
+        challenger_candidate=stateful_candidate_simulation(
+            h,a,challenger_profile,r,runs,seed)
+        challenger_status='AVAILABLE_RESEARCH_ONLY'
+    except (InputError, ValueError, KeyError, ArithmeticError) as exc:
+        # Missing challenger features cannot contaminate the valid baseline.
+        challenger_reason=str(exc)
     # Player evidence is source-verified and conditional QB impacts never silently
     # override the recorded neutral baseline forecast.
     personnel_evidence=measure(snapshot,injuries,cutoff,g['home']['name'],g['away']['name'],int(row['week']),pbp=pbp,roster=roster,metrics_dir=extra)
@@ -182,24 +175,22 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
        'injuries':injuries_for_game(injuries,g['home']['name'],g['away']['name'],int(row['week']),cutoff),
        'player_availability_evidence':personnel_evidence,
        'conditional_qb_scenarios':conditional_scenarios,
-       'mechanism_research':{'observations':mechanism_profile,'candidate':mechanism_candidate,
-           'status':mechanism_status,'missing_reason':mechanism_reason,
+       'challenger':{'version':'0.10.0','candidate':challenger_candidate,
+           'observations':challenger_profile,'status':challenger_status,
+           'missing_reason':challenger_reason,
            'baseline_locked_margin_home':sim['mean_margin_home'],
-           'comparison_status':'CANDIDATE_NOT_VALIDATED; NO ATS EDGE CLAIM'},
-       'stateful_research':{'candidate':stateful_candidate,
-           'status':stateful_status,'missing_reason':stateful_reason,
-           'comparison_status':'NEW_CHALLENGER_UNFITTED_NOT_VALIDATED; NO ATS EDGE'},
+           'comparison_status':'ONLY_ACTIVE_CHALLENGER_UNFITTED_NOT_VALIDATED; NO ATS EDGE'},
        'personnel_analysis_version':'0.8.0',
        'limitations':['No verified active/inactive lineup; all personnel shifts set to NEUTRAL SCENARIO, NOT measured zero impact',
            'No verified signed market spread; no ATS recommendation or EV',
            'Provisional model coefficients and raw probabilities not historically calibrated',
            'QB replacement scenarios are conditional and not the main forecast; no starter/inactive confirmation',
-           'v0.9 drive-state/turnover-location candidate is research only and cannot change the baseline forecast',
-           'v0.10 stateful candidate is unfitted, no in-game injury adjustment, and not a calibrated ATS edge'],
+           'Exactly one active evolving challenger, v0.10, incorporating earlier mechanism research',
+           'v0.10 stateful challenger is unfitted, no in-game injury adjustment, and not a calibrated ATS edge'],
        'audit':{'snapshot':str(snapshot),'derived_metrics':str(extra),'source_sha256':overlay['source_sha256'],
             'pressure_rate_reference':ref_to_number(g['pressure_reference_rate']),
             'advanced_missing':overlay['missing'],'statistics_provenance_issues':[x for x in audit['asof_issues'] if not x.startswith('market.as_of_utc:')],
-            'model_version':'0.8.1+candidate_0.9','simulation_runs':runs,'seed':seed}}
+            'model_version':'0.8.1+single_challenger_0.10','simulation_runs':runs,'seed':seed}}
 
 def ref_to_number(x):return float(x)
 
@@ -234,16 +225,16 @@ def generate(snapshot:Path,extra:Path,out:Path,injuries:Path|None=None,window_ho
             records.append({'game_id':game_id,'status':'PROJECTED_UNCALIBRATED','file':file.name,
                 'mean_margin_home':obj['projected_home_margin'],'fair_spread_home':obj['projected_fair_spread_home'],
                 'conditional_qb_scenarios':len(obj['conditional_qb_scenarios']),
-                'experimental_mechanism_margin_home':obj['mechanism_research']['candidate']['mean_margin_home'] if obj['mechanism_research']['candidate'] is not None else None,
-                'experimental_stateful_margin_home':obj['stateful_research']['candidate']['mean_margin_home'] if obj['stateful_research']['candidate'] is not None else None,
+                'challenger_version':obj['challenger']['version'],
+                'challenger_margin_home':obj['challenger']['candidate']['mean_margin_home'] if obj['challenger']['candidate'] is not None else None,
                 'reported_out_players':sum(len(t['reported_out']) for t in obj['player_availability_evidence']['teams'].values())})
         except (InputError,ValueError,KeyError,TypeError) as exc:
             records.append({'game_id':game_id,'status':'BLOCKED','reason':str(exc)})
-    index={'schema':'future_core_index_v0.9','capture_cutoff_utc':cutoff.isoformat(),
+    index={'schema':'future_core_index_v0.10','capture_cutoff_utc':cutoff.isoformat(),
       'window_hours':window_hours,'pre_inactives_lock_minutes':PREGAME_LOCK_MINUTES,
       'games':records,'n_projected':sum(x['status']=='PROJECTED_UNCALIBRATED' for x in records),
       'n_blocked':sum(x['status']=='BLOCKED' for x in records),
-      'candidate_model_production_status':'V09_AND_V010_RESEARCH_ONLY_NOT_VALIDATED',
+      'challenger_status':'ONE_ACTIVE_CHALLENGER_V010_RESEARCH_ONLY_NOT_PROMOTED',
       'not_a_bet':True,'notes':'Predictions locked at least 120 minutes before kickoff; no official inactives incorporated. No artificial odds or personnel confirmation. Future games only; separately listed measured QB scenarios are conditional.'}
     (out/'index.json').write_text(json.dumps(index,indent=2)+'\n')
     return index
