@@ -5,9 +5,12 @@ name: NFL locked-forecast accuracy ledger (free only)
 on:
   push:
     branches:
+      - main
       - 'nfl/**'
     paths:
       - 'nfl_forward_ledger.py'
+      - 'evaluate_locked_forecasts.py'
+      - 'nfl_challenger_policy.py'
       - 'test_nfl_forward_ledger.py'
       - '.github/workflows/nfl-forward-evaluate.yml'
   workflow_dispatch:
@@ -54,8 +57,11 @@ jobs:
               else:
                   j=json.loads(f.read_text());e=j['evaluation']
                   out.write(f"Artifacts: {j['artifact_count']}; frozen files: {j['forecast_file_count']}; completed distinct games: {e['completed_games']}\n\n")
-                  out.write(f"Margin MAE: baseline {e['base_mae_margin']}; v0.9 {e['candidate_mae_margin']}; v0.10 {e['stateful_mae_margin']} (n={e['stateful_completed_games']}).\n\n")
-                  out.write(f"Total MAE: baseline {e['base_mae_total']}; v0.9 {e['candidate_mae_total']}; v0.10 {e['stateful_mae_total']}.\n\n")
+                  current=e['current_challenger'];base=e['all_baseline']
+                  out.write(f"Active challenger: v{e['active_challenger_version']} (n={current['challenger_games']}).\n\n")
+                  out.write(f"Paired margin MAE: baseline {current['paired_baseline_mae_margin']}; current challenger {current['challenger_mae_margin']}.\n\n")
+                  out.write(f"Paired total MAE: baseline {current['paired_baseline_mae_total']}; current challenger {current['challenger_mae_total']}.\n\n")
+                  out.write(f"Historical retired versions: {list(e['archived_challenger_versions'])}; they are NOT active challenger models.\n\n")
                   out.write('No ATS record or promotion without validated pregame signed market quotes and adequate chronological samples.\n')
           PY
       - name: Save free prospective evaluation artifact

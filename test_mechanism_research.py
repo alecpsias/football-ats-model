@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from model import MODEL_RULES,InputError
-from mechanism_research import extract_mechanisms,matchup_third_down,turnover_following_field_bonus,candidate_simulation,_passrate_for_state
+from mechanism_research import extract_mechanisms,matchup_third_down,turnover_following_field_bonus,_passrate_for_state
 from evaluate_locked_forecasts import evaluate
 
 CUTOFF='2026-10-18T18:00:00Z'
@@ -84,16 +84,9 @@ class MechanismTest(unittest.TestCase):
         for state in ('trailing_9_plus','leading_9_plus','within_8'):
             self.assertTrue(0.18<=_passrate_for_state(p,'GB',state,.6)<=.90)
 
-    def test_deterministic_candidate_is_separate_from_production(self):
-        h,a=projections()
-        before=dict(h)
-        x=candidate_simulation(h,a,self.profile,MODEL_RULES['NFL'],1000,12)
-        y=candidate_simulation(h,a,self.profile,MODEL_RULES['NFL'],1000,12)
-        self.assertEqual(x,y)
-        self.assertEqual(h,before)
-        self.assertFalse(x['promoted_to_primary'])
-        self.assertTrue(x['research_only'])
-        self.assertTrue(-50<x['mean_margin_home']<50)
+    def test_retired_legacy_runner_is_not_an_active_model(self):
+        import mechanism_research
+        self.assertFalse(hasattr(mechanism_research,'candidate_simulation'))
 
     def test_scoring_opportunity_diagnostics_recorded_without_assumed_epa(self):
         self.assertIn('scoring_opportunities',self.profile['offense']['GB'])
@@ -118,8 +111,9 @@ class MechanismTest(unittest.TestCase):
                                    home_score=23,away_score=13,result=10,gameday='2026-10-18',gametime='16:00')])
             out=evaluate([path],s)
             self.assertEqual(out['completed_games'],1)
-            self.assertEqual(out['base_mae_margin'],6)
-            self.assertEqual(out['candidate_mae_margin'],8)
+            self.assertEqual(out['all_baseline']['baseline_mae_margin'],6)
+            self.assertEqual(out['archived_challenger_versions']['0.9.0']['challenger_mae_margin'],8)
+            self.assertEqual(out['current_challenger']['challenger_games'],0)
             self.assertEqual(out['ats_record'],'NOT_MEASURED_NO_VALIDATED_PRICED_SIGNED_LINES')
             data['data_as_of_utc']='2026-10-18T19:00:01Z'
             path.write_text(json.dumps(data))

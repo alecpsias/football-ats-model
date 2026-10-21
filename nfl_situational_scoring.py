@@ -1,4 +1,4 @@
-"""NFL v0.9 source-backed but UNFITTED fourth/finishing/penalty residuals.
+"""NFL single-challenger source-backed but UNFITTED fourth/finishing/penalty residuals.
 
 Only observed previously completed plays. Missing sample => no scoring effect.
 No isolated penalty EPA and no claim of calibrated ATS probabilities.

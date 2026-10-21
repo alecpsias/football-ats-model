@@ -1,8 +1,9 @@
-"""NFL v0.9 must score situational matchups without changing NFL baseline."""
+"""NFL one evolving challenger must score situations without changing baseline."""
 import copy
 import unittest
 from model import MODEL_RULES
-from mechanism_research import extract_mechanisms,candidate_simulation
+from mechanism_research import extract_mechanisms
+from nfl_stateful_candidate import stateful_candidate_simulation
 from test_mechanism_research import fixture,projections,CUTOFF
 from nfl_situational_scoring import scored_situations
 
@@ -32,12 +33,12 @@ class SituationalNFLTests(unittest.TestCase):
         self.assertLessEqual(abs(z['total_delta_ppd']),.085)
         self.assertLessEqual(abs(z['total_delta_td_share']),.032)
         h,a=projections();copy_h=copy.deepcopy(h)
-        x=candidate_simulation(h,a,self.profile,MODEL_RULES['NFL'],1000,19)
-        y=candidate_simulation(h,a,p,MODEL_RULES['NFL'],1000,19)
+        x=stateful_candidate_simulation(h,a,self.profile,MODEL_RULES['NFL'],1000,19)
+        y=stateful_candidate_simulation(h,a,p,MODEL_RULES['NFL'],1000,19)
         self.assertNotEqual(x['score_home'],y['score_home'])
         self.assertEqual(h,copy_h)
         self.assertFalse(y['promoted_to_primary'])
-        self.assertEqual(y,candidate_simulation(h,a,p,MODEL_RULES['NFL'],1000,19))
+        self.assertEqual(y,stateful_candidate_simulation(h,a,p,MODEL_RULES['NFL'],1000,19))
     def test_no_defense_opportunities_means_no_finishing_effect(self):
         p=copy.deepcopy(self.profile);p['defense']['DAL']['scoring_opportunities']=0
         self.assertEqual(scored_situations(p,'GB','DAL')['finishing']['delta_td_share'],0)
