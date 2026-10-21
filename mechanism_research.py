@@ -62,6 +62,9 @@ def _blank():
             'penalty_nonthird_firsts_allowed':0,
             'penalty_auto_first_down_conceded':0,'penalties_conceded':0,
             'penalty_yards_conceded':0,'snaps_faced':0,
+            'drive_states':{s:{'drives':0,'points_proxy':0,'touchdowns':0,'field_goals':0}
+                            for s in ('trailing_9_plus','within_8','leading_9_plus')},
+            'completed_team_game_ppd':[],
             'scoring_opportunities':0,'scoring_opportunity_touchdowns':0,
             'scoring_opportunity_field_goals':0,'scoring_opportunity_turnovers':0,
             'scoring_opportunity_fourth_down_failures':0}
@@ -101,6 +104,9 @@ def extract_mechanisms(pbp:pd.DataFrame,schedule:pd.DataFrame,cutoff,teams:tuple
     # Save observed following-possession yardline by location of prior turnover.
     next_starts={b:[] for b in ('opponent_40_or_closer','outside_opponent_40')}
     drives=defaultdict(list)
+    # Pre-cutoff, completed-drive PPD observations for a separate v0.10
+    # research challenger. Never import the target game's play-by-play.
+    game_points=defaultdict(lambda:[0.,0])
     for row in valid.itertuples(index=False):
         gid=str(row.game_id);a=str(row.posteam);d=str(row.defteam)
         x=off[a];y=deff[d]
@@ -169,6 +175,24 @@ def extract_mechanisms(pbp:pd.DataFrame,schedule:pd.DataFrame,cutoff,teams:tuple
         # scoring position. These are observation counts, NOT isolated points.
         for (k,initial) in ordered:
             drive_rows=bydrive[k]
+            outcome=str(next((q.fixed_drive_result for q in reversed(drive_rows)
+                              if hasattr(q,'fixed_drive_result') and pd.notna(q.fixed_drive_result)),'')).lower()
+            state=_state(initial.score_differential)
+            # Only recognize explicit FINAL drive outcomes. A missing result
+            # is not silently relabeled a scoreless drive.
+            observed={'touchdown','field goal','punt','turnover',
+                      'turnover on downs','missed field goal',
+                      'end of half','end of game'}
+            if state and outcome in observed:
+                points=7 if outcome=='touchdown' else 3 if outcome=='field goal' else 0
+                for obj in (off[k[0]],deff[str(initial.defteam)],lg):
+                    entry=obj['drive_states'][state]
+                    entry['drives']+=1
+                    entry['points_proxy']+=points
+                    entry['touchdowns']+=int(outcome=='touchdown')
+                    entry['field_goals']+=int(outcome=='field goal')
+                game_points[(gid,k[0])][0]+=points
+                game_points[(gid,k[0])][1]+=1
             if not any((_num(p.yardline_100) is not None and
                         _num(p.yardline_100)<=40) for p in drive_rows):continue
             outcome=str(next((q.fixed_drive_result for q in reversed(drive_rows)
@@ -191,6 +215,9 @@ def extract_mechanisms(pbp:pd.DataFrame,schedule:pd.DataFrame,cutoff,teams:tuple
             start=_num(ordered[j+1][1].yardline_100)
             if z and start is not None and 1<=start<=99:
                 next_starts[z].append(round(100-start,2))
+    for (gid,team),(points,attempts) in sorted(game_points.items()):
+        if attempts>=5:
+            lg['completed_team_game_ppd'].append(round(points/attempts,6))
     if not next_starts['opponent_40_or_closer'] and not next_starts['outside_opponent_40']:
         raise InputError('No observed next-drive field positions after turnovers')
     # Each team should have at least three legitimate prior games, not 3 tagged plays.

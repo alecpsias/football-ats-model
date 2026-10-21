@@ -1,0 +1,53 @@
+name: NFL stateful challenger tests (free only)
+
+on:
+  push:
+    branches:
+      - 'nfl/**'
+    paths:
+      - 'nfl_stateful_candidate.py'
+      - 'mechanism_research.py'
+      - 'forecast_upcoming_core.py'
+      - 'evaluate_locked_forecasts.py'
+      - 'test_nfl_stateful_candidate.py'
+      - 'test_mechanism_research.py'
+      - '.github/workflows/nfl-research-tests.yml'
+  pull_request:
+    paths:
+      - 'nfl_stateful_candidate.py'
+      - 'mechanism_research.py'
+      - 'forecast_upcoming_core.py'
+      - 'evaluate_locked_forecasts.py'
+      - 'test_nfl_stateful_candidate.py'
+      - '.github/workflows/nfl-research-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free dependencies
+        run: pip install -r requirements-nflverse.txt
+      - name: Syntax check
+        run: |
+          python -m py_compile nfl_stateful_candidate.py mechanism_research.py forecast_upcoming_core.py evaluate_locked_forecasts.py test_nfl_stateful_candidate.py
+      - name: Run entire NFL root test suite (CFB suite remains independent)
+        run: |
+          mkdir -p ../examples
+          cp synthetic_matchup.json ../examples/synthetic_matchup.json
+          python - <<'PY'
+          import pathlib, sys, unittest
+          names = sorted(p.stem for p in pathlib.Path('.').glob('test_*.py'))
+          print('NFL root test modules:', ', '.join(names), flush=True)
+          result = unittest.TextTestRunner(verbosity=2).run(
+              unittest.defaultTestLoader.loadTestsFromNames(names))
+          sys.exit(0 if result.wasSuccessful() else 1)
+          PY
