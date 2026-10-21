@@ -6,8 +6,8 @@ empirically calibrated betting probabilities. Neutral PERSONNEL SCENARIO is
 an explicit assumption and not a verified injury adjustment.
 """
 from __future__ import annotations
-import argparse, copy, hashlib, json, math
-from datetime import timedelta
+import argparse, copy, hashlib, json, math, os
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import pandas as pd
 from ingest import build, load_table, normalize_schedule
@@ -163,6 +163,9 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
     def clean(p):
         return {k:v for k,v in p.items() if not k.startswith('_') and k not in ('personnel_adjustment_source','personnel_news_checked_at_utc','personnel_notes')}
     result={'schema':'football_ats_future_core_v0.8','game_id':g['id'],'home':g['home']['name'],'away':g['away']['name'],
+       'generated_at_utc':datetime.now(timezone.utc).isoformat(),
+       'execution':{'github_run_id':os.environ.get('GITHUB_RUN_ID'),
+                    'git_commit_sha':os.environ.get('GITHUB_SHA')},
        'kickoff_utc':g['kickoff_utc'],'data_as_of_utc':g['data_as_of_utc'],
        'pre_inactives_lock_minutes':PREGAME_LOCK_MINUTES,
        'status':'EXPLORATORY_CORE_PROJECTION_UNCALIBRATED',
