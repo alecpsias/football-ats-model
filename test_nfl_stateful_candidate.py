@@ -103,7 +103,7 @@ class StatefulCandidateTests(unittest.TestCase):
                     promoted_to_primary=False)},
                 stateful_research={"candidate": dict(
                     mean_margin_home=5., score_home=23., score_away=18.,
-                    promoted_to_primary=False)})
+                    promoted_to_primary=False)},
             )
             f.write_text(json.dumps(pred))
             scores = pd.DataFrame([dict(game_id="2026_game", home_team="GB",
