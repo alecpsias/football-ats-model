@@ -10,7 +10,7 @@ EPA is a competing estimate, not an additional full correction on top of the
 current baseline's already-realized scoring rates: blended *levels* avoid
 counting existing offensive/defensive drive results twice. All constants below
 are hypotheses, not fitted or validated coefficients. Full pressure and
-special-teams/penalty EPA remain missing and NEVER replaced with zero-valued
+charting-based special-teams/penalty EPA remain missing and NEVER replaced with zero-valued
 'observations'. Target-game outcomes, odds, and guessed injuries are unused.
 """
 from __future__ import annotations
@@ -21,7 +21,7 @@ from types import MappingProxyType
 from cfb.engine import CFB_RULES, simulate
 from cfb.matchups import _adjusted_attack
 
-VERSION='cfb-integrated-scoring-research-v1'
+VERSION='cfb-integrated-scoring-research-v2-field-special'
 RULES=MappingProxyType({
     'epa_prior_plays':450.0,
     'epa_level_prior_plays':300.0,
@@ -35,6 +35,12 @@ RULES=MappingProxyType({
     'third_down_residual_ppd':.65,
     'red_zone_residual_ppd':.26,
     'field_position_ppd_per_yard':.018,
+    'field_position_prior_drives':80.,
+    'field_position_residual_cap':.06,
+    'field_goal_prior_make_rate':.72,
+    'field_goal_prior_attempts':18.,
+    'field_goal_regression_weight':.45,
+    'field_goal_residual_cap':.055,
     'qb_rush_residual_points_per_rush':.20,
     'sack_residual_ppd':-.25,
     'success_pass_prior':.44,
@@ -95,6 +101,41 @@ def _interaction_residual(off,defense,off_n,off_d,def_n,def_d,prior,scale):
 def _mean_optional(rows,key):
     z=[r[key] for r in rows if _finite(r.get(key))]
     return float(sum(z)/len(z)) if z else None
+
+
+def _start_position(rows,position_key,count_key):
+    """Possession-weighted start location, not unweighted average of game means."""
+    weighted=count=0.
+    for row in rows:
+        v=row.get(position_key);n=row.get(count_key)
+        if v is None or n is None:
+            continue
+        if not _finite(v) or not _finite(n) or not 1<=v<=99 or n<=0:
+            raise ValueError('Invalid verified CFB drive-start observation')
+        weighted+=v*n;count+=n
+    return (weighted/count,count) if count else (None,0.)
+
+
+def _special_observed(rows):
+    """Never infer a missing special-teams statistic from points or PBP EPA."""
+    keys=('fg_made','fg_attempts','punt_net_sum','punt_net_n',
+          'kick_return_sum','kick_return_n')
+    values={}
+    for name in keys:
+        x=[(r.get('special_teams') or {}).get(name) for r in rows]
+        if len(x)!=len(rows) or any(v is None for v in x):
+            values[name]=None
+        elif any(not _finite(v) or v<0 for v in x if name not in
+                 ('punt_net_sum','kick_return_sum')):
+            raise ValueError('Invalid special teams event count')
+        elif any(not _finite(v) for v in x):
+            raise ValueError('Invalid special teams yards')
+        else:
+            values[name]=sum(x)
+    fg_m=values['fg_made'];fg_n=values['fg_attempts']
+    if fg_m is not None and fg_n is not None and (fg_m>fg_n or fg_n<0):
+        raise ValueError('Impossible field goal observations')
+    return values
 
 
 def _weight_and_match(team_id,opponent_id,histories,kind):
@@ -266,15 +307,67 @@ def project_integrated(team_id,opponent_id,histories,neutral,side):
         adjusted+=term;components['qb_rushing_residual_ppd']=round(term,6)
     else:missing.append('qb_rushing_samples')
 
-    our_field=_mean_optional(team,'start_field_position')
-    opp_field=_mean_optional(opponent,'start_field_position')
-    if our_field is None or opp_field is None:missing.append('matched_field_position')
+    own_start,own_n=_start_position(team,'start_field_position','start_field_n')
+    allowed_start,allowed_n=_start_position(
+        opponent,'start_field_position_allowed','start_field_allowed_n')
+    if own_start is None or allowed_start is None:
+        missing.append('opponent_matched_defensive_start_field_position')
     else:
-        # Delta relative to opponent, avoids inventing a global starting-yard
-        # reference. Symmetric half-shift avoids doubling its effect in margin.
-        term=float(_clip((our_field-opp_field)*RULES['field_position_ppd_per_yard']/2,-.06,.06))
-        adjusted+=term;components['field_position_residual_ppd']=round(term,6)
-    missing.extend(('special_teams_epa_unavailable','penalty_epa_unavailable',
+        # Baseline offense PPD already reflects its own historic starting
+        # fields. Adjust ONLY the matchup-driven deviation from that baseline:
+        # average our observed start and this opponent's observed allowed start.
+        # The effect is shrinkage-weighted and bounded to prevent counting all
+        # punts, kickoffs and turnovers again as independent EPA.
+        reliability=min(own_n,allowed_n)
+        w=reliability/(reliability+RULES['field_position_prior_drives'])
+        matchup_start=(own_start+allowed_start)/2
+        term=float(_clip((matchup_start-own_start)*
+            RULES['field_position_ppd_per_yard']*w,
+            -RULES['field_position_residual_cap'],
+             RULES['field_position_residual_cap']))
+        adjusted+=term
+        components.update({'own_start_field_position':round(own_start,5),
+                           'opponent_allowed_start_field_position':round(allowed_start,5),
+                           'matchup_start_field_position':round(matchup_start,5),
+                           'matched_start_field_samples':round(reliability,2),
+                           'field_position_residual_ppd':round(term,6)})
+    st=_special_observed(team)
+    fg_m=st['fg_made']; fg_n=st['fg_attempts']
+    if fg_n is None or fg_m is None:
+        missing.append('field_goals_unverified')
+    elif fg_n:
+        # Prior games' made FGs were already in baseline scoring; this is
+        # REGRESSION of kicker finishing toward a league hypothesis, not a
+        # second additive reward for made FGs. No claim of fitted kicker skill.
+        raw=fg_m/fg_n
+        posterior=(fg_m+RULES['field_goal_prior_attempts']*
+                   RULES['field_goal_prior_make_rate'])/(fg_n+
+                   RULES['field_goal_prior_attempts'])
+        drives=sum(float(x['drives']) for x in team)
+        fg_per_drive=fg_n/max(1.,drives)
+        term=float(_clip((posterior-raw)*3*fg_per_drive*
+            RULES['field_goal_regression_weight'],
+            -RULES['field_goal_residual_cap'],
+             RULES['field_goal_residual_cap']))
+        adjusted+=term
+        components['field_goal_regression_residual_ppd']=round(term,6)
+        components['field_goal_empirical_rate']=round(raw,6)
+        components['field_goal_shrunk_rate']=round(posterior,6)
+    # Punts and kickoff returns affect drive starting position. Report them
+    # from source events without tacking on another unvalidated points effect.
+    def per_event(numerator,denominator):
+        x,y=st[numerator],st[denominator]
+        return round(x/y,4) if x is not None and y is not None and y>0 else None
+    components['special_teams_observed']={
+        'field_goals_made':fg_m,'field_goals_attempted':fg_n,
+        'net_punt_yards_per_punt':per_event('punt_net_sum','punt_net_n'),
+        'kickoff_return_yards_per_observed_return':
+            per_event('kick_return_sum','kick_return_n'),
+        'punt_kickoff_scoring_policy':'FIELD_POSITION_CAPTURED_ON_DRIVE_STARTS_NO_DUPLICATE_EPA'}
+    for metric in ('punt_net_n','kick_return_n'):
+        if st[metric] is None:missing.append(metric+'_unverified')
+    missing.extend(('charting_based_special_teams_epa_unavailable',
+                    'penalty_epa_unavailable',
                     'confirmed_next_game_lineup_unavailable'))
     ppd=float(_clip(adjusted,.35,5.5))
     td=base['_td'] if rz is None else float(_clip(
