@@ -105,7 +105,7 @@ jobs:
           python -m cfb.prospective \
             --snapshot "$SNAPSHOT" \
             --out cfb_artifacts/prospective_frozen \
-            --runs 3000 --days 7 \
+            --runs 5000 --days 7 \
             --git-sha "$GITHUB_SHA" \
             --github-run-id "$GITHUB_RUN_ID"
       - name: Restore original October 20 frozen forecasts (unchanged)
@@ -177,14 +177,25 @@ jobs:
             --team-a "$CFB_TEAM_A" --team-b "$CFB_TEAM_B" \
             --game-id "$CFB_GAME_ID" \
             --reviews cfb/archive/reviews \
+            --runs 5000 \
             --odds cfb/_market_disabled \
             --snapshot "$SNAPSHOT" \
             --availability-dir cfb/availability \
             --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
             --out "cfb/archive/reviews/${GITHUB_RUN_ID}.json"
+          if [[ "$CFB_MODE" == "pregame" ]]; then
+            python simulation_receipt.py \
+              --league CFB \
+              --input "cfb/archive/reviews/${GITHUB_RUN_ID}.json" \
+              --out "cfb/archive/reviews/${GITHUB_RUN_ID}.proof.json" \
+              --run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA"
+          fi
           mkdir -p cfb_artifacts/matchup_request
           cp "cfb/archive/reviews/${GITHUB_RUN_ID}.json" cfb_artifacts/matchup_request/latest.json
           cp "cfb/archive/reviews/${GITHUB_RUN_ID}.md" cfb_artifacts/matchup_request/latest.md
+          if [[ "$CFB_MODE" == "pregame" ]]; then
+            cp "cfb/archive/reviews/${GITHUB_RUN_ID}.proof.json" cfb_artifacts/matchup_request/proof.json
+          fi
       - name: Save requested matchup review as separate append-only commit
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.mode != 'batch' }}
         run: |
@@ -260,9 +271,19 @@ jobs:
             --runs 5000 \
             --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
             --out "cfb/archive/reviews/${GITHUB_RUN_ID}.json"
+          if [[ "$CFB_MODE" == "pregame" ]]; then
+            python simulation_receipt.py \
+              --league CFB \
+              --input "cfb/archive/reviews/${GITHUB_RUN_ID}.json" \
+              --out "cfb/archive/reviews/${GITHUB_RUN_ID}.proof.json" \
+              --run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA"
+          fi
           mkdir -p cfb_artifacts/matchup_request
           cp "cfb/archive/reviews/${GITHUB_RUN_ID}.json" cfb_artifacts/matchup_request/latest.json
           cp "cfb/archive/reviews/${GITHUB_RUN_ID}.md" cfb_artifacts/matchup_request/latest.md
+          if [[ "$CFB_MODE" == "pregame" ]]; then
+            cp "cfb/archive/reviews/${GITHUB_RUN_ID}.proof.json" cfb_artifacts/matchup_request/proof.json
+          fi
       - name: Permanently save this requested matchup investigation
         run: |
           set -euo pipefail
