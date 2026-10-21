@@ -17,6 +17,8 @@ from collect_extra_metrics import parse_stamp
 from model import MODEL_RULES, InputError, validate_team, projection, simulate
 from mechanism_research import extract_mechanisms
 from nfl_stateful_candidate import stateful_candidate_simulation
+from nfl_challenger_policy import (ACTIVE_CHALLENGER_VERSION, BASELINE_VERSION,
+                                   require_single_active_challenger)
 
 # All source capture and forecast generation must occur before the normal
 # ~90-minute inactive announcement window. This is a policy cutoff, not
@@ -160,7 +162,7 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
     # Remove the internal scenario-only placeholder fields from user-visible results.
     def clean(p):
         return {k:v for k,v in p.items() if not k.startswith('_') and k not in ('personnel_adjustment_source','personnel_news_checked_at_utc','personnel_notes')}
-    return {'schema':'football_ats_future_core_v0.8','game_id':g['id'],'home':g['home']['name'],'away':g['away']['name'],
+    result={'schema':'football_ats_future_core_v0.8','game_id':g['id'],'home':g['home']['name'],'away':g['away']['name'],
        'kickoff_utc':g['kickoff_utc'],'data_as_of_utc':g['data_as_of_utc'],
        'pre_inactives_lock_minutes':PREGAME_LOCK_MINUTES,
        'status':'EXPLORATORY_CORE_PROJECTION_UNCALIBRATED',
@@ -175,7 +177,7 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
        'injuries':injuries_for_game(injuries,g['home']['name'],g['away']['name'],int(row['week']),cutoff),
        'player_availability_evidence':personnel_evidence,
        'conditional_qb_scenarios':conditional_scenarios,
-       'challenger':{'version':'0.10.0','candidate':challenger_candidate,
+       'challenger':{'version':ACTIVE_CHALLENGER_VERSION,'candidate':challenger_candidate,
            'observations':challenger_profile,'status':challenger_status,
            'missing_reason':challenger_reason,
            'baseline_locked_margin_home':sim['mean_margin_home'],
@@ -190,7 +192,10 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
        'audit':{'snapshot':str(snapshot),'derived_metrics':str(extra),'source_sha256':overlay['source_sha256'],
             'pressure_rate_reference':ref_to_number(g['pressure_reference_rate']),
             'advanced_missing':overlay['missing'],'statistics_provenance_issues':[x for x in audit['asof_issues'] if not x.startswith('market.as_of_utc:')],
-            'model_version':'0.8.1+single_challenger_0.10','simulation_runs':runs,'seed':seed}}
+            'model_version':f'{BASELINE_VERSION}+single_challenger_{ACTIVE_CHALLENGER_VERSION}','simulation_runs':runs,'seed':seed}}
+
+    require_single_active_challenger(result)
+    return result
 
 def ref_to_number(x):return float(x)
 
@@ -234,7 +239,7 @@ def generate(snapshot:Path,extra:Path,out:Path,injuries:Path|None=None,window_ho
       'window_hours':window_hours,'pre_inactives_lock_minutes':PREGAME_LOCK_MINUTES,
       'games':records,'n_projected':sum(x['status']=='PROJECTED_UNCALIBRATED' for x in records),
       'n_blocked':sum(x['status']=='BLOCKED' for x in records),
-      'challenger_status':'ONE_ACTIVE_CHALLENGER_V010_RESEARCH_ONLY_NOT_PROMOTED',
+      'challenger_status':f'ONE_ACTIVE_CHALLENGER_V{ACTIVE_CHALLENGER_VERSION}_RESEARCH_ONLY_NOT_PROMOTED',
       'not_a_bet':True,'notes':'Predictions locked at least 120 minutes before kickoff; no official inactives incorporated. No artificial odds or personnel confirmation. Future games only; separately listed measured QB scenarios are conditional.'}
     (out/'index.json').write_text(json.dumps(index,indent=2)+'\n')
     return index
