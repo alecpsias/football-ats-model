@@ -21,7 +21,7 @@ def raw_fixture():
          'fg_attempt':True,'fg_made':True,'yds_fg':45,'fg_team':'2',
          'punt':False,'kickoff_play':False},
         {'game_id':10,'game_play_number':4,'pos_team_id':1,
-         'punt':True,'punt_team':'1','yds_punt_gained':42,
+         'punt':True,'punt_team':'1','punt_net_yards':42,
          'fg_attempt':False,'kickoff_play':False},
         {'game_id':10,'game_play_number':5,'pos_team_id':2,
          'kickoff_play':True,'kick_return_team':'1','yds_kickoff_return':23,
@@ -55,6 +55,13 @@ class FieldSpecialTests(unittest.TestCase):
         self.assertEqual((x['fg_long_made'],x['fg_long_attempts']),(0,1))
         self.assertEqual((x['punt_net_sum'],x['punt_net_n']),(42.,1))
         self.assertEqual((x['kick_return_sum'],x['kick_return_n']),(23.,1))
+
+    def test_punt_gain_not_confused_with_net_punting(self):
+        raw=raw_fixture().drop(columns=['punt_net_yards'])
+        raw['yds_punt_gained']=3
+        x=observed_special_teams(raw,1,2)
+        self.assertIsNone(x['punt_net_sum'])
+        self.assertIsNone(x['punt_net_n'])
 
     def test_unattributed_fg_is_unknown_not_a_zero(self):
         raw=raw_fixture().drop(columns=['fg_team','pos_team_id'])
