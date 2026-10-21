@@ -79,7 +79,8 @@ def list_free_pregame_artifacts(repo: str, token: str, limit: int = 25) -> list[
 def free_nfl_finals(season: int) -> pd.DataFrame:
     """nflverse/nflreadpy schedule supplies realized scores ONLY."""
     import nflreadpy
-    # Polars to_dicts avoids requiring paid services or optional pyarrow.\n    data = pd.DataFrame(nflreadpy.load_schedules([int(season)]).to_dicts())
+    # Polars to_dicts avoids requiring paid services or optional pyarrow.
+    data = pd.DataFrame(nflreadpy.load_schedules([int(season)]).to_dicts())
     fields = ("game_id", "home_team", "away_team", "home_score", "away_score",
               "gameday", "gametime")
     missing = set(fields).difference(data.columns)
