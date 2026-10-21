@@ -1,0 +1,29 @@
+{
+  "ats_calibrated": false,
+  "away": "NE",
+  "challenger_home_margin": 3.7,
+  "challenger_model_version": "0.10.0",
+  "challenger_runs": 5000,
+  "forecast_at_or_after_source_utc": "2026-10-21T21:11:45.123460+00:00",
+  "game_id": "2026_07_NE_CHI",
+  "git_commit_sha": "d7adc15211779fb316c02d6c0016e8b1fb988b21",
+  "github_actions_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39676660380",
+  "github_run_id": "39676660380",
+  "home": "CHI",
+  "kickoff_utc": "2026-10-23T00:15:00+00:00",
+  "league": "NFL",
+  "market_quote_verified": false,
+  "primary_home_margin": 4.02,
+  "primary_model_version": "0.8.1+single_challenger_0.10.0",
+  "primary_runs": 5000,
+  "result_sha256": "1aa1f20994c716de3ea911632186c8b776cb27ae7c588eef63ab9a23eccd5e81",
+  "schema": "simulation_execution_receipt_v1",
+  "source_as_of_utc": "2026-10-21T21:11:40.477186+00:00",
+  "source_fingerprint": {
+    "derived": "5a194fa6a8311239fbca22662cd2ab602b111152bc931ca224f8ccd62af536d8",
+    "pbp": "15dec54ba27f9a81bf019576f7faaafcdb9c19de215d8cf75d206f13f5f7f623",
+    "pfr_pass": "4f41173dcea8b32df165a4a2727be99415a9378249e3a3305c81004b17203b84"
+  },
+  "status": "VERIFIED_5000_SIMULATIONS_RESEARCH_ONLY",
+  "warning": "This verifies execution, not an empirically validated ATS edge."
+}

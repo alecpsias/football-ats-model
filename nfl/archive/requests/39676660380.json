@@ -1,0 +1,1491 @@
+{
+  "schema": "football_ats_future_core_v0.8",
+  "game_id": "2026_07_NE_CHI",
+  "home": "CHI",
+  "away": "NE",
+  "generated_at_utc": "2026-10-21T21:11:45.123460+00:00",
+  "execution": {
+    "github_run_id": "39676660380",
+    "git_commit_sha": "d7adc15211779fb316c02d6c0016e8b1fb988b21"
+  },
+  "kickoff_utc": "2026-10-23T00:15:00+00:00",
+  "data_as_of_utc": "2026-10-21T21:11:40.477186+00:00",
+  "pre_inactives_lock_minutes": 120,
+  "status": "EXPLORATORY_CORE_PROJECTION_UNCALIBRATED",
+  "score_home": 25.0,
+  "score_away": 20.99,
+  "baseline_simulation": {
+    "mean_score_home": 25.0,
+    "mean_score_away": 20.99,
+    "median_score_home": 24.0,
+    "median_score_away": 20.0,
+    "mean_margin_home": 4.02,
+    "median_margin_home": 4.0,
+    "margin_p10_p50_p90": [
+      -14.0,
+      4.0,
+      22.0
+    ],
+    "margin_standard_deviation": 13.85,
+    "home_cover_probability_raw": null,
+    "away_cover_probability_raw": null,
+    "push_probability": null,
+    "home_win_probability_raw": 0.6158,
+    "over_probability_raw": null,
+    "under_probability_raw": null,
+    "total_push_probability": null,
+    "mean_total": 45.99,
+    "home_cover_monte_carlo_se": null,
+    "simulations": 5000,
+    "seed": 20261018,
+    "simulation_note": "Approximate possession model with provisional priors; simplified overtime. Probabilities NOT empirically calibrated. MC uncertainty omits model error."
+  },
+  "projected_home_margin": 4.02,
+  "projected_fair_spread_home": -4.02,
+  "home_win_probability_RAW_UNCALIBRATED": 0.6158,
+  "margin_interval_p10_p50_p90": [
+    -14.0,
+    4.0,
+    22.0
+  ],
+  "market_reference": {
+    "source": "nflverse schedule feed: unverified original quote time/book",
+    "first_observed_in_our_snapshot_at_utc": "2026-10-21T21:11:40.477186+00:00",
+    "spread_line": 3.0,
+    "home_spread_odds": -102.0,
+    "away_spread_odds": -118.0,
+    "total_line": 50.5,
+    "signed_home_spread": null,
+    "executable_quote_verified": false,
+    "note": "spread_line is unsigned; snapshot observation does not prove bookmaker quote age. Never calculate EV or cover side from it."
+  },
+  "spread_side": "NOT_EVALUATED_NO_VERIFIED_SIGNED_LINE",
+  "ats_roi": null,
+  "team_projections": {
+    "home": {
+      "team": "CHI",
+      "side": "home",
+      "pass_rate": 0.5509259259259259,
+      "plays_per_drive": 5.951,
+      "expected_drives": 10.833,
+      "sos_adjusted_pass_epa_offense": 0.0455,
+      "sos_adjusted_pass_epa_defense_allowed": -0.0388,
+      "sos_adjusted_rush_epa_offense": 0.0224,
+      "sos_adjusted_rush_epa_defense_allowed": 0.0089,
+      "matched_pass_epa": -0.001,
+      "matched_rush_epa": 0.015,
+      "pressure_rate": 0.221,
+      "pressure_residual_epa": 0.0003,
+      "pass_success_residual_epa": 0.0011,
+      "rush_success_residual_epa": -0.0005,
+      "expected_sack_rate_per_dropback": 0.0661,
+      "expected_sacks_per_game": 2.347,
+      "qb_rushes_per_game": 1.525,
+      "qb_rushing_epa_adjustment": -0.0001,
+      "pass_success_rate": 0.4556,
+      "rush_success_rate": 0.4317,
+      "explosive_pass_rate": 0.1141,
+      "explosive_rush_rate": 0.1005,
+      "third_down_conversion": 0.4066,
+      "redzone_td_rate": 0.5465,
+      "touchdown_share_of_scoring_drives": 0.5719,
+      "interception_rate_per_dropback": 0.0228,
+      "fumble_lost_rate_per_play": 0.00942,
+      "turnover_drive_probability": 0.1226,
+      "pressure_related_interception_rate_adjustment": -0.00012,
+      "epa_points_per_drive_adjustment": 0.0365,
+      "redzone_residual_ppd": 0.0066,
+      "third_down_residual_ppd": 0.0032,
+      "field_position_ppd": 0.1669,
+      "net_penalties_ppg_component": 0.0,
+      "net_special_teams_ppg_component": 0.0,
+      "advanced_penalty_yards_proxy_ppg": 0.0083,
+      "advanced_fg_accuracy_proxy_ppg": -0.09,
+      "advanced_punt_gross_descriptive_not_scored": 49.29412,
+      "advanced_feature_note": "Experimental bounded effects, NOT backtested; punt gross not used as net punting",
+      "home_adv_ppg_component": 0.75,
+      "raw_points_per_drive": 2.355,
+      "redzone_sample_off_def": [
+        26,
+        18
+      ]
+    },
+    "away": {
+      "team": "NE",
+      "side": "away",
+      "pass_rate": 0.5842105263157895,
+      "plays_per_drive": 5.5,
+      "expected_drives": 10.333,
+      "sos_adjusted_pass_epa_offense": 0.0514,
+      "sos_adjusted_pass_epa_defense_allowed": -0.0131,
+      "sos_adjusted_rush_epa_offense": -0.0088,
+      "sos_adjusted_rush_epa_defense_allowed": 0.0283,
+      "matched_pass_epa": 0.0065,
+      "matched_rush_epa": 0.0089,
+      "pressure_rate": 0.2412,
+      "pressure_residual_epa": -0.0009,
+      "pass_success_residual_epa": 0.0006,
+      "rush_success_residual_epa": -0.001,
+      "expected_sack_rate_per_dropback": 0.0612,
+      "expected_sacks_per_game": 2.031,
+      "qb_rushes_per_game": 0.997,
+      "qb_rushing_epa_adjustment": 0.0,
+      "pass_success_rate": 0.4487,
+      "rush_success_rate": 0.4234,
+      "explosive_pass_rate": 0.1279,
+      "explosive_rush_rate": 0.0994,
+      "third_down_conversion": 0.3708,
+      "redzone_td_rate": 0.5802,
+      "touchdown_share_of_scoring_drives": 0.5921,
+      "interception_rate_per_dropback": 0.025,
+      "fumble_lost_rate_per_play": 0.00987,
+      "turnover_drive_probability": 0.126,
+      "pressure_related_interception_rate_adjustment": 0.00044,
+      "epa_points_per_drive_adjustment": 0.0412,
+      "redzone_residual_ppd": 0.0131,
+      "third_down_residual_ppd": -0.0074,
+      "field_position_ppd": -0.066,
+      "net_penalties_ppg_component": 0.0,
+      "net_special_teams_ppg_component": 0.0,
+      "advanced_penalty_yards_proxy_ppg": -0.0083,
+      "advanced_fg_accuracy_proxy_ppg": -0.03,
+      "advanced_punt_gross_descriptive_not_scored": 47.61111,
+      "advanced_feature_note": "Experimental bounded effects, NOT backtested; punt gross not used as net punting",
+      "home_adv_ppg_component": -0.75,
+      "raw_points_per_drive": 1.9846,
+      "redzone_sample_off_def": [
+        20,
+        14
+      ]
+    }
+  },
+  "injuries": {
+    "source": "nflverse weekly injury report (not official inactive confirmation)",
+    "status": "REPORT_ROWS_SNAPSHOT_ONLY_NOT_ROW_TIMESTAMP_VERIFIED",
+    "confirmed_inactives": null,
+    "personnel_point_adjustments_applied": false,
+    "team_report_rows": {
+      "CHI": 0,
+      "NE": 0
+    },
+    "row_timestamp_provenance": "SNAPSHOT_OBSERVED_NO_ROW_PUBLICATION_TIME",
+    "captured_at_utc": "2026-10-21T21:11:40.477186Z"
+  },
+  "player_availability_evidence": {
+    "schema": "player_availability_evidence_v0.8",
+    "as_of_utc": "2026-10-21T21:11:40.477186+00:00",
+    "injury_source_status": "SNAPSHOT_OBSERVED_NOT_FINAL_INACTIVES",
+    "injury_time_provenance": "SNAPSHOT_OBSERVED_NO_ROW_PUBLICATION_TIME",
+    "teams": {
+      "CHI": {
+        "reported_out": [],
+        "uncertain_status": [],
+        "historical_main_qb_id": null,
+        "historical_main_qb_name": null,
+        "qb_eligible_games": 6,
+        "qb_profiles": {
+          "00-0028986": {
+            "name": "C.Keenum",
+            "dropbacks": 55,
+            "epa_per_dropback_observed": -0.08511004057806262,
+            "games_sampled": 2,
+            "recent_three_game_dropbacks": 21,
+            "most_recent_game": "2026_05_CHI_GB"
+          },
+          "00-0038416": {
+            "name": "T.Bagent",
+            "dropbacks": 67,
+            "epa_per_dropback_observed": -0.07491356152638837,
+            "games_sampled": 3,
+            "recent_three_game_dropbacks": 58,
+            "most_recent_game": "2026_05_CHI_GB"
+          },
+          "00-0039918": {
+            "name": "C.Williams",
+            "dropbacks": 100,
+            "epa_per_dropback_observed": 0.23511770402088916,
+            "games_sampled": 3,
+            "recent_three_game_dropbacks": 40,
+            "most_recent_game": "2026_06_CHI_ATL"
+          }
+        },
+        "skill_position_usage": {
+          "targets": [
+            {
+              "player_id": "00-0040735",
+              "name": "Luther Burden III",
+              "position": "WR",
+              "opportunities": 43,
+              "team_share": 0.2216,
+              "games": 6,
+              "observed_team_play_epa": 0.0371,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0039919",
+              "name": "Rome Odunze",
+              "position": "WR",
+              "opportunities": 33,
+              "team_share": 0.1701,
+              "games": 6,
+              "observed_team_play_epa": 0.3078,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0040126",
+              "name": "Colston Loveland",
+              "position": "TE",
+              "opportunities": 30,
+              "team_share": 0.1546,
+              "games": 6,
+              "observed_team_play_epa": -0.1518,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0032464",
+              "name": "Kalif Raymond",
+              "position": "WR",
+              "opportunities": 29,
+              "team_share": 0.1495,
+              "games": 6,
+              "observed_team_play_epa": 0.584,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0036275",
+              "name": "D'Andre Swift",
+              "position": "RB",
+              "opportunities": 21,
+              "team_share": 0.1082,
+              "games": 6,
+              "observed_team_play_epa": 0.2996,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0036290",
+              "name": "Cole Kmet",
+              "position": "TE",
+              "opportunities": 11,
+              "team_share": 0.0567,
+              "games": 6,
+              "observed_team_play_epa": 0.3818,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0039021",
+              "name": "Roschon Johnson",
+              "position": "RB",
+              "opportunities": 10,
+              "team_share": 0.0515,
+              "games": 3,
+              "observed_team_play_epa": 0.4405,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            }
+          ],
+          "carries": [
+            {
+              "player_id": "00-0036275",
+              "name": "D'Andre Swift",
+              "position": "RB",
+              "opportunities": 94,
+              "team_share": 0.4352,
+              "games": 6,
+              "observed_team_play_epa": -0.0596,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0040236",
+              "name": "Kyle Monangai",
+              "position": "RB",
+              "opportunities": 60,
+              "team_share": 0.2778,
+              "games": 4,
+              "observed_team_play_epa": 0.0974,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0039021",
+              "name": "Roschon Johnson",
+              "position": "RB",
+              "opportunities": 22,
+              "team_share": 0.1019,
+              "games": 3,
+              "observed_team_play_epa": -0.2877,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0039918",
+              "name": "Caleb Williams",
+              "position": "QB",
+              "opportunities": 19,
+              "team_share": 0.088,
+              "games": 3,
+              "observed_team_play_epa": -0.0763,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            }
+          ]
+        },
+        "conditional_qb_replacement": null,
+        "warnings": [],
+        "skill_replacement_evidence": [],
+        "pass_rush_replacement_evidence": []
+      },
+      "NE": {
+        "reported_out": [],
+        "uncertain_status": [],
+        "historical_main_qb_id": "00-0039851",
+        "historical_main_qb_name": "D.Maye",
+        "qb_eligible_games": 6,
+        "qb_profiles": {
+          "00-0038476": {
+            "name": "T.DeVito",
+            "dropbacks": 5,
+            "epa_per_dropback_observed": -0.10725390780717134,
+            "games_sampled": 1,
+            "recent_three_game_dropbacks": 0,
+            "most_recent_game": "2026_03_NE_JAX"
+          },
+          "00-0039851": {
+            "name": "D.Maye",
+            "dropbacks": 195,
+            "epa_per_dropback_observed": 0.11821868875768748,
+            "games_sampled": 6,
+            "recent_three_game_dropbacks": 106,
+            "most_recent_game": "2026_06_NYJ_NE"
+          },
+          "00-0040563": {
+            "name": "E.Chism",
+            "dropbacks": 1,
+            "epa_per_dropback_observed": 0.792526712291874,
+            "games_sampled": 1,
+            "recent_three_game_dropbacks": 0,
+            "most_recent_game": "2026_03_NE_JAX"
+          }
+        },
+        "skill_position_usage": {
+          "targets": [
+            {
+              "player_id": "00-0038621",
+              "name": "DeMario Douglas",
+              "position": "WR",
+              "opportunities": 30,
+              "team_share": 0.1667,
+              "games": 6,
+              "observed_team_play_epa": 0.4283,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0037816",
+              "name": "Romeo Doubs",
+              "position": "WR",
+              "opportunities": 24,
+              "team_share": 0.1333,
+              "games": 6,
+              "observed_team_play_epa": 0.5211,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0033090",
+              "name": "Hunter Henry",
+              "position": "TE",
+              "opportunities": 24,
+              "team_share": 0.1333,
+              "games": 6,
+              "observed_team_play_epa": 0.5039,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0033555",
+              "name": "Mack Hollins",
+              "position": "WR",
+              "opportunities": 20,
+              "team_share": 0.1111,
+              "games": 4,
+              "observed_team_play_epa": 0.6442,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0036875",
+              "name": "Rhamondre Stevenson",
+              "position": "RB",
+              "opportunities": 20,
+              "team_share": 0.1111,
+              "games": 5,
+              "observed_team_play_epa": -0.1659,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0040563",
+              "name": "Efton Chism III",
+              "position": "WR",
+              "opportunities": 14,
+              "team_share": 0.0778,
+              "games": 5,
+              "observed_team_play_epa": 0.1562,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0035676",
+              "name": "A.J. Brown",
+              "position": "WR",
+              "opportunities": 14,
+              "team_share": 0.0778,
+              "games": 2,
+              "observed_team_play_epa": -0.4387,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0041395",
+              "name": "Eli Raridon",
+              "position": "TE",
+              "opportunities": 12,
+              "team_share": 0.0667,
+              "games": 5,
+              "observed_team_play_epa": 0.5305,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0040131",
+              "name": "Kyle Williams",
+              "position": "WR",
+              "opportunities": 11,
+              "team_share": 0.0611,
+              "games": 5,
+              "observed_team_play_epa": 0.275,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            }
+          ],
+          "carries": [
+            {
+              "player_id": "00-0036875",
+              "name": "Rhamondre Stevenson",
+              "position": "RB",
+              "opportunities": 71,
+              "team_share": 0.3797,
+              "games": 6,
+              "observed_team_play_epa": -0.0606,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0040734",
+              "name": "TreVeyon Henderson",
+              "position": "RB",
+              "opportunities": 49,
+              "team_share": 0.262,
+              "games": 5,
+              "observed_team_play_epa": -0.2478,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0039851",
+              "name": "Drake Maye",
+              "position": "QB",
+              "opportunities": 34,
+              "team_share": 0.1818,
+              "games": 6,
+              "observed_team_play_epa": 0.4382,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            },
+            {
+              "player_id": "00-0040556",
+              "name": "Corey Kiner",
+              "position": "RB",
+              "opportunities": 31,
+              "team_share": 0.1658,
+              "games": 5,
+              "observed_team_play_epa": -0.2274,
+              "warning": "This is TEAM play EPA on a player touch/target, not player-causal EPA or an injury point effect"
+            }
+          ]
+        },
+        "conditional_qb_replacement": null,
+        "warnings": [],
+        "skill_replacement_evidence": [],
+        "pass_rush_replacement_evidence": []
+      }
+    },
+    "assumptions": [
+      "OUT is a collected injury report designation, not an official inactive list",
+      "An ACT weekly roster status is not confirmation of a starting assignment",
+      "QB effects use observational per-dropback EPA and explicit shrinkage; uncalibrated",
+      "WR/RB/OL/defender reports have no automatic scoring impact without defensible position-level attribution"
+    ]
+  },
+  "conditional_qb_scenarios": [],
+  "challenger": {
+    "version": "0.10.0",
+    "candidate": {
+      "schema": "nfl_stateful_challenger_v0.10",
+      "research_only": true,
+      "promoted_to_primary": false,
+      "score_home": 25.068,
+      "score_away": 21.368,
+      "mean_margin_home": 3.7,
+      "margin_p10_p50_p90": [
+        -16.0,
+        3.0,
+        24.0
+      ],
+      "total_p10_p50_p90": [
+        28.0,
+        46.0,
+        67.0
+      ],
+      "home_win_probability_raw_uncalibrated": 0.5642,
+      "expected_turnovers": {
+        "home": 1.312,
+        "away": 1.335
+      },
+      "measured_hit_interception_association_uncalibrated": {
+        "home_residual_per_dropback": 1.3e-05,
+        "away_residual_per_dropback": -6.2e-05,
+        "qb_hit_is_not_pfr_pressure": true
+      },
+      "empty_possession_fourth_down_labels": {
+        "home": 0.674,
+        "away": 0.589
+      },
+      "game_script_9plus_drives": {
+        "home_leading": 2.014,
+        "away_leading": 1.185,
+        "home_trailing": 1.624,
+        "away_trailing": 2.635
+      },
+      "pre_cutoff_state_scoring": {
+        "home": {
+          "ppd_delta": {
+            "trailing_9_plus": -0.244178,
+            "within_8": 0.025533,
+            "leading_9_plus": 0.188762
+          },
+          "state_drives_pre_cutoff": {
+            "trailing_9_plus": 341,
+            "within_8": 1435,
+            "leading_9_plus": 247
+          },
+          "reference_ppd": 2.048524,
+          "status": "OBSERVED_SHRUNK_UNFITTED"
+        },
+        "away": {
+          "ppd_delta": {
+            "trailing_9_plus": 0.053711,
+            "within_8": 0.026999,
+            "leading_9_plus": -0.231008
+          },
+          "state_drives_pre_cutoff": {
+            "trailing_9_plus": 341,
+            "within_8": 1435,
+            "leading_9_plus": 247
+          },
+          "reference_ppd": 2.023231,
+          "status": "OBSERVED_SHRUNK_UNFITTED"
+        }
+      },
+      "pre_cutoff_situational_scoring": {
+        "home": {
+          "version": "nfl-v09-situational-scoring-research-v1",
+          "status": "OBSERVED_BOUNDED_UNFITTED",
+          "fourth": {
+            "status": "UNAVAILABLE",
+            "delta_ppd": 0.0
+          },
+          "finishing": {
+            "status": "OBSERVED_UNFITTED",
+            "offense_opportunities": 41,
+            "defense_opportunities_faced": 30,
+            "matched_td_rate": 0.427403,
+            "delta_td_share": -0.00455
+          },
+          "penalty_first_down": {
+            "status": "OBSERVED_UNFITTED",
+            "offense_snaps": 432,
+            "defense_snaps_faced": 344,
+            "matched_awarded_rate": 0.021258,
+            "delta_ppd": -0.006595
+          },
+          "total_delta_ppd": -0.006595,
+          "total_delta_td_share": -0.00455,
+          "fitted": false,
+          "ATS_calibrated": false,
+          "limits": [
+            "Unfitted coefficients; scoring effects not established causal",
+            "EPA/PPD already include much fourth-down and penalty contribution",
+            "Finishing only changes TD/FG mix; third-down penalties excluded"
+          ]
+        },
+        "away": {
+          "version": "nfl-v09-situational-scoring-research-v1",
+          "status": "OBSERVED_BOUNDED_UNFITTED",
+          "fourth": {
+            "status": "OBSERVED_UNFITTED",
+            "offense_attempts": 10,
+            "defense_faced": 8,
+            "matched_conversion_rate": 0.575157,
+            "attempts_per_drive_proxy": 0.157895,
+            "delta_ppd": -0.012214
+          },
+          "finishing": {
+            "status": "OBSERVED_UNFITTED",
+            "offense_opportunities": 35,
+            "defense_opportunities_faced": 31,
+            "matched_td_rate": 0.436384,
+            "delta_td_share": 0.001038
+          },
+          "penalty_first_down": {
+            "status": "OBSERVED_UNFITTED",
+            "offense_snaps": 380,
+            "defense_snaps_faced": 302,
+            "matched_awarded_rate": 0.02174,
+            "delta_ppd": 0.002256
+          },
+          "total_delta_ppd": -0.009958,
+          "total_delta_td_share": 0.001038,
+          "fitted": false,
+          "ATS_calibrated": false,
+          "limits": [
+            "Unfitted coefficients; scoring effects not established causal",
+            "EPA/PPD already include much fourth-down and penalty contribution",
+            "Finishing only changes TD/FG mix; third-down penalties excluded"
+          ]
+        }
+      },
+      "shared_game_scoring_shock_sd_ppd_unfitted": 0.412115,
+      "n": 5000,
+      "seed": 20261018,
+      "limitations": [
+        "Research only; no ATS calibration, calibrated coverage, or EV.",
+        "7/3 drive points are TD/FG proxies, not play-level EPA.",
+        "State PPD and game shocks are shrunken observational proxies; coefficients not fitted.",
+        "Fourth-down labels reclassify empty drives; no extra independent penalty applied.",
+        "In-game injuries, changes to roster depth and precise running clock not inferred.",
+        "All features use pre-cutoff snapshots; never use this game's later PBP."
+      ]
+    },
+    "observations": {
+      "schema": "ats_mechanism_observations_v0.9",
+      "as_of_utc": "2026-10-21T21:11:40.477186Z",
+      "completion_buffer_hours": 6,
+      "eligible_game_count": 93,
+      "eligible_play_count": 15485,
+      "target_teams": [
+        "CHI",
+        "NE"
+      ],
+      "target_team_games": {
+        "CHI": 6,
+        "NE": 6
+      },
+      "league": {
+        "third": {
+          "short_1_2": [
+            337,
+            539
+          ],
+          "medium_3_6": [
+            383,
+            851
+          ],
+          "long_7_plus": [
+            330,
+            1270
+          ]
+        },
+        "pass_states": {
+          "trailing_9_plus": [
+            1523,
+            2118
+          ],
+          "leading_9_plus": [
+            635,
+            1276
+          ],
+          "within_8": [
+            4890,
+            8090
+          ]
+        },
+        "qb_hit_dropbacks": 1087,
+        "dropbacks": 7048,
+        "sacks": 429,
+        "interceptions": 130,
+        "hit_interceptions": 30,
+        "clean_interceptions": 100,
+        "turnovers": 237,
+        "turnovers_near_scoring": 75,
+        "fourth_attempts": 253,
+        "fourth_failed": 121,
+        "snaps_taken": 11484,
+        "penalty_nonthird_firsts_earned": 249,
+        "penalty_nonthird_firsts_allowed": 0,
+        "penalty_auto_first_down_conceded": 374,
+        "penalties_conceded": 562,
+        "penalty_yards_conceded": 5132.0,
+        "snaps_faced": 0,
+        "drive_states": {
+          "trailing_9_plus": {
+            "drives": 341,
+            "points_proxy": 762,
+            "touchdowns": 87,
+            "field_goals": 51
+          },
+          "within_8": {
+            "drives": 1435,
+            "points_proxy": 2981,
+            "touchdowns": 323,
+            "field_goals": 240
+          },
+          "leading_9_plus": {
+            "drives": 247,
+            "points_proxy": 479,
+            "touchdowns": 50,
+            "field_goals": 43
+          }
+        },
+        "completed_team_game_ppd": [
+          2.363636,
+          1.4,
+          1.083333,
+          1.0,
+          3.153846,
+          2.0,
+          3.083333,
+          2.818182,
+          2.923077,
+          4.214286,
+          1.111111,
+          3.777778,
+          3.0,
+          4.0,
+          0.833333,
+          2.583333,
+          1.916667,
+          2.923077,
+          2.454545,
+          1.181818,
+          1.111111,
+          1.3,
+          2.066667,
+          2.214286,
+          2.090909,
+          1.111111,
+          0.7,
+          3.0,
+          3.25,
+          2.5,
+          2.0,
+          2.0,
+          0.272727,
+          2.454545,
+          1.538462,
+          0.461538,
+          1.916667,
+          1.727273,
+          4.666667,
+          3.444444,
+          1.666667,
+          1.307692,
+          3.0,
+          3.0,
+          2.222222,
+          1.444444,
+          1.166667,
+          1.846154,
+          1.625,
+          4.375,
+          0.3,
+          1.0,
+          2.125,
+          2.555556,
+          2.545455,
+          0.6,
+          3.0,
+          2.222222,
+          1.181818,
+          0.272727,
+          0.7,
+          3.1,
+          4.625,
+          2.222222,
+          3.0,
+          3.8,
+          3.090909,
+          1.4,
+          2.833333,
+          2.5,
+          1.583333,
+          1.666667,
+          3.375,
+          3.0,
+          1.7,
+          1.9,
+          2.666667,
+          1.111111,
+          2.181818,
+          1.454545,
+          1.909091,
+          2.363636,
+          3.363636,
+          2.545455,
+          1.230769,
+          1.142857,
+          3.5,
+          0.6,
+          3.444444,
+          2.666667,
+          3.0,
+          0.777778,
+          2.583333,
+          2.076923,
+          1.090909,
+          0.777778,
+          2.0,
+          2.5,
+          4.090909,
+          2.4,
+          3.4,
+          2.727273,
+          1.444444,
+          2.181818,
+          3.4,
+          2.6,
+          1.7,
+          1.555556,
+          2.307692,
+          1.083333,
+          1.888889,
+          2.555556,
+          2.583333,
+          2.363636,
+          1.769231,
+          2.214286,
+          1.846154,
+          1.538462,
+          1.111111,
+          1.5,
+          2.454545,
+          2.545455,
+          2.555556,
+          1.625,
+          2.076923,
+          2.0,
+          2.0,
+          1.545455,
+          1.6,
+          3.0,
+          3.7,
+          3.181818,
+          0.583333,
+          2.384615,
+          3.1,
+          2.4,
+          1.0,
+          1.307692,
+          1.769231,
+          1.307692,
+          1.75,
+          4.090909,
+          2.6,
+          0.333333,
+          2.2,
+          3.4,
+          1.545455,
+          4.090909,
+          2.3,
+          0.875,
+          2.076923,
+          2.076923,
+          1.666667,
+          1.545455,
+          2.071429,
+          1.846154,
+          1.888889,
+          2.181818,
+          1.8,
+          1.545455,
+          0.909091,
+          1.181818,
+          3.3,
+          3.0,
+          2.25,
+          1.272727,
+          1.909091,
+          2.214286,
+          1.4,
+          2.3,
+          3.4,
+          2.818182,
+          2.090909,
+          0.545455,
+          2.125,
+          1.8,
+          2.454545,
+          1.727273,
+          1.733333,
+          1.357143,
+          1.307692,
+          1.083333,
+          2.0,
+          1.9,
+          2.666667,
+          1.7
+        ],
+        "scoring_opportunities": 1042,
+        "scoring_opportunity_touchdowns": 460,
+        "scoring_opportunity_field_goals": 328,
+        "scoring_opportunity_turnovers": 64,
+        "scoring_opportunity_fourth_down_failures": 60
+      },
+      "offense": {
+        "CHI": {
+          "third": {
+            "short_1_2": [
+              15,
+              24
+            ],
+            "medium_3_6": [
+              23,
+              42
+            ],
+            "long_7_plus": [
+              9,
+              37
+            ]
+          },
+          "pass_states": {
+            "trailing_9_plus": [
+              39,
+              58
+            ],
+            "leading_9_plus": [
+              44,
+              101
+            ],
+            "within_8": [
+              155,
+              273
+            ]
+          },
+          "qb_hit_dropbacks": 34,
+          "dropbacks": 238,
+          "sacks": 15,
+          "interceptions": 5,
+          "hit_interceptions": 2,
+          "clean_interceptions": 3,
+          "turnovers": 13,
+          "turnovers_near_scoring": 4,
+          "fourth_attempts": 15,
+          "fourth_failed": 7,
+          "snaps_taken": 432,
+          "penalty_nonthird_firsts_earned": 10,
+          "penalty_nonthird_firsts_allowed": 0,
+          "penalty_auto_first_down_conceded": 0,
+          "penalties_conceded": 0,
+          "penalty_yards_conceded": 0,
+          "snaps_faced": 0,
+          "drive_states": {
+            "trailing_9_plus": {
+              "drives": 9,
+              "points_proxy": 7,
+              "touchdowns": 1,
+              "field_goals": 0
+            },
+            "within_8": {
+              "drives": 43,
+              "points_proxy": 109,
+              "touchdowns": 13,
+              "field_goals": 6
+            },
+            "leading_9_plus": {
+              "drives": 16,
+              "points_proxy": 34,
+              "touchdowns": 4,
+              "field_goals": 2
+            }
+          },
+          "completed_team_game_ppd": [],
+          "scoring_opportunities": 41,
+          "scoring_opportunity_touchdowns": 18,
+          "scoring_opportunity_field_goals": 8,
+          "scoring_opportunity_turnovers": 4,
+          "scoring_opportunity_fourth_down_failures": 3
+        },
+        "NE": {
+          "third": {
+            "short_1_2": [
+              14,
+              24
+            ],
+            "medium_3_6": [
+              13,
+              29
+            ],
+            "long_7_plus": [
+              11,
+              34
+            ]
+          },
+          "pass_states": {
+            "trailing_9_plus": [
+              24,
+              40
+            ],
+            "leading_9_plus": [
+              36,
+              62
+            ],
+            "within_8": [
+              162,
+              278
+            ]
+          },
+          "qb_hit_dropbacks": 29,
+          "dropbacks": 222,
+          "sacks": 11,
+          "interceptions": 7,
+          "hit_interceptions": 2,
+          "clean_interceptions": 5,
+          "turnovers": 13,
+          "turnovers_near_scoring": 6,
+          "fourth_attempts": 10,
+          "fourth_failed": 2,
+          "snaps_taken": 380,
+          "penalty_nonthird_firsts_earned": 8,
+          "penalty_nonthird_firsts_allowed": 0,
+          "penalty_auto_first_down_conceded": 0,
+          "penalties_conceded": 0,
+          "penalty_yards_conceded": 0,
+          "snaps_faced": 0,
+          "drive_states": {
+            "trailing_9_plus": {
+              "drives": 6,
+              "points_proxy": 3,
+              "touchdowns": 0,
+              "field_goals": 1
+            },
+            "within_8": {
+              "drives": 43,
+              "points_proxy": 102,
+              "touchdowns": 12,
+              "field_goals": 6
+            },
+            "leading_9_plus": {
+              "drives": 14,
+              "points_proxy": 24,
+              "touchdowns": 3,
+              "field_goals": 1
+            }
+          },
+          "completed_team_game_ppd": [],
+          "scoring_opportunities": 35,
+          "scoring_opportunity_touchdowns": 15,
+          "scoring_opportunity_field_goals": 8,
+          "scoring_opportunity_turnovers": 6,
+          "scoring_opportunity_fourth_down_failures": 2
+        }
+      },
+      "defense": {
+        "CHI": {
+          "third": {
+            "short_1_2": [
+              5,
+              10
+            ],
+            "medium_3_6": [
+              7,
+              21
+            ],
+            "long_7_plus": [
+              4,
+              34
+            ]
+          },
+          "pass_states": {
+            "trailing_9_plus": [
+              0,
+              0
+            ],
+            "leading_9_plus": [
+              0,
+              0
+            ],
+            "within_8": [
+              0,
+              0
+            ]
+          },
+          "qb_hit_dropbacks": 31,
+          "dropbacks": 192,
+          "sacks": 17,
+          "interceptions": 3,
+          "hit_interceptions": 0,
+          "clean_interceptions": 3,
+          "turnovers": 0,
+          "turnovers_near_scoring": 0,
+          "fourth_attempts": 8,
+          "fourth_failed": 6,
+          "snaps_taken": 0,
+          "penalty_nonthird_firsts_earned": 0,
+          "penalty_nonthird_firsts_allowed": 7,
+          "penalty_auto_first_down_conceded": 7,
+          "penalties_conceded": 15,
+          "penalty_yards_conceded": 117.0,
+          "snaps_faced": 302,
+          "drive_states": {
+            "trailing_9_plus": {
+              "drives": 21,
+              "points_proxy": 52,
+              "touchdowns": 7,
+              "field_goals": 1
+            },
+            "within_8": {
+              "drives": 34,
+              "points_proxy": 57,
+              "touchdowns": 6,
+              "field_goals": 5
+            },
+            "leading_9_plus": {
+              "drives": 8,
+              "points_proxy": 10,
+              "touchdowns": 1,
+              "field_goals": 1
+            }
+          },
+          "completed_team_game_ppd": [],
+          "scoring_opportunities": 31,
+          "scoring_opportunity_touchdowns": 14,
+          "scoring_opportunity_field_goals": 7,
+          "scoring_opportunity_turnovers": 1,
+          "scoring_opportunity_fourth_down_failures": 3
+        },
+        "NE": {
+          "third": {
+            "short_1_2": [
+              11,
+              16
+            ],
+            "medium_3_6": [
+              11,
+              35
+            ],
+            "long_7_plus": [
+              7,
+              29
+            ]
+          },
+          "pass_states": {
+            "trailing_9_plus": [
+              0,
+              0
+            ],
+            "leading_9_plus": [
+              0,
+              0
+            ],
+            "within_8": [
+              0,
+              0
+            ]
+          },
+          "qb_hit_dropbacks": 36,
+          "dropbacks": 213,
+          "sacks": 14,
+          "interceptions": 4,
+          "hit_interceptions": 0,
+          "clean_interceptions": 4,
+          "turnovers": 0,
+          "turnovers_near_scoring": 0,
+          "fourth_attempts": 7,
+          "fourth_failed": 4,
+          "snaps_taken": 0,
+          "penalty_nonthird_firsts_earned": 0,
+          "penalty_nonthird_firsts_allowed": 6,
+          "penalty_auto_first_down_conceded": 11,
+          "penalties_conceded": 17,
+          "penalty_yards_conceded": 132.0,
+          "snaps_faced": 344,
+          "drive_states": {
+            "trailing_9_plus": {
+              "drives": 19,
+              "points_proxy": 29,
+              "touchdowns": 2,
+              "field_goals": 5
+            },
+            "within_8": {
+              "drives": 40,
+              "points_proxy": 64,
+              "touchdowns": 7,
+              "field_goals": 5
+            },
+            "leading_9_plus": {
+              "drives": 5,
+              "points_proxy": 21,
+              "touchdowns": 3,
+              "field_goals": 0
+            }
+          },
+          "completed_team_game_ppd": [],
+          "scoring_opportunities": 30,
+          "scoring_opportunity_touchdowns": 12,
+          "scoring_opportunity_field_goals": 10,
+          "scoring_opportunity_turnovers": 1,
+          "scoring_opportunity_fourth_down_failures": 3
+        }
+      },
+      "next_start_own_yardline_after_takeaway_by_prior_offense_zone": {
+        "opponent_40_or_closer": [
+          34.0,
+          24.0,
+          41.0,
+          16.0,
+          20.0,
+          36.0,
+          14.0,
+          20.0,
+          80.0,
+          20.0,
+          17.0,
+          1.0,
+          9.0,
+          21.0,
+          90.0,
+          16.0,
+          13.0,
+          32.0,
+          20.0,
+          25.0,
+          51.0,
+          1.0,
+          46.0,
+          25.0,
+          42.0,
+          85.0,
+          45.0,
+          32.0,
+          38.0,
+          20.0,
+          57.0,
+          20.0,
+          10.0,
+          25.0,
+          4.0,
+          15.0,
+          15.0,
+          30.0,
+          50.0,
+          20.0,
+          19.0,
+          43.0,
+          41.0,
+          23.0,
+          7.0,
+          57.0,
+          34.0,
+          85.0,
+          23.0,
+          25.0,
+          12.0,
+          25.0,
+          20.0,
+          23.0,
+          20.0,
+          20.0,
+          20.0,
+          38.0,
+          38.0,
+          34.0,
+          31.0,
+          6.0,
+          11.0,
+          19.0
+        ],
+        "outside_opponent_40": [
+          5.0,
+          75.0,
+          69.0,
+          85.0,
+          69.0,
+          53.0,
+          85.0,
+          68.0,
+          58.0,
+          38.0,
+          39.0,
+          56.0,
+          45.0,
+          54.0,
+          95.0,
+          66.0,
+          47.0,
+          99.0,
+          86.0,
+          48.0,
+          34.0,
+          56.0,
+          66.0,
+          33.0,
+          53.0,
+          40.0,
+          59.0,
+          75.0,
+          31.0,
+          57.0,
+          85.0,
+          67.0,
+          85.0,
+          56.0,
+          65.0,
+          44.0,
+          85.0,
+          54.0,
+          72.0,
+          82.0,
+          84.0,
+          36.0,
+          77.0,
+          84.0,
+          52.0,
+          35.0,
+          29.0,
+          89.0,
+          17.0,
+          85.0,
+          47.0,
+          56.0,
+          87.0,
+          45.0,
+          44.0,
+          47.0,
+          60.0,
+          47.0,
+          64.0,
+          53.0,
+          57.0,
+          10.0,
+          17.0,
+          72.0,
+          63.0,
+          96.0,
+          65.0,
+          78.0,
+          59.0,
+          79.0,
+          95.0,
+          85.0,
+          42.0,
+          79.0,
+          57.0,
+          70.0,
+          32.0,
+          74.0,
+          63.0,
+          42.0,
+          78.0,
+          32.0,
+          56.0,
+          79.0,
+          37.0,
+          80.0,
+          82.0,
+          39.0,
+          55.0,
+          48.0,
+          80.0,
+          90.0,
+          72.0,
+          65.0,
+          50.0,
+          36.0,
+          91.0,
+          19.0,
+          66.0,
+          72.0,
+          44.0,
+          23.0,
+          18.0,
+          63.0,
+          35.0,
+          85.0,
+          43.0,
+          55.0,
+          45.0,
+          49.0,
+          47.0,
+          90.0,
+          77.0,
+          83.0,
+          60.0,
+          58.0,
+          77.0,
+          66.0,
+          65.0,
+          59.0,
+          62.0,
+          34.0,
+          63.0,
+          46.0,
+          73.0,
+          26.0,
+          82.0,
+          89.0,
+          85.0,
+          61.0,
+          77.0,
+          64.0,
+          68.0,
+          65.0,
+          68.0,
+          43.0,
+          72.0,
+          58.0,
+          83.0,
+          79.0,
+          44.0,
+          48.0,
+          64.0,
+          24.0,
+          45.0,
+          61.0,
+          55.0,
+          97.0,
+          57.0,
+          51.0,
+          67.0
+        ]
+      },
+      "limits": [
+        "QB hits are NOT PFR pressure or all disruptions",
+        "Automatic first downs from penalties describe events, not isolated penalty EPA",
+        "Next-possession field position is observational, not causal penalty/turnover value",
+        "Six-hour kickoff buffer is conservative; only files captured by as-of are valid"
+      ]
+    },
+    "status": "AVAILABLE_RESEARCH_ONLY",
+    "missing_reason": null,
+    "baseline_locked_margin_home": 4.02,
+    "comparison_status": "ONLY_ACTIVE_CHALLENGER_UNFITTED_NOT_VALIDATED; NO ATS EDGE"
+  },
+  "personnel_analysis_version": "0.8.0",
+  "limitations": [
+    "No verified active/inactive lineup; all personnel shifts set to NEUTRAL SCENARIO, NOT measured zero impact",
+    "No verified signed market spread; no ATS recommendation or EV",
+    "Provisional model coefficients and raw probabilities not historically calibrated",
+    "QB replacement scenarios are conditional and not the main forecast; no starter/inactive confirmation",
+    "Exactly one active evolving challenger, v0.10, incorporating earlier mechanism research",
+    "v0.10 stateful challenger is unfitted, no in-game injury adjustment, and not a calibrated ATS edge"
+  ],
+  "audit": {
+    "snapshot": "snapshots/2026/run-39676660380",
+    "derived_metrics": "derived-metrics/run-39676660380",
+    "source_sha256": {
+      "pbp": "15dec54ba27f9a81bf019576f7faaafcdb9c19de215d8cf75d206f13f5f7f623",
+      "derived": "5a194fa6a8311239fbca22662cd2ab602b111152bc931ca224f8ccd62af536d8",
+      "pfr_pass": "4f41173dcea8b32df165a4a2727be99415a9378249e3a3305c81004b17203b84"
+    },
+    "pressure_rate_reference": 0.2253945,
+    "advanced_missing": [],
+    "statistics_provenance_issues": [],
+    "model_version": "0.8.1+single_challenger_0.10.0",
+    "simulation_runs": 5000,
+    "seed": 20261018
+  }
+}
