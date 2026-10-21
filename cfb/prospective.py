@@ -53,6 +53,8 @@ def freeze(snapshot, out, runs=3000, days=7, min_games=3, now=None,
     history=history.loc[history['_kickoff']+embargo <= cutoff].copy()
     mapped=normalize_pbp_teams(past_plays.loc[past_plays.game_id.isin(history.game_id)],history)
     by_game={gid:part for gid,part in mapped.groupby('game_id',sort=False)}
+    raw_by_game={gid:part for gid,part in
+                 past_plays.loc[past_plays.game_id.isin(history.game_id)].groupby('game_id',sort=False)}
     qb_ids={int(team):set(group.athlete_id.dropna()) for team,group in
             roster.loc[roster.position_abbreviation.eq('QB')].groupby('team_id')}
     histories=defaultdict(list)
@@ -61,8 +63,10 @@ def freeze(snapshot, out, runs=3000, days=7, min_games=3, now=None,
         if part is None or pd.isna(g.home_points) or pd.isna(g.away_points):
             continue
         h,a=int(g.home_id),int(g.away_id)
-        ho=observed_game(part,h,a,g.home_points,g.away_points,qb_ids.get(h,set()))
-        aw=observed_game(part,a,h,g.away_points,g.home_points,qb_ids.get(a,set()))
+        ho=observed_game(part,h,a,g.home_points,g.away_points,qb_ids.get(h,set()),
+                         special_plays=raw_by_game.get(g.game_id))
+        aw=observed_game(part,a,h,g.away_points,g.home_points,qb_ids.get(a,set()),
+                         special_plays=raw_by_game.get(g.game_id))
         if ho is None or aw is None:continue
         ho['opponent_id']=a
         aw['opponent_id']=h
