@@ -127,7 +127,7 @@ def _assemble(snapshot:Path, extra:Path, row:pd.Series, cutoff, *, pbp=None,sche
     if ref is None or not .10<=float(ref)<=.65:raise InputError('Missing verified league PFR pressure reference')
     return g,audit,overlay
 
-def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,runs:int=3000,seed:int=20261018,pbp=None,schedule=None,roster=None):
+def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,runs:int=5000,seed:int=20261018,pbp=None,schedule=None,roster=None):
     enforce_pregame_lock(cutoff,row['kickoff_utc'])
     g,audit,overlay=_assemble(snapshot,extra,row,cutoff,pbp=pbp,schedule=schedule,roster=roster)
     r=dict(MODEL_RULES['NFL']);r['pressure']=float(g['pressure_reference_rate'])
@@ -167,6 +167,7 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
        'pre_inactives_lock_minutes':PREGAME_LOCK_MINUTES,
        'status':'EXPLORATORY_CORE_PROJECTION_UNCALIBRATED',
        'score_home':sim['mean_score_home'],'score_away':sim['mean_score_away'],
+       'baseline_simulation':sim,
        'projected_home_margin':sim['mean_margin_home'],
        'projected_fair_spread_home':round(-sim['mean_margin_home'],2),
        'home_win_probability_RAW_UNCALIBRATED':sim['home_win_probability_raw'],
@@ -199,7 +200,7 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
 
 def ref_to_number(x):return float(x)
 
-def generate(snapshot:Path,extra:Path,out:Path,injuries:Path|None=None,window_hours:float=48,runs:int=3000,seed:int=20261018):
+def generate(snapshot:Path,extra:Path,out:Path,injuries:Path|None=None,window_hours:float=48,runs:int=5000,seed:int=20261018):
     if not 0<window_hours<=168:raise ValueError('Window must be 0-168 hours')
     if not 1000<=runs<=100000:raise ValueError('Runs out of bounds')
     snapshot,extra,out=Path(snapshot),Path(extra),Path(out)
@@ -248,5 +249,5 @@ if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--snapshot',type=Path,required=True)
     p.add_argument('--metrics-dir',type=Path,required=True);p.add_argument('--injuries-dir',type=Path)
     p.add_argument('--out',type=Path,required=True);p.add_argument('--window-hours',type=float,default=48)
-    p.add_argument('--runs',type=int,default=3000);p.add_argument('--seed',type=int,default=20261018)
+    p.add_argument('--runs',type=int,default=5000);p.add_argument('--seed',type=int,default=20261018)
     a=p.parse_args();print(json.dumps(generate(a.snapshot,a.metrics_dir,a.out,a.injuries_dir,a.window_hours,a.runs,a.seed),indent=2))
