@@ -29,7 +29,7 @@ def _json_bytes(obj):
     return (json.dumps(obj,sort_keys=True,separators=(',',':'),default=str)+'\n').encode()
 
 
-def freeze(snapshot, out, runs=3000, days=7, min_games=3, now=None,
+def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
            git_sha=None, workflow_run_id=None, availability_root=None):
     """Generate a frozen RESEARCH forecast artifact for each eligible future game.
 
@@ -170,7 +170,7 @@ def freeze(snapshot, out, runs=3000, days=7, min_games=3, now=None,
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--snapshot',required=True);p.add_argument('--out',required=True)
-    p.add_argument('--runs',type=int,default=3000);p.add_argument('--days',type=int,default=7)
+    p.add_argument('--runs',type=int,default=5000);p.add_argument('--days',type=int,default=7)
     p.add_argument('--git-sha');p.add_argument('--github-run-id')
     p.add_argument('--availability-dir',default='cfb/availability')
     args=p.parse_args()
