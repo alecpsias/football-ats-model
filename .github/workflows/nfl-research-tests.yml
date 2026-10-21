@@ -1,0 +1,44 @@
+name: NFL stateful challenger tests (free only)
+
+on:
+  push:
+    branches:
+      - 'nfl/**'
+    paths:
+      - 'nfl_stateful_candidate.py'
+      - 'mechanism_research.py'
+      - 'forecast_upcoming_core.py'
+      - 'evaluate_locked_forecasts.py'
+      - 'test_nfl_stateful_candidate.py'
+      - 'test_mechanism_research.py'
+      - '.github/workflows/nfl-research-tests.yml'
+  pull_request:
+    paths:
+      - 'nfl_stateful_candidate.py'
+      - 'mechanism_research.py'
+      - 'forecast_upcoming_core.py'
+      - 'evaluate_locked_forecasts.py'
+      - 'test_nfl_stateful_candidate.py'
+      - '.github/workflows/nfl-research-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  research-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free dependencies
+        run: pip install -r requirements-nflverse.txt
+      - name: Syntax check
+        run: |
+          python -m py_compile nfl_stateful_candidate.py mechanism_research.py forecast_upcoming_core.py evaluate_locked_forecasts.py test_nfl_stateful_candidate.py
+      - name: Run NFL research and baseline isolation tests
+        run: |
+          python -m unittest -v test_mechanism_research test_nfl_stateful_candidate test_nfl_situational_scoring test_future_core
