@@ -106,6 +106,25 @@ def stateful_candidate_simulation(
     # 0.45 shrinkage factor is NOT fitted; candidate must win a forward test.
     shock_sigma = clip(.45 * float(np.std(game_ppd, ddof=1)), .12, .50)
 
+    # Carry forward the previous challenger version's *observed* QB-hit/
+    # interception association as a small, shrinkable residual. QB hits are
+    # NOT the same as PFR pressure and this is not a fitted causal effect.
+    lg = profile["league"]
+    overall_int = (lg["interceptions"] + 2.) / (lg["dropbacks"] + 80.)
+    hit_n = lg["qb_hit_dropbacks"]
+    clean_n = max(0, lg["dropbacks"] - hit_n)
+    hit_int = (lg["hit_interceptions"] + 60. * overall_int) / (hit_n + 60.)
+    clean_int = (lg["clean_interceptions"] + 60. * overall_int) / (clean_n + 60.)
+    hit_assoc = clip(hit_int - clean_int, -.04, .04)
+    hit_prior = (hit_n + 12. * .08) / (lg["dropbacks"] + 12.)
+
+    def matched_hit_interception_residual(offense, defense):
+        x = profile["offense"][offense]
+        y = profile["defense"][defense]
+        p_off = (x["qb_hit_dropbacks"] + 80 * hit_prior) / (x["dropbacks"] + 80)
+        p_def = (y["qb_hit_dropbacks"] + 80 * hit_prior) / (y["dropbacks"] + 80)
+        return clip(((p_off + p_def) / 2 - hit_prior) * hit_assoc, -.004, .004)
+
     def prepare(p, states, situ, third, opp):
         for k in ("_ppd", "_td", "_to", "expected_drives", "pass_rate",
                   "plays_per_drive", "interception_rate_per_dropback",
@@ -120,6 +139,7 @@ def stateful_candidate_simulation(
             "pass_ref": float(p["pass_rate"]),
             "plays": float(p["plays_per_drive"]),
             "int_rate": float(p["interception_rate_per_dropback"]),
+            "hit_int_residual": matched_hit_interception_residual(p["team"], opp),
             "fumble_rate": float(p["fumble_lost_rate_per_play"]),
             "third_delta": clip(1.25 * (third["weighted_conversion_rate"] -
                                        float(p["third_down_conversion"])), -.12, .12),
@@ -166,7 +186,8 @@ def stateful_candidate_simulation(
             return 1 - math.exp(-p["plays"] *
                                 (pass_mix * p["int_rate"] + p["fumble_rate"]))
         turnover = clip(p["base_turnover"] + .6 * (
-            torate(pass_share) - torate(p["pass_ref"])), .005, .42)
+            torate(pass_share) - torate(p["pass_ref"]))
+            + p["plays"] * pass_share * p["hit_int_residual"], .005, .42)
         ppd = clip(p["base_ppd"] + p["third_delta"] + p["state_delta"][state] +
                    offense_shock[i, side] + next_field_bonus[i, side] -
                    rules["league_to_drive"] * avg_field_bonus, .10, 5.5)
@@ -221,6 +242,11 @@ def stateful_candidate_simulation(
         "expected_turnovers": {
             "home": round(float(np.mean(turnovers[:, 0])), 3),
             "away": round(float(np.mean(turnovers[:, 1])), 3),
+        },
+        "measured_hit_interception_association_uncalibrated": {
+            "home_residual_per_dropback": round(hp["hit_int_residual"], 6),
+            "away_residual_per_dropback": round(ap["hit_int_residual"], 6),
+            "qb_hit_is_not_pfr_pressure": True,
         },
         "empty_possession_fourth_down_labels": {
             "home": round(float(np.mean(fourth_failures[:, 0])), 3),
