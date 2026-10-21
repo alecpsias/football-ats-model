@@ -1,0 +1,68 @@
+name: NFL locked-forecast accuracy ledger (free only)
+
+# Score *previously frozen* predictions using finalized free NFL schedules.
+# Never rerun the model with postgame inputs. Not a market/ATS ledger.
+on:
+  push:
+    branches:
+      - 'nfl/**'
+    paths:
+      - 'nfl_forward_ledger.py'
+      - 'test_nfl_forward_ledger.py'
+      - '.github/workflows/nfl-forward-evaluate.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '42 13 * * *'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  score-locked-forecasts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install permitted free-data libraries
+        run: pip install -r requirements-nflverse.txt
+      - name: Validate frozen archive parsing
+        run: python -m unittest -v test_nfl_forward_ledger
+      - name: Collect final scores and evaluate strictly pre-locked forecasts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python nfl_forward_ledger.py \
+            --repo "${{ github.repository }}" \
+            --out evaluations/nfl-prospective.json \
+            --workdir evaluations/frozen \
+            --max-artifacts 25
+      - name: Publish evaluation summary
+        if: always()
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          f=Path('evaluations/nfl-prospective.json')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write('# NFL frozen forecast evaluation\n\n')
+              if not f.exists():
+                  out.write('No ledger generated. Inspect prior step failure.\n')
+              else:
+                  j=json.loads(f.read_text());e=j['evaluation']
+                  out.write(f"Artifacts: {j['artifact_count']}; frozen files: {j['forecast_file_count']}; completed distinct games: {e['completed_games']}\n\n")
+                  out.write(f"Margin MAE: baseline {e['base_mae_margin']}; v0.9 {e['candidate_mae_margin']}; v0.10 {e['stateful_mae_margin']} (n={e['stateful_completed_games']}).\n\n")
+                  out.write(f"Total MAE: baseline {e['base_mae_total']}; v0.9 {e['candidate_mae_total']}; v0.10 {e['stateful_mae_total']}.\n\n")
+                  out.write('No ATS record or promotion without validated pregame signed market quotes and adequate chronological samples.\n')
+          PY
+      - name: Save free prospective evaluation artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nfl-locked-evaluation-${{ github.run_id }}
+          path: evaluations/nfl-prospective.json
+          if-no-files-found: warn
+          retention-days: 30
