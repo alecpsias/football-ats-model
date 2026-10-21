@@ -24,6 +24,7 @@ from cfb.disruption import observed_disruption
 from cfb.matchups import matchup_signals
 from cfb.calibration import calibrate
 from cfb.pipeline import verify, normalize_pbp_teams, iso_utc
+from cfb.field_special import observed_special_teams
 
 
 def total(rows, key):
@@ -35,7 +36,7 @@ def mean_epa(records, kind):
     return total(records, kind + '_sum') / count if count else None
 
 
-def observed_game(plays, team, opponent, points, conceded, qb_ids):
+def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays=None):
     """Read observed PBP per game without accessing future fixtures."""
     off = plays.loc[plays.pos_team_id.eq(team)]
     opp = plays.loc[plays.pos_team_id.eq(opponent)]
@@ -118,9 +119,22 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids):
     # Recorded starting position and QB rushing remain optional, descriptive.
     starts=off.sort_values('game_play_number').drop_duplicates('drive_id')
     field_position=None
+    start_field_n=None
     if 'yards_to_goal' in starts and len(starts):
         vals=pd.to_numeric(starts.yards_to_goal,errors='coerce')
-        if vals.notna().all():field_position=float((100-vals).mean())
+        if vals.notna().all() and vals.between(1,99).all():
+            field_position=float((100-vals).mean())
+            start_field_n=int(len(vals))
+    # Opponent's TRUE starting field position while this school's defense
+    # was on the field. Not an inferred punt location or turnover spot.
+    opponent_starts=opp.sort_values('game_play_number').drop_duplicates('drive_id')
+    field_allowed=None
+    field_allowed_n=None
+    if 'yards_to_goal' in opponent_starts and len(opponent_starts):
+        vals=pd.to_numeric(opponent_starts.yards_to_goal,errors='coerce')
+        if vals.notna().all() and vals.between(1,99).all():
+            field_allowed=float((100-vals).mean())
+            field_allowed_n=int(len(vals))
     rz=off.loc[pd.to_numeric(off.yards_to_goal,errors='coerce').le(20)] if 'yards_to_goal' in off else off.iloc[:0]
     redzone_drives=int(rz.drive_id.nunique()) if not rz.empty else 0
     rz_td=int(rz.loc[rz.offense_score_play.eq(True)&rz.td_play.eq(True),'drive_id'].nunique()) if len(rz) else 0
@@ -156,6 +170,10 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids):
             'third_conversions_sum':tc,'third_conversions_n':tn,
             'def_third_conversions_sum':dtc,'def_third_conversions_n':dtn,
             'start_field_position':field_position,
+            'start_field_n':start_field_n,
+            'start_field_position_allowed':field_allowed,
+            'start_field_allowed_n':field_allowed_n,
+            'special_teams':observed_special_teams(special_plays,team,opponent),
             'redzone_trips':redzone_drives,'redzone_tds':rz_td,
             'def_redzone_trips':faced_rz,'def_redzone_tds':conceded_rz_tds,
             'redzone_tds_sum':rz_td,'redzone_tds_n':redzone_drives,
@@ -231,6 +249,8 @@ def replay(snapshot, out, runs=1500, min_games=3):
     games=schedule.loc[eligible].sort_values(['_kickoff','game_id']).copy()
     mapped=normalize_pbp_teams(pbp.loc[pbp.game_id.isin(games.game_id)],games)
     by_game={gid:part for gid,part in mapped.groupby('game_id',sort=False)}
+    raw_by_game={gid:part for gid,part in
+                 pbp.loc[pbp.game_id.isin(games.game_id)].groupby('game_id',sort=False)}
     qb_ids={int(t):set(g.athlete_id.dropna()) for t,g in
             roster.loc[roster.position_abbreviation.eq('QB')].groupby('team_id')}
     history=defaultdict(list)
@@ -251,8 +271,10 @@ def replay(snapshot, out, runs=1500, min_games=3):
             plays=by_game.get(g.game_id)
             if plays is None:
                 continue
-            h=observed_game(plays,home,away,g.home_points,g.away_points,qb_ids.get(home,set()))
-            a=observed_game(plays,away,home,g.away_points,g.home_points,qb_ids.get(away,set()))
+            h=observed_game(plays,home,away,g.home_points,g.away_points,qb_ids.get(home,set()),
+                            special_plays=raw_by_game.get(g.game_id))
+            a=observed_game(plays,away,home,g.away_points,g.home_points,qb_ids.get(away,set()),
+                            special_plays=raw_by_game.get(g.game_id))
             if h is None or a is None:
                 continue
             if len(history[home])>=min_games and len(history[away])>=min_games:
