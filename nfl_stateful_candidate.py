@@ -2,7 +2,7 @@
 """NFL v0.10 STATEFUL RESEARCH CHALLENGER; never a production ATS forecast.
 
 Uses only pre-cutoff drive outcomes extracted by mechanism_research.py. The
-v0.8.1 production forecast and v0.9 candidate are neither edited nor refitted.
+v0.8.1 production remains fixed; v0.9 mechanisms have been incorporated\ninto this SOLE evolving challenger rather than retained as a second model.
 This is a *hypothesis* for forward testing, not a coefficient calibration.
 """
 from __future__ import annotations
@@ -80,7 +80,7 @@ def stateful_candidate_simulation(
 
     Correlated in-game efficiency is an UNFITTED variance hypothesis, estimated
     using pre-cutoff between-game PPD variation, with conservative shrinkage.
-    Total drive count is shared by teams, as in the existing v0.9 challenger.
+    Total drive count is shared by teams; legacy v0.9 features are integrated.
     Score state changes BOTH pass tendency/turnover risk AND drive scoring.
     In-game injuries are NOT simulated without verified hazard/replacement data.
     """
