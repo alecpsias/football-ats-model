@@ -142,7 +142,7 @@ def sensitivity(hp, ap, game_id, runs=500):
             'scenarios':out}
 
 
-def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=3000,
+def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000,
             min_games=3, now=None, github_run_id=None, git_sha=None,
             availability_root=None):
     """Run a FRESH two-team model investigation from latest captured data.
@@ -616,7 +616,7 @@ def main():
     ap.add_argument('--odds',default='cfb/archive/odds')
     ap.add_argument('--availability-dir',default='cfb/availability')
     ap.add_argument('--out',required=True)
-    ap.add_argument('--runs',type=int,default=3000)
+    ap.add_argument('--runs',type=int,default=5000)
     ap.add_argument('--min-games',type=int,default=3)
     ap.add_argument('--github-run-id');ap.add_argument('--git-sha')
     args=ap.parse_args();run(args)
