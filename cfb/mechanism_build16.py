@@ -13,6 +13,7 @@ import pandas as pd
 from cfb.integrated_scoring import project_integrated
 from cfb.game_script import simulate_script
 from cfb.disruption import matchup_disruption
+from cfb.situational_scoring import matchup_effects
 
 VERSION='cfb-build16-unified-situational-v1'
 BUCKETS=('short_1_2','medium_3_6','long_7_plus')
@@ -38,7 +39,8 @@ def observe_game_context(plays, team, opponent):
     Score state uses pos_score_diff_start (pre-play), never final score.
     """
     out={'third_off':None,'third_def':None,'pass_states_off':None,
-         'scoring_off':None,'fourth_off':None,'penalty_first_down_def':None,
+         'scoring_off':None,'scoring_def':None,'fourth_off':None,'fourth_def':None,
+         'penalty_first_down_off':None,'penalty_first_down_def':None,
          'turnover_zone_off':None,'turnover_next_field_by_zone':None}
     if not isinstance(plays,pd.DataFrame) or plays.empty:return out
     required={'pos_team_id','def_pos_team_id','game_play_number','down','distance',
@@ -66,36 +68,52 @@ def observe_game_context(plays, team, opponent):
                 state=STATES[0] if diff<=-9 else STATES[2] if diff>=9 else STATES[1]
                 z[state][0]+=int(bool(row['pass']));z[state][1]+=1
             out['pass_states_off']=z
-    # Red-zone drive and fourth-down results are observed descriptive evidence;
-    # do not assign causal scoring shifts without non-overlapping validation.
-    if {'drive_id','pos_team_id','yards_to_goal','offense_score_play','td_play',
-        'fg_made','downs_turnover','pos_fumble_lost','int'}.issubset(plays.columns):
-        teamplays=plays.loc[plays.pos_team_id==team].sort_values('game_play_number')
-        if not teamplays.empty:
-            scoring={'td':0,'fg':0,'turnover':0,'turnover_on_downs':0,'other':0,'opportunities':0}
-            for _,part in teamplays.groupby('drive_id',sort=False):
-                part=part.sort_values('game_play_number')
-                if not part['yards_to_goal'].le(40).any():continue
-                scoring['opportunities']+=1
-                if (part.offense_score_play.eq(True)&part.td_play.eq(True)).any():scoring['td']+=1
-                elif part.fg_made.eq(True).any():scoring['fg']+=1
-                elif part.downs_turnover.eq(True).any():scoring['turnover_on_downs']+=1
-                elif (part['int'].eq(True)|part.pos_fumble_lost.eq(True)).any():scoring['turnover']+=1
-                else:scoring['other']+=1
-            out['scoring_off']=scoring
-    if {'pos_team_id','down','distance','rush','pass','downs_turnover','firstD_by_yards',
-        'firstD_by_penalty','rush_td','pass_td'}.issubset(plays.columns):
-        q=plays.loc[(plays.pos_team_id==team)&plays.down.eq(4)&
-                    (plays['rush'].eq(True)|plays['pass'].eq(True))]
-        if not q.empty and not q[['downs_turnover','firstD_by_yards','firstD_by_penalty','rush_td','pass_td']].isna().any().any():
-            out['fourth_off']={'attempted':int(len(q)),
-              'converted':int(q[['firstD_by_yards','firstD_by_penalty','rush_td','pass_td']].eq(True).any(axis=1).sum()),
-              'failed_marked':int(q['downs_turnover'].eq(True).sum())}
-    if {'penalty_1st_conv','pos_team_id'}.issubset(plays.columns):
-        against=plays.loc[plays.pos_team_id==opponent]
-        if not against.empty and against.penalty_1st_conv.notna().all():
-            out['penalty_first_down_def']={'allowed':int(against.penalty_1st_conv.eq(True).sum()),
-                                         'plays':int(len(against))}
+    def opportunities(tid):
+        needed={'drive_id','pos_team_id','yards_to_goal','offense_score_play',
+                'td_play','fg_made','downs_turnover','pos_fumble_lost','int'}
+        if not needed.issubset(plays.columns):return None
+        rows=plays.loc[plays.pos_team_id.eq(tid)].sort_values('game_play_number')
+        if rows.empty or rows[['drive_id','yards_to_goal']].isna().any().any():return None
+        counts={'td':0,'fg':0,'turnover':0,'turnover_on_downs':0,
+                'other':0,'opportunities':0}
+        for _,part in rows.groupby('drive_id',sort=False):
+            if not part.yards_to_goal.le(40).any():continue
+            cols=['offense_score_play','td_play','fg_made','downs_turnover','pos_fumble_lost','int']
+            if part[cols].isna().any().any():return None
+            counts['opportunities']+=1
+            if (part.offense_score_play.eq(True)&part.td_play.eq(True)).any():counts['td']+=1
+            elif part.fg_made.eq(True).any():counts['fg']+=1
+            elif part.downs_turnover.eq(True).any():counts['turnover_on_downs']+=1
+            elif (part['int'].eq(True)|part.pos_fumble_lost.eq(True)).any():counts['turnover']+=1
+            else:counts['other']+=1
+        return counts
+    out['scoring_off']=opportunities(team)
+    out['scoring_def']=opportunities(opponent)
+
+    def fourth(tid):
+        needed={'pos_team_id','down','rush','pass','downs_turnover',
+                'firstD_by_yards','firstD_by_penalty','rush_td','pass_td'}
+        if not needed.issubset(plays.columns):return None
+        z=plays.loc[plays.pos_team_id.eq(tid)&plays.down.eq(4)&
+                    (plays.rush.eq(True)|plays['pass'].eq(True))]
+        fields=['downs_turnover','firstD_by_yards','firstD_by_penalty','rush_td','pass_td']
+        if z.empty or z[fields].isna().any().any():return None
+        return {'attempted':int(len(z)),
+                'converted':int(z[fields[1:]].eq(True).any(axis=1).sum()),
+                'failed_marked':int(z.downs_turnover.eq(True).sum())}
+    out['fourth_off']=fourth(team)
+    out['fourth_def']=fourth(opponent)
+
+    def penalty_firsts(tid):
+        needed={'pos_team_id','down','penalty_1st_conv'}
+        if not needed.issubset(plays.columns):return None
+        z=plays.loc[plays.pos_team_id.eq(tid)&plays.down.isin((1,2,4))]
+        if z.empty or z.penalty_1st_conv.isna().any():return None
+        count=int(z.penalty_1st_conv.eq(True).sum())
+        return {'awarded':count,'allowed':count,'plays':int(len(z))}
+    out['penalty_first_down_off']=penalty_firsts(team)
+    out['penalty_first_down_def']=penalty_firsts(opponent)
+
     # Next actual opposition drive starting field position, conditional on the
     # field zone of the turnover. Do not equate turnover SPOT with next start.
     keys={'drive_id','game_play_number','pos_team_id','yards_to_goal','int','pos_fumble_lost'}
@@ -181,19 +199,18 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
                 'samples':sum(len(x) for x in ob.values())}
     hneutral=sum(r['off_pass_n'] for r in h)/max(1,sum(r['off_pass_n']+r['off_rush_n'] for r in h))
     aneutral=sum(r['off_pass_n'] for r in a)/max(1,sum(r['off_pass_n']+r['off_rush_n'] for r in a))
-    # Other features (fourth-down decisions, scoring opportunities, penalty first
-    # downs) remain descriptive until independently estimated as residuals.
+    # Situational outcome residuals are explicitly UNFITTED research only.
     return {'version':VERSION,
      'home':{'third':third(h,a,home_projection),'pass_states':pass_states(h,hneutral),
              'neutral_pass_rate':round(float(hneutral),6),
-             'recorded_disruption':matchup_disruption(h,a)},
+             'recorded_disruption':matchup_disruption(h,a),
+             'situational_scoring':matchup_effects(h,a)},
      'away':{'third':third(a,h,away_projection),'pass_states':pass_states(a,aneutral),
              'neutral_pass_rate':round(float(aneutral),6),
-             'recorded_disruption':matchup_disruption(a,h)},
+             'recorded_disruption':matchup_disruption(a,h),
+             'situational_scoring':matchup_effects(a,h)},
      'turnover_field':fields(h,a),
-     'unscored_descriptive':{'scoring_opportunity_outcomes':'OBSERVED_WHEN_AVAILABLE_NO_FITTED_EFFECT',
-          'fourth_down':'OBSERVED_WHEN_AVAILABLE_NO_FITTED_EFFECT',
-          'penalty_automatic_first_down':'OBSERVED_WHEN_AVAILABLE_NO_FITTED_EFFECT'},
+     'situational_scoring_policy':'BOUNDED_UNFITTED_RESEARCH_NOT_ATS_CALIBRATED',
      'assumptions':{'third_distance_residual':'bounded <=0.055 PPD per offense, not fitted',
                     'pass_state_response':'shrunken observed frequencies, not estimated causal elasticities',
                     'turnover_following_field_ppd_per_yard':0.018,
@@ -212,7 +229,10 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
     h=home['projection'].copy();a=away['projection'].copy()
     profile=mechanism_profile(home_id,away_id,histories,h,a)
     for side,proj in (('home',h),('away',a)):
-        proj['_ppd']=float(np.clip(proj['_ppd']+profile[side]['third']['residual_ppd'],.35,5.5))
+        so=profile[side]['situational_scoring']
+        proj['_ppd']=float(np.clip(proj['_ppd']+profile[side]['third']['residual_ppd']+
+                                  so['delta_ppd'],.35,5.5))
+        proj['_td']=float(np.clip(proj['_td']+so['delta_td_share'],.35,.9))
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
     out=simulate_script(h,a,histories[home_id],histories[away_id],runs=runs,seed=seed,
