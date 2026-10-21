@@ -76,7 +76,7 @@ def verify(data, league, run_id, git_sha, raw_sha256):
                   data.get("simulated_margin_home"))
         require(all(number(v, "CFB projected score/margin") is not None for v in scores),
                 "CFB projection incomplete")
-        require(number(challenge.get("mean_margin_home"), "CFB challenger margin") is not None,
+        require(number((data.get("build16_challenger") or {}).get("mean_margin_home"), "CFB challenger margin") is not None,
                 "CFB challenger projection incomplete")
         challenger_runs = challenge["simulations"]
     else:
