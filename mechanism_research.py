@@ -18,6 +18,7 @@ import pandas as pd
 
 from collect_extra_metrics import parse_stamp
 from model import InputError, clip, shrink, logit, sigmoid
+from nfl_situational_scoring import scored_situations
 
 REQUIRED = {'game_id','play_id','posteam','defteam','fixed_drive','play_type','down',
             'ydstogo','third_down_converted','first_down_penalty','yardline_100',
@@ -57,6 +58,8 @@ def _blank():
             'qb_hit_dropbacks':0,'dropbacks':0,'sacks':0,'interceptions':0,
             'hit_interceptions':0,'clean_interceptions':0,
             'turnovers':0,'turnovers_near_scoring':0,'fourth_attempts':0,'fourth_failed':0,
+            'snaps_taken':0,'penalty_nonthird_firsts_earned':0,
+            'penalty_nonthird_firsts_allowed':0,
             'penalty_auto_first_down_conceded':0,'penalties_conceded':0,
             'penalty_yards_conceded':0,'snaps_faced':0,
             'scoring_opportunities':0,'scoring_opportunity_touchdowns':0,
@@ -105,6 +108,7 @@ def extract_mechanisms(pbp:pd.DataFrame,schedule:pd.DataFrame,cutoff,teams:tuple
         if row.play_type!='kickoff' and _num(row.fixed_drive) is not None:
             drives[gid].append(row)
         if row.play_type in ('run','pass'):
+            x['snaps_taken']+=1;lg['snaps_taken']+=1
             state=_state(row.score_differential)
             if state is not None:
                 is_pass=int(_num(row.qb_dropback)==1 or row.play_type=='pass')
@@ -133,13 +137,19 @@ def extract_mechanisms(pbp:pd.DataFrame,schedule:pd.DataFrame,cutoff,teams:tuple
         if _num(row.down)==4 and row.play_type in ('run','pass','no_play'):
             failed=int(_num(row.fourth_down_failed)==1)
             if failed or _num(row.fourth_down_converted)==1:
-                for obj in (x,lg):
+                for obj in (x,y,lg):
                     obj['fourth_attempts']+=1;obj['fourth_failed']+=failed
         if _num(row.interception)==1 or _num(row.fumble_lost)==1:
             z=_zone(row.yardline_100)
             for obj in (x,lg):
                 obj['turnovers']+=1
                 obj['turnovers_near_scoring']+=int(z=='opponent_40_or_closer')
+        if (_num(row.first_down_penalty)==1 and _num(row.down)!=3
+                and row.play_type in ('run','pass','no_play')):
+            x['penalty_nonthird_firsts_earned']+=1
+            lg['penalty_nonthird_firsts_earned']+=1
+            if str(row.penalty_team)==d:
+                y['penalty_nonthird_firsts_allowed']+=1
         if _num(row.penalty)==1 and str(row.penalty_team)==d:
             amount=_num(row.penalty_yards)
             for obj in (y,lg):
@@ -163,7 +173,7 @@ def extract_mechanisms(pbp:pd.DataFrame,schedule:pd.DataFrame,cutoff,teams:tuple
                         _num(p.yardline_100)<=40) for p in drive_rows):continue
             outcome=str(next((q.fixed_drive_result for q in reversed(drive_rows)
                               if hasattr(q,'fixed_drive_result') and pd.notna(q.fixed_drive_result)),'')).lower()
-            for obj in (off[k[0]],lg):
+            for obj in (off[k[0]],deff[str(initial.defteam)],lg):
                 obj['scoring_opportunities']+=1
                 obj['scoring_opportunity_touchdowns']+=int(outcome=='touchdown')
                 obj['scoring_opportunity_field_goals']+=int(outcome=='field goal')
@@ -271,6 +281,12 @@ def candidate_simulation(home:dict,away:dict,profile:dict,r:dict,runs:int,seed:i
     starts=profile['next_start_own_yardline_after_takeaway_by_prior_offense_zone']
     observed=[v for a in starts.values() for v in a]
     empirical_avg_bonus=float(np.mean([clip((v-r['ref_start_yardline'])*r['field_position_points_per_yard'],-1.25,2.2) for v in observed]))
+    situ_h=scored_situations(profile,home['team'],away['team'])
+    situ_a=scored_situations(profile,away['team'],home['team'])
+    home_sim={**home,'_ppd':clip(home['_ppd']+situ_h['total_delta_ppd'],.16,5.4),
+              '_td':clip(home['_td']+situ_h['total_delta_td_share'],.10,.95)}
+    away_sim={**away,'_ppd':clip(away['_ppd']+situ_a['total_delta_ppd'],.16,5.4),
+              '_td':clip(away['_td']+situ_a['total_delta_td_share'],.10,.95)}
     score_h=np.zeros(runs,dtype=float);score_a=np.zeros(runs,dtype=float)
     to_h=np.zeros(runs,dtype=int);to_a=np.zeros(runs,dtype=int)
     state_pass_h=defaultdict(list);state_pass_a=defaultdict(list)
@@ -325,11 +341,11 @@ def candidate_simulation(home:dict,away:dict,profile:dict,r:dict,runs:int,seed:i
     for i in range(17):
         for idx in np.flatnonzero(drive_count>i):
             if opening[idx]==0:
-                score_h[idx]+=one(home,'home',idx,next_bonus_h,next_bonus_a)
-                score_a[idx]+=one(away,'away',idx,next_bonus_h,next_bonus_a)
+                score_h[idx]+=one(home_sim,'home',idx,next_bonus_h,next_bonus_a)
+                score_a[idx]+=one(away_sim,'away',idx,next_bonus_h,next_bonus_a)
             else:
-                score_a[idx]+=one(away,'away',idx,next_bonus_h,next_bonus_a)
-                score_h[idx]+=one(home,'home',idx,next_bonus_h,next_bonus_a)
+                score_a[idx]+=one(away_sim,'away',idx,next_bonus_h,next_bonus_a)
+                score_h[idx]+=one(home_sim,'home',idx,next_bonus_h,next_bonus_a)
     margins=score_h-score_a
     result={'schema':'ats_candidate_mechanism_simulation_v0.9','research_only':True,'promoted_to_primary':False,
             'score_home':round(float(score_h.mean()),2),'score_away':round(float(score_a.mean()),2),
@@ -337,6 +353,7 @@ def candidate_simulation(home:dict,away:dict,profile:dict,r:dict,runs:int,seed:i
             'margin_p10_p50_p90':[float(x) for x in np.quantile(margins,[.1,.5,.9])],
             'projected_third_down_by_distance':{'home':third_h,'away':third_a},
             'third_down_ppd_residual_not_fitted':{'home':round(r_h,4),'away':round(r_a,4)},
+            'scored_situational_outcomes':{'home':situ_h,'away':situ_a},
             'passing_share_given_score_state':{'home':pass_h,'away':pass_a},
             'empirical_turnover_following_start':{k:{'sample_count':len(v),'mean_own_yardline':round(float(np.mean(v)),2) if v else None} for k,v in starts.items()},
             'sampled_turnovers_per_game':{'home':round(float(to_h.mean()),3),'away':round(float(to_a.mean()),3)},
@@ -349,5 +366,5 @@ def candidate_simulation(home:dict,away:dict,profile:dict,r:dict,runs:int,seed:i
             'limitations':['Exploratory uncalibrated model; must not supplant locked primary prediction until out-of-sample improvement',
               'QB hit is not full pressure. No unmeasured penalty or scoring-opportunity EPA is invented.',
               'Turnover field location uses empirically sampled next possession, not an assumed short field',
-              'Fourth-down, red-zone and penalty counts require historical causal validation before scoring coefficients']}
+              'New fourth-down, finishing and nonthird penalty effects are bounded unfitted hypotheses, not measured causal EPA']}
     return result
