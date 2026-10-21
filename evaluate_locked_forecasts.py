@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Score frozen, pre-lock primary vs v0.9 candidate against LATER results.
+"""Score frozen pre-lock primary vs v0.9 and optional v0.10 against LATER results.
 
 A later data snapshot is used ONLY for realized scores; never to refit or
 recompute the frozen prediction. Outputs no ATS record without verified line.
@@ -50,23 +50,55 @@ def evaluate(forecast_files,completed_schedule:pd.DataFrame,out=None):
             raise InputError(f'Conflicting final score vs official result in schedule: {gid}')
         bmargin=float(data['projected_home_margin']);cmargin=float(if_candidate['mean_margin_home'])
         bm=abs(bmargin-(h-a));cm=abs(cmargin-(h-a))
-        rows.append({'game_id':gid,'frozen_file_sha256':hashlib.sha256(raw).hexdigest(),
+        stateful=data.get('stateful_research',{}).get('candidate')
+        if stateful is not None and stateful.get('promoted_to_primary') is not False:
+            raise InputError(f'Stateful candidate incorrectly promoted for {gid}')
+        one={'game_id':gid,'frozen_file_sha256':hashlib.sha256(raw).hexdigest(),
             'prediction_as_of_utc':data['data_as_of_utc'], 'actual_home_margin':h-a,
             'baseline_margin_home':bmargin,'candidate_margin_home':cmargin,
             'baseline_abs_margin_error':round(bm,4),'candidate_abs_margin_error':round(cm,4),
             'baseline_total_abs_error':round(abs(float(data['score_home'])+float(data['score_away'])-h-a),4),
             'candidate_total_abs_error':round(abs(float(if_candidate['score_home'])+float(if_candidate['score_away'])-h-a),4),
-            'ATS_side_evaluated':False,'market_quote_status':'NO_VERIFIED_FROZEN_SIGNED_LINE'})
+            'baseline_home_score_abs_error':round(abs(float(data['score_home'])-h),4),
+            'baseline_away_score_abs_error':round(abs(float(data['score_away'])-a),4),
+            'candidate_home_score_abs_error':round(abs(float(if_candidate['score_home'])-h),4),
+            'candidate_away_score_abs_error':round(abs(float(if_candidate['score_away'])-a),4),
+            'ATS_side_evaluated':False,'market_quote_status':'NO_VERIFIED_FROZEN_SIGNED_LINE'}
+        if stateful is not None:
+            smargin=float(stateful['mean_margin_home'])
+            one.update({
+                'stateful_margin_home':smargin,
+                'stateful_abs_margin_error':round(abs(smargin-(h-a)),4),
+                'stateful_total_abs_error':round(abs(float(stateful['score_home'])+
+                    float(stateful['score_away'])-h-a),4),
+                'stateful_home_score_abs_error':round(abs(float(stateful['score_home'])-h),4),
+                'stateful_away_score_abs_error':round(abs(float(stateful['score_away'])-a),4)})
+        rows.append(one)
     def avg(key):return round(sum(r[key] for r in rows)/len(rows),4) if rows else None
-    result={'schema':'locked_future_model_comparison_v0.9','evaluation_selection_policy':'LATEST_CAPTURE_AT_LEAST_120_MINUTES_PRE_KICKOFF',
+    def avg_stateful(key):
+        vals=[r[key] for r in rows if key in r]
+        return round(sum(vals)/len(vals),4) if vals else None
+    result={'schema':'locked_future_model_comparison_v0.10','evaluation_selection_policy':'LATEST_CAPTURE_AT_LEAST_120_MINUTES_PRE_KICKOFF',
         'distinct_eligible_game_ids':len(chosen),'completed_games':len(rows),
         'base_mae_margin':avg('baseline_abs_margin_error'),
         'candidate_mae_margin':avg('candidate_abs_margin_error'),
         'base_mae_total':avg('baseline_total_abs_error'),
         'candidate_mae_total':avg('candidate_total_abs_error'),
         'candidate_better_margin_games':sum(r['candidate_abs_margin_error']<r['baseline_abs_margin_error'] for r in rows),
+        'stateful_completed_games':sum('stateful_abs_margin_error' in r for r in rows),
+        'stateful_mae_margin':avg_stateful('stateful_abs_margin_error'),
+        'stateful_mae_total':avg_stateful('stateful_total_abs_error'),
+        'base_mae_home_score':avg('baseline_home_score_abs_error'),
+        'base_mae_away_score':avg('baseline_away_score_abs_error'),
+        'candidate_mae_home_score':avg('candidate_home_score_abs_error'),
+        'candidate_mae_away_score':avg('candidate_away_score_abs_error'),
+        'stateful_mae_home_score':avg_stateful('stateful_home_score_abs_error'),
+        'stateful_mae_away_score':avg_stateful('stateful_away_score_abs_error'),
+        'stateful_better_margin_games':sum(
+            r['stateful_abs_margin_error']<r['baseline_abs_margin_error']
+            for r in rows if 'stateful_abs_margin_error' in r),
         'ats_record':'NOT_MEASURED_NO_VALIDATED_PRICED_SIGNED_LINES',
-        'model_promoted':False,'conclusion':'No reliability inference from a small, selected sample. Use chronological out-of-sample validation.',
+        'model_promoted':False,'conclusion':'Never refit a locked forecast. Small selected samples do not show reliability; prospective chronological evaluation required.',
         'games':rows}
     if out:
         path=Path(out);path.parent.mkdir(parents=True,exist_ok=True)
