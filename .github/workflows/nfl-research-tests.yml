@@ -15,6 +15,7 @@ on:
       - 'forecast_upcoming_core.py'
       - 'evaluate_locked_forecasts.py'
       - 'test_nfl_stateful_candidate.py'
+      - 'test_nfl_situational_scoring.py'
       - 'test_mechanism_research.py'
       - '.github/workflows/nfl-research-tests.yml'
   pull_request:
@@ -29,6 +30,7 @@ on:
       - 'forecast_upcoming_core.py'
       - 'evaluate_locked_forecasts.py'
       - 'test_nfl_stateful_candidate.py'
+      - 'test_nfl_situational_scoring.py'
       - '.github/workflows/nfl-research-tests.yml'
   workflow_dispatch:
 
