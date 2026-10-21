@@ -65,6 +65,7 @@ def histories_asof(schedule, pbp, roster, cutoff):
     past_plays=past_plays.loc[past_plays.game_id.isin(eligible.game_id)]
     mapped=normalize_pbp_teams(past_plays, eligible)
     by_game={gid:group for gid,group in mapped.groupby('game_id',sort=False)}
+    raw_by_game={gid:group for gid,group in past_plays.groupby('game_id',sort=False)}
     if not {'position_abbreviation','team_id','athlete_id'}.issubset(roster.columns):
         raise ValueError('Verified roster missing required QB identity columns')
     qb_ids={int(t):set(g.athlete_id.dropna()) for t,g in
@@ -74,8 +75,10 @@ def histories_asof(schedule, pbp, roster, cutoff):
         part=by_game.get(g.game_id)
         if part is None or pd.isna(g.home_points) or pd.isna(g.away_points):continue
         hid,aid=int(g.home_id),int(g.away_id)
-        h=observed_game(part,hid,aid,g.home_points,g.away_points,qb_ids.get(hid,set()))
-        a=observed_game(part,aid,hid,g.away_points,g.home_points,qb_ids.get(aid,set()))
+        h=observed_game(part,hid,aid,g.home_points,g.away_points,qb_ids.get(hid,set()),
+                        special_plays=raw_by_game.get(g.game_id))
+        a=observed_game(part,aid,hid,g.away_points,g.home_points,qb_ids.get(aid,set()),
+                        special_plays=raw_by_game.get(g.game_id))
         if h is None or a is None:continue
         h['opponent_id']=aid; a['opponent_id']=hid
         h['source_game_id']=str(g.game_id);a['source_game_id']=str(g.game_id)
