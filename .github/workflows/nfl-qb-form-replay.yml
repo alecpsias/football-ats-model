@@ -1,0 +1,44 @@
+name: NFL Week 7 QB adjusted research replay (free only)
+
+on:
+  push:
+    branches:
+      - nfl/qb-form-fit-research-20261020
+    paths:
+      - nfl_qb_form_sensitivity.py
+      - .github/workflows/nfl-qb-form-replay.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  research-qb-form:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free model dependencies
+        run: pip install -r requirements-nflverse.txt
+      - name: Verify research script syntax
+        run: python -m py_compile nfl_qb_form_sensitivity.py
+      - name: Fit prospective QB effects and replay same two simulations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python nfl_qb_form_sensitivity.py \
+            --artifact-id 12318235317 \
+            --repo "${{ github.repository }}" \
+            --out research/NE_CHI_QB_fit.json
+      - name: Attach immutable sensitivity research output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nfl-NE-CHI-fitted-QB-replay-${{ github.run_id }}
+          path: research/NE_CHI_QB_fit.json
+          if-no-files-found: warn
+          retention-days: 30
