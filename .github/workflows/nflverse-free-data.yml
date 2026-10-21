@@ -44,7 +44,14 @@ jobs:
         run: |
           mkdir -p ../examples run-metadata
           cp synthetic_matchup.json ../examples/synthetic_matchup.json
-          python -m unittest discover -s . -p 'test_*.py' -v
+          # NFL tests live at repository root; CFB has its own dedicated suite.
+          python - <<'PY'
+          import pathlib,unittest,sys
+          names=sorted(x.stem for x in pathlib.Path('.').glob('test_*.py'))
+          result=unittest.TextTestRunner(verbosity=2).run(
+              unittest.defaultTestLoader.loadTestsFromNames(names))
+          sys.exit(0 if result.wasSuccessful() else 1)
+          PY
       - name: Resolve current NFL season and run-scoped paths
         shell: bash
         run: |

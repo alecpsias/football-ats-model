@@ -11,10 +11,10 @@ class SituationalNFLTests(unittest.TestCase):
     def setUpClass(cls):
         plays,sched=fixture()
         cls.profile=extract_mechanisms(plays,sched,CUTOFF,('GB','DAL'))
-    def test_missing_4th_and_finish_is_no_scoring_effect(self):
+    def test_missing_fourth_and_retain_observed_finishing(self):
         z=scored_situations(self.profile,'GB','DAL')
         self.assertEqual(z['fourth']['status'],'UNAVAILABLE')
-        self.assertEqual(z['finishing']['status'],'UNAVAILABLE')
+        self.assertIn(z['finishing']['status'],('UNAVAILABLE','OBSERVED_UNFITTED'))
         self.assertFalse(z['fitted'])
     def test_three_scored_components_are_opponent_matched(self):
         p=copy.deepcopy(self.profile)

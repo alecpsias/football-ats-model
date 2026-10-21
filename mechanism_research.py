@@ -283,10 +283,17 @@ def candidate_simulation(home:dict,away:dict,profile:dict,r:dict,runs:int,seed:i
     empirical_avg_bonus=float(np.mean([clip((v-r['ref_start_yardline'])*r['field_position_points_per_yard'],-1.25,2.2) for v in observed]))
     situ_h=scored_situations(profile,home['team'],away['team'])
     situ_a=scored_situations(profile,away['team'],home['team'])
-    home_sim={**home,'_ppd':clip(home['_ppd']+situ_h['total_delta_ppd'],.16,5.4),
-              '_td':clip(home['_td']+situ_h['total_delta_td_share'],.10,.95)}
-    away_sim={**away,'_ppd':clip(away['_ppd']+situ_a['total_delta_ppd'],.16,5.4),
-              '_td':clip(away['_td']+situ_a['total_delta_td_share'],.10,.95)}
+    def adjusted(p,s):
+        # A shift toward TDs rather than FGs changes expected points too.
+        # Keep the original scoring-event frequency fixed; do not let the
+        # score normalization cancel the conditional finishing adjustment.
+        scoring_event_rate=clip(p['_ppd']/(3.0+3.95*p['_td']),.01,.8)
+        finishing_ppd=3.95*scoring_event_rate*s['total_delta_td_share']
+        s['applied_finishing_delta_ppd']=round(finishing_ppd,6)
+        return {**p,'_ppd':clip(p['_ppd']+s['total_delta_ppd']+finishing_ppd,.16,5.4),
+                '_td':clip(p['_td']+s['total_delta_td_share'],.10,.95)}
+    home_sim=adjusted(home,situ_h)
+    away_sim=adjusted(away,situ_a)
     score_h=np.zeros(runs,dtype=float);score_a=np.zeros(runs,dtype=float)
     to_h=np.zeros(runs,dtype=int);to_a=np.zeros(runs,dtype=int)
     state_pass_h=defaultdict(list);state_pass_a=defaultdict(list)

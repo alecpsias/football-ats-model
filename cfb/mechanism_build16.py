@@ -230,8 +230,13 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
     profile=mechanism_profile(home_id,away_id,histories,h,a)
     for side,proj in (('home',h),('away',a)):
         so=profile[side]['situational_scoring']
+        # Apply finishing as an expected point shift, not just a changed
+        # TD/FG conditional share that the PPD normalizer cancels.
+        scoring_rate=float(np.clip(proj['_ppd']/(3.0+3.965*proj['_td']),.01,.8))
+        finish_ppd=float(3.965*scoring_rate*so['delta_td_share'])
+        so['applied_finishing_delta_ppd']=round(finish_ppd,6)
         proj['_ppd']=float(np.clip(proj['_ppd']+profile[side]['third']['residual_ppd']+
-                                  so['delta_ppd'],.35,5.5))
+                                  so['delta_ppd']+finish_ppd,.35,5.5))
         proj['_td']=float(np.clip(proj['_td']+so['delta_td_share'],.35,.9))
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
