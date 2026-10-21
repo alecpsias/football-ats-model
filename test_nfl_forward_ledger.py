@@ -28,10 +28,7 @@ class ArchivedForecastTests(unittest.TestCase):
             "kickoff_utc": "2026-10-19T20:15:00Z",
             "data_as_of_utc": "2026-10-19T17:00:00Z",
             "projected_home_margin": 6.0, "score_home": 27,
-            "score_away": 21, "mechanism_research": {"candidate": {
-                "mean_margin_home": 5.5, "score_home": 25, "score_away": 19.5,
-                "promoted_to_primary": False}},
-            "stateful_research": {"candidate": {
+            "score_away": 21, "challenger": {"version": "0.10.0", "candidate": {
                 "mean_margin_home": 6.3, "score_home": 24.0, "score_away": 18.0,
                 "promoted_to_primary": False}}
         }
@@ -63,7 +60,7 @@ class ArchivedForecastTests(unittest.TestCase):
             with self.assertRaisesRegex(InputError, "After-lock"):
                 evaluate(paths, finals)
 
-    def test_frozen_fixture_scores_all_three_models_without_ats_claim(self):
+    def test_frozen_fixture_scores_baseline_and_one_challenger_without_ats_claim(self):
         finals = pd.DataFrame([dict(game_id="2026_test", home_team="SF",
                                    away_team="WAS", home_score=23,
                                    away_score=17, result=6,
@@ -74,10 +71,10 @@ class ArchivedForecastTests(unittest.TestCase):
             }), Path(d), 123)
             x = evaluate(paths, finals)
             self.assertEqual(x["completed_games"], 1)
-            self.assertEqual(x["stateful_completed_games"], 1)
-            self.assertEqual(x["base_mae_margin"], 0)
-            self.assertEqual(x["candidate_mae_margin"], .5)
-            self.assertEqual(x["stateful_mae_margin"], .3)
+            self.assertEqual(x["current_challenger"]["challenger_games"], 1)
+            self.assertEqual(x["all_baseline"]["baseline_mae_margin"], 0)
+            self.assertEqual(x["current_challenger"]["challenger_mae_margin"], .3)
+            self.assertEqual(x["archived_challenger_versions"], {})
             self.assertEqual(x["ats_record"], "NOT_MEASURED_NO_VALIDATED_PRICED_SIGNED_LINES")
 
 
