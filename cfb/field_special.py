@@ -61,8 +61,9 @@ def observed_special_teams(raw, team, opponent):
     """Return traceable per-game observations; no league assumptions.
 
     FG denominators include attempts only, returns include actual observed
-    returns only (not touchbacks as zero-yard returns). Net punt yardage is
-    provider yds_punt_gained, never gross yardage minus guessed return yards.
+    returns only (not touchbacks as zero-yard returns). Net punt yards are
+    recorded ONLY if the raw provider explicitly supplies punt_net_yards;
+    yds_punt_gained must NOT be mistaken for net punt distance.
     """
     default={k:None for k in ('fg_made','fg_attempts','fg_short_made',
         'fg_short_attempts','fg_medium_made','fg_medium_attempts',
@@ -91,7 +92,10 @@ def observed_special_teams(raw, team, opponent):
         result=dict(default)
     punts=_attributed(_selected(raw,('punt','punt_play')),
                       ('punt_team','kicking_team','pos_team_id'),team,opponent)
-    result['punt_net_sum'],result['punt_net_n']=_metric(punts,'yds_punt_gained',-35,110)
+    result['punt_net_sum'],result['punt_net_n']=_metric(punts,'punt_net_yards',-35,110)
+    net_sum,net_n=result['punt_net_sum'],result['punt_net_n']
+    if net_n is not None and not 20 <= net_sum / net_n <= 70:
+        result['punt_net_sum']=result['punt_net_n']=None
     returns=_attributed(_selected(raw,('kickoff_play',)),
                         ('kick_return_team','return_team'),team,opponent)
     result['kick_return_sum'],result['kick_return_n']=_metric(
