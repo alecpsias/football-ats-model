@@ -30,7 +30,9 @@ USC_SJSU_OFFICIAL={
 # https://goheels.com/game-center/26876
 UNC_TCU_OFFICIAL={
     'game_id':401856766,'tcu_id':2628,'unc_id':153,
-    'tcu_possession_seconds':1981,'unc_possession_seconds':1618}
+    'tcu_possession_seconds':1981,'unc_possession_seconds':1618,
+    'tcu_rush_attempts':39,'unc_rush_attempts':29,
+    'tcu_pass_attempts':32,'unc_pass_attempts':28}
 
 def _weighted(rows,key,weight):
     included=[r for r in rows if r.get(key) is not None and r.get(weight,0)>0]
@@ -59,7 +61,7 @@ def study(snapshot,out,min_games=3,max_games=None):
     if max_games is not None:games=games.head(max_games).copy()
     # Never read 500+ wide columns if only source clock and class are required.
     cols=['game_id','game_play_number','drive.id','drive_id','pos_team_id',
-          'pass','rush','drive.timeElapsed.displayValue',
+          'pass','rush','sack','drive.timeElapsed.displayValue',
           'drive.start.period.number','drive.start.clock.displayValue',
           'drive.end.period.number','drive.end.clock.displayValue']
     import pyarrow.parquet as pq
@@ -101,7 +103,13 @@ def study(snapshot,out,min_games=3,max_games=None):
           'pass_plays_home':ref['teams'][str(off['usc_id'])]['pass_plays'],
           'pass_plays_away':ref['teams'][str(off['sjsu_id'])]['pass_plays'],
           'official_pass_attempts_home':off['usc_pass_attempts'],
-          'official_pass_attempts_away':off['sjsu_pass_attempts']})
+          'official_pass_attempts_away':off['sjsu_pass_attempts'],
+          'pbp_box_rush_attempts_home':ref['teams'][str(off['usc_id'])]['official_rush_attempts'],
+          'pbp_box_rush_attempts_away':ref['teams'][str(off['sjsu_id'])]['official_rush_attempts'],
+          'pbp_box_pass_attempts_home':ref['teams'][str(off['usc_id'])]['official_pass_attempts'],
+          'pbp_box_pass_attempts_away':ref['teams'][str(off['sjsu_id'])]['official_pass_attempts'],
+          'sacks_reclassified_home':ref['teams'][str(off['usc_id'])]['sack_reclassification_count'],
+          'sacks_reclassified_away':ref['teams'][str(off['sjsu_id'])]['sack_reclassification_count']})
     # Second independent published game, contrasting playing styles and a
     # neutral site. One second can be omitted in official period bookkeeping.
     n=UNC_TCU_OFFICIAL
@@ -119,7 +127,17 @@ def study(snapshot,out,min_games=3,max_games=None):
           'observed_seconds_tcu':other['teams'][str(n['tcu_id'])]['observed_time_seconds'],
           'observed_seconds_unc':other['teams'][str(n['unc_id'])]['observed_time_seconds'],
           'provider_elapsed_only_drives':other['source_only_elapsed_drive_count'],
-          'excluded_drives':other['excluded']})
+          'excluded_drives':other['excluded'],
+          'official_rush_attempts_tcu':n['tcu_rush_attempts'],
+          'official_rush_attempts_unc':n['unc_rush_attempts'],
+          'official_pass_attempts_tcu':n['tcu_pass_attempts'],
+          'official_pass_attempts_unc':n['unc_pass_attempts'],
+          'pbp_box_rush_attempts_tcu':other['teams'][str(n['tcu_id'])]['official_rush_attempts'],
+          'pbp_box_rush_attempts_unc':other['teams'][str(n['unc_id'])]['official_rush_attempts'],
+          'pbp_box_pass_attempts_tcu':other['teams'][str(n['tcu_id'])]['official_pass_attempts'],
+          'pbp_box_pass_attempts_unc':other['teams'][str(n['unc_id'])]['official_pass_attempts'],
+          'sacks_reclassified_tcu':other['teams'][str(n['tcu_id'])]['sack_reclassification_count'],
+          'sacks_reclassified_unc':other['teams'][str(n['unc_id'])]['sack_reclassification_count']})
     # Exclude incomplete possession sources from statistical claims.
     eligible_games=[g for _,g in games.iterrows() if measured[str(g.game_id)]['status']=='COMPLETE_REGULATION_CLOCK_AUDIT']
     history=defaultdict(list);pending=[];rows=[]
@@ -136,7 +154,7 @@ def study(snapshot,out,min_games=3,max_games=None):
                 actual=game['teams'][str(tid)]
                 own=prior[tid]
                 other=prior[opponent]
-                if actual['run_share'] is None or actual['seconds_per_drive'] is None:
+                if actual['official_rush_share'] is None or actual['seconds_per_drive'] is None:
                     continue
                 own_mix=_weighted(own,'run_share','total_scrimmage')
                 def_mix=_weighted(other,'run_share_allowed','opponent_total_scrimmage')
@@ -151,7 +169,7 @@ def study(snapshot,out,min_games=3,max_games=None):
                 proposed_time=own_duration+.45*w*(def_duration-own_duration)
                 rows.append({'game_id':str(g.game_id),'kickoff':kickoff.isoformat(),
                     'team_id':tid,'opponent_id':opponent,'home':tid==home,
-                    'observed_rush_share':actual['run_share'],
+                    'observed_rush_share':actual['official_rush_share'],
                     'observed_seconds_per_drive':actual['seconds_per_drive'],
                     'observed_plays_per_drive':actual['scrimmage_plays_per_drive'],
                     'observed_drives':actual['valid_drives'],
@@ -169,9 +187,9 @@ def study(snapshot,out,min_games=3,max_games=None):
         for tid,opponent in ((home,away),(away,home)):
             t=game['teams'][str(tid)]
             o=game['teams'][str(opponent)]
-            rec={'run_share':t['run_share'],'total_scrimmage':t['rush_plays']+t['pass_plays'],
-                 'run_share_allowed':o['run_share'],
-                 'opponent_total_scrimmage':o['rush_plays']+o['pass_plays'],
+            rec={'run_share':t['official_rush_share'],'total_scrimmage':t['official_rush_attempts']+t['official_pass_attempts'],
+                 'run_share_allowed':o['official_rush_share'],
+                 'opponent_total_scrimmage':o['official_rush_attempts']+o['official_pass_attempts'],
                  'seconds_per_drive':t['seconds_per_drive'],
                  'valid_drives':t['valid_drives'],
                  'seconds_per_drive_allowed':o['seconds_per_drive'],
@@ -183,10 +201,10 @@ def study(snapshot,out,min_games=3,max_games=None):
         game=measured[str(g.game_id)]
         for t in (int(g.home_id),int(g.away_id)):
             z=game['teams'][str(t)]
-            if z['run_share'] is not None:
+            if z['official_rush_share'] is not None:
                 observed.append({'game_id':str(g.game_id),
                     'seconds_per_drive':z['seconds_per_drive'],
-                    'rush_share':z['run_share'],
+                    'rush_share':z['official_rush_share'],
                     'scrimmage_plays_per_drive':z['scrimmage_plays_per_drive'],
                     'drives':z['valid_drives']})
     def linear_fit(records):
