@@ -9,6 +9,7 @@ from __future__ import annotations
 import math
 import numpy as np
 import pandas as pd
+from cfb.official_scoring_checks import official_reconciliation
 
 SCORE_PAIRS=(('home_score','away_score'),('homeScore','awayScore'),
              ('home.score','away.score'),('home_points','away_points'))
@@ -45,10 +46,16 @@ def attribute(raw, home_id, away_id, home_final, away_final):
     if (values<0).any() or not np.isfinite(values).all():
         return reject('INVALID_SCORE_VALUES')
     deltas=np.diff(np.vstack([np.zeros((1,2)),values]),axis=0)
-    if (deltas<0).any() or (deltas>8).any() or (deltas.sum(axis=1)>8).any():
-        return reject('IMPOSSIBLE_SCORE_TRANSITIONS')
     if tuple(values[-1])!=(float(home_final),float(away_final)):
         return reject('OFFICIAL_FINAL_RECONCILIATION_FAILED')
+    # Independently verified institutional scorebooks correct known ESPN
+    # delayed overtime updates and misclassified return scores. Only use
+    # exact raw game IDs, finals and explicit return text; never global
+    # team-level assumptions or guessed zero non-offensive scores.
+    official=official_reconciliation(frame,home_id,away_id,home_final,away_final)
+    if official is not None:return official
+    if (deltas<0).any() or (deltas>8).any() or (deltas.sum(axis=1)>8).any():
+        return reject('IMPOSSIBLE_SCORE_TRANSITIONS')
     offensive={side:0. for side in SIDES}
     defensive={side:0. for side in SIDES}
     special={side:0. for side in SIDES}
@@ -71,6 +78,27 @@ def attribute(raw, home_id, away_id, home_final, away_final):
             return reject('INCOMPLETE_SCORING_EVENT_FLAGS')
         scrimmage=scrimmage_pass or scrimmage_rush
         turnover=was_int or was_fumble
+        # A +7 score on a nonscrimmage/false-offense-flag row does NOT
+        # establish a special teams TD. ESPN often attaches scores to
+        # subsequent kickoff/PAT rows. Demand an explicit event type.
+        event_type=str(row.get('type.text','')).strip().lower()
+        detail=str(row.get('text','')).strip().lower()
+        scoring_text=event_type+' '+detail
+        special_return=(
+            ('touchdown' in scoring_text) and (
+             'punt return' in scoring_text or 'kickoff return' in scoring_text
+             or 'kick return' in scoring_text or
+             ('blocked' in scoring_text and ('punt' in scoring_text or
+                                               'field goal' in scoring_text))))
+        defensive_return=(
+            ('touchdown' in scoring_text) and (
+             'interception return' in scoring_text or
+             'fumble return' in scoring_text))
+        explicit_offense_td=(
+            'passing touchdown' in event_type or 'rushing touchdown' in event_type)
+        explicit_fg=('field goal good' in event_type or
+                     'field goal is good' in detail or
+                     bool(row.get('fg_made',False)) is True)
         for side,points,team in (('home',dh,home_id),('away',da,away_id)):
             if not points:continue
             # Two-point plays, safeties and split PAT scoring need explicitly
@@ -78,30 +106,34 @@ def attribute(raw, home_id, away_id, home_final, away_final):
             if points==2:return reject('TWO_POINT_SCORING_ATTRIBUTION_AMBIGUOUS')
             if points not in (3,6,7,8):return reject('AMBIGUOUS_SCORING_EVENT')
             own_possession=str(pos)==str(team)
-            if own_possession:
-                if offense_flag and not turnover:
-                    offensive[side]+=float(points)
-                    event_counts['offensive']+=1
-                elif not scrimmage and not offense_flag and points in (6,7,8):
-                    special[side]+=float(points)
-                    special_tds[side]+=1
-                    event_counts['special_teams']+=1
-                else:return reject('AMBIGUOUS_SAME_TEAM_SCORING_EVENT')
-            elif scrimmage and turnover and not offense_flag and points in (6,7,8):
-                defensive[side]+=float(points)
-                defensive_tds[side]+=1
-                event_counts['defensive_return']+=1
-            elif not scrimmage and not offense_flag and points in (6,7,8):
+            if special_return and points in (6,7,8):
                 special[side]+=float(points)
                 special_tds[side]+=1
                 event_counts['special_teams']+=1
+            elif (defensive_return and not own_possession and turnover
+                  and points in (6,7,8)):
+                defensive[side]+=float(points)
+                defensive_tds[side]+=1
+                event_counts['defensive_return']+=1
+            elif (own_possession and not special_return and not defensive_return
+                  and ((points==3 and explicit_fg)
+                    or (points in (6,7,8) and not turnover
+                        and (explicit_offense_td or (offense_flag and scrimmage))))):
+                offensive[side]+=float(points)
+                event_counts['offensive']+=1
+            elif (not own_possession and scrimmage and turnover
+                  and points in (6,7,8) and not offense_flag):
+                defensive[side]+=float(points)
+                defensive_tds[side]+=1
+                event_counts['defensive_return']+=1
             else:
-                return reject('AMBIGUOUS_RETURN_SCORING_EVENT')
+                return reject('SCORING_TYPE_UNVERIFIED_NOT_ASSUMED_SPECIAL_TEAMS')
     for side,final in (('home',float(home_final)),('away',float(away_final))):
         if offensive[side]+defensive[side]+special[side]!=final:
             return reject('SCORING_TOTAL_CHECK_FAILED')
     non={s:defensive[s]+special[s] for s in SIDES}
     return {'status':'VERIFIED_RAW_SCORE_RECONCILIATION',
+            'verification_method':'EXPLICIT_PLAY_TYPE_AND_RAW_SCORE_DELTA',
             'offensive_points':offensive,'nonoffensive_points':non,
             'defensive_return_points':defensive,'special_teams_points':special,
             'defensive_return_tds':defensive_tds,'special_teams_tds':special_tds,
