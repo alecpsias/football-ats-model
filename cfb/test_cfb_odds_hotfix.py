@@ -81,6 +81,16 @@ class OddsInlineRegressionTests(unittest.TestCase):
             self.assertEqual(rec[0]['quote']['book'],'DraftKings')
             self.assertEqual(load_quotes(odds)[G]['quote']['home_odds_american'],-110)
 
+    def test_conflicting_home_away_current_line_rejected_without_guess(self):
+        obj=_inline()
+        obj['provider']={**obj['provider'],'name':'Draft Kings'}
+        obj['homeTeamOdds']={**obj['homeTeamOdds'],
+            'current':{'pointSpread':{'alternateDisplayValue':'-13.5'}}}
+        obj['awayTeamOdds']={**obj['awayTeamOdds'],
+            'current':{'pointSpread':{'alternateDisplayValue':'+14'}}}
+        q,_,_=choose_espn_quote(json.dumps({'items':[obj]}).encode(),expected_gid=G)
+        self.assertIsNone(q)
+
     def test_unknown_similar_provider_name_not_accepted(self):
         obj=_inline()
         obj['provider']={**obj['provider'],'name':'Draft Kingzz'}
