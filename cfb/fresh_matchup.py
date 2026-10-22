@@ -21,7 +21,7 @@ from cfb.advanced_scoring import simulate_challenger
 from cfb.game_script import simulate_script, adverse_scripts
 from cfb.mechanism_build16 import simulate_build16
 from cfb.failure1_shadow import include_prior_game
-from cfb.failure1_learned_shadow import shadow as learned_rushing_shadow
+from cfb.failure1_learned_shadow import shadow as learned_rushing_shadow, correction as fitted_rush_correction
 from cfb.mandatory_rushing_audit import audit as rushing_audit, gate as rushing_gate
 from cfb.market import _date
 from cfb.matchups import matchup_signals
@@ -240,9 +240,11 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
         qmap={str(g.game_id):q} if q else {}
         sim=simulate(hp,ap,runs=runs,seed=int(g.game_id)%(2**32),
                      spread_home=q['quote']['spread_home'] if q else None)
+        rushing_correction=fitted_rush_correction(hid,aid,histories)
         challenger=simulate_build16(hid,aid,histories,neutral,runs=runs,
                      seed=int(g.game_id)%(2**32),
                      spread_home=q['quote']['spread_home'] if q else None,
+                     failure1_fit_margin_delta=rushing_correction['margin_delta_points'],
                      stress_runs=(5000 if rush_screen['requires_full_rush_stress']
                                   else max(100,min(400,runs//8))))
         personnel=simulate_personnel_scenarios(hp,ap,qb_effects['home'],qb_effects['away'],
@@ -260,6 +262,7 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
                     runs=max(100,min(600,runs//5)),seed=int(g.game_id)%(2**32))
         result.update({'status':'FRESH_PREGAME_PROJECTION_LOCKED',
                        'build16_challenger':challenger,
+                       'build16_active_failure1_rushing_correction':rushing_correction,
                        'build16_not_primary':True,
                        'conditional_personnel_scenarios':personnel,
                        'home_projection':hp,'away_projection':ap,
