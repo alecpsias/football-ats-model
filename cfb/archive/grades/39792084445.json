@@ -1,0 +1,253 @@
+{
+  "archived_forecast_games": 49,
+  "ats_provisional": {
+    "ats_validated": false,
+    "complete_observed_quoted_games": 0,
+    "cover_accuracy_excluding_pushes": null,
+    "flat_stake_roi_per_decision": null,
+    "losses": 0,
+    "pushes": 0,
+    "research_decisions": 0,
+    "wins": 0
+  },
+  "build16_ats_provisional": {
+    "ats_validated": false,
+    "cover_accuracy_excluding_pushes_and_no_edge": null,
+    "games_with_joint_pre_kickoff_line": 0
+  },
+  "build16_challenger_forward": {
+    "not_primary": true,
+    "paired_baseline_mae": null,
+    "paired_build16_mae": null,
+    "paired_games": 0,
+    "status": "RESEARCH_ONLY_NOT_VALIDATED_OR_DEPLOYED"
+  },
+  "earliest_frozen_prediction_per_game": true,
+  "forward_margin": {
+    "bias": null,
+    "games": 0,
+    "mae": null,
+    "rmse": null,
+    "winner_direction_accuracy_not_ats": null
+  },
+  "free_schedule_bytes_sha256": "9b970cff51bda692cc9d00eab06c73d63ae8e6bceac29301ff33c309f9e462bc",
+  "free_schedule_observed_at_utc": "2026-10-22T14:01:37.177202+00:00",
+  "free_schedule_source_url": "https://github.com/sportsdataverse/sportsdataverse-data/releases/download/cfb_schedules/cfb_schedules_2026.parquet",
+  "graded_final_games": 0,
+  "limitations": [
+    "No independently attested original sportsbook publication time",
+    "GitHub archive commit must be independently checked to establish pregame durability",
+    "Free SportsDataverse schedule may be revised after game; hash records observed bytes",
+    "No empirically calibrated ATS probability, no wager recommendations",
+    "Bookmaker price availability and coverage are uncontrolled",
+    "Repeated observations/overlapping teams are not independent samples"
+  ],
+  "pending": [
+    {
+      "game_id": "401871055",
+      "reason": "FINAL_NOT_IN_FREE_RELEASE"
+    },
+    {
+      "game_id": "401871069",
+      "reason": "FINAL_NOT_IN_FREE_RELEASE"
+    },
+    {
+      "game_id": "401871092",
+      "reason": "FINAL_NOT_IN_FREE_RELEASE"
+    },
+    {
+      "game_id": "401871070",
+      "reason": "FINAL_NOT_IN_FREE_RELEASE"
+    },
+    {
+      "game_id": "401869845",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401871056",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401862807",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401858271",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401861965",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401862808",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401864525",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401858272",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401856728",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401856841",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401858270",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401858274",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401858496",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401858498",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401862809",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401866450",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401866446",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401866476",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401856727",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401856730",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401856731",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401858273",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401862810",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401864526",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401866447",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401866448",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401866449",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401871094",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401864528",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401869967",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401871093",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401860907",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401860905",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401869935",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401856729",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401856732",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401858275",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401858500",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401860906",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401862811",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401864527",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401871071",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401871072",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401871058",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    },
+    {
+      "game_id": "401871057",
+      "reason": "INSUFFICIENT_ELAPSED_TIME"
+    }
+  ],
+  "pending_games": 49,
+  "personnel_conditional_forward": {
+    "games_with_conditional_scenarios": 0,
+    "games_with_frozen_conditional_evidence": 0,
+    "prospective_personnel_accuracy_claims": false,
+    "status": "NOT_GRADED_UNCONFIRMED_PREGAME_STARTERS"
+  },
+  "schema": "cfb_forward_research_audit_v1",
+  "scored_games": [],
+  "status": "FORWARD_MARGIN_RESEARCH_NO_VALIDATED_ATS_EDGE"
+}
