@@ -54,6 +54,10 @@ def evaluate(snapshot,*,max_games=160,runs=5000):
              'simulated_possessions_home':b.get('failure3_possessions_home'),
              'simulated_possessions_away':b.get('failure3_possessions_away'),
              'clock_method':b.get('failure3_clock_model'),
+             'source_clock_verified':b.get('failure3_source_clock_verified'),
+             'clock_audit':evidence.get('clock_audit'),
+             'mean_elapsed_source_seconds':b.get('failure3_mean_elapsed_seconds'),
+             'source_clock_status':evidence.get('possession_process_status'),
              'mae_before':round(abs(a['mean_margin_home']-observed),5),
              'mae_after':round(abs(b['mean_margin_home']-observed),5),
              'paired_gain':round(abs(a['mean_margin_home']-observed)-
@@ -61,7 +65,7 @@ def evaluate(snapshot,*,max_games=160,runs=5000):
              'margin_shift':round(b['mean_margin_home']-a['mean_margin_home'],5)}
         paired.append(row)
     if not paired:raise RuntimeError('No paired eligible completed matchups')
-    active=[r for r in paired if r['failure3_status']=='ACTIVE_BUILD16_UNCALIBRATED_FAILURE3']
+    active=[r for r in paired if r['source_clock_verified'] is True]
     changed=[r for r in active if abs(r['margin_shift'])>.001]
     def summary(rows):
         if not rows:return {'games':0,'mae_before':None,'mae_after':None}
@@ -76,21 +80,27 @@ def evaluate(snapshot,*,max_games=160,runs=5000):
           'gain_bootstrap95':[round(float(x),5) for x in np.quantile(boot,[.025,.975])],
           'mean_absolute_margin_change':round(float(np.mean(
              [abs(r['margin_shift']) for r in rows])),5)}
-    return {'schema':'cfb_failure3_opponent_sustainability_possessions_paired_v2',
+    return {'schema':'cfb_failure3_empirical_verified_possession_clock_paired_v3',
       'snapshot':str(snapshot),'precutoff_eligible_screen':screen,
       'motivation_fixture_excluded':MOTIVATION_GAME,
       'paired_protocol':'Same game, seed, 5000 simulations; Failure1+Failure2 constant',
       'sample_games':len(chosen),
       'all':summary(paired),'active':summary(active),
       'changed_games':len(changed),
+      'verified_source_clock_games':len(active),
+      'fallback_clock_games':len(paired)-len(active),
+      'fallback_reasons':{reason:sum(x['clock_audit'].get('status')==reason for x in paired
+                           if x['source_clock_verified'] is not True) for reason in
+                           sorted({x['clock_audit'].get('status') for x in paired
+                                   if x['source_clock_verified'] is not True})},
       'mean_total_before':round(float(np.mean([r['total_before'] for r in paired])),4),
       'mean_total_after':round(float(np.mean([r['total_after'] for r in paired])),4),
       'mean_absolute_total_shift':round(float(np.mean([abs(r['total_after']-r['total_before']) for r in paired])),4),
-      'clock_evidence_class':'UNFITTED_DURATION_BY_SCORE_CATEGORY_NOT_OFFICIAL_TOP_CALIBRATED',
+      'clock_evidence_class':'ESPN_SOURCE_ELAPSED_CROSSCHECKED_START_END_GAME_COVERAGE_NOT_INDEPENDENT_OFFICIAL_TOP',
       'fitted':False,'ATS_calibrated':False,
       'limitations':['Retrospective source capture, not contemporaneous as-of data',
        'No verified sportsbook spreads for ATS testing',
-       'Per-possession chain persistence and clock multipliers are structural hypotheses, not trained coefficients',
+       'Chain persistence remains unfitted; drive durations are empirical when audit passes and fall back to unchanged Build16 otherwise',
        'Game scores in validation not used to choose coefficient'],
       'games':paired}
 
