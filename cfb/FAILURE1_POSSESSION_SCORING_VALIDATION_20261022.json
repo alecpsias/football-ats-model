@@ -103,7 +103,8 @@
     "active_Build16_score_parameters_unchanged": true,
     "one_active_challenger_retained": true,
     "existing_2023_ridge_shadow_unchanged": true,
-    "research_mode": "optional possession_response argument in same Build16 mechanism; never passed from standard pregame production"
+    "research_mode": "optional possession_response argument in same Build16 mechanism; never passed from standard pregame production",
+    "new_possession_scoring_logic_active_in_standard_Build16": false
   },
   "data_provenance": {
     "source": "free historical ESPN/SportsDataverse college-football PBP; source captured retrospectively",
@@ -113,5 +114,12 @@
     "motivating_game_included": false,
     "historical_original_publication_times_authenticated": false
   },
-  "conclusion": "Real possession-scoring/clock interaction is built, reproducibly tested and rejected for default promotion; primary predictions may still underweight a specific rushing matchup. Maintain mandatory matchup stress and collect forward evidence. Never claim the failure fixed."
+  "conclusion": "Real possession-scoring/clock interaction is built, reproducibly tested and rejected for default promotion; primary predictions may still underweight a specific rushing matchup. Maintain mandatory matchup stress and collect forward evidence. Never claim the failure fixed.",
+  "concurrent_production_integration_as_verified": {
+    "timestamp_date": "2026-10-22",
+    "active_challenger_applies_separate_2023_seven_feature_ridge": true,
+    "active_challenger_is_not_new_possession_model": true,
+    "concurrent_change_commit": "67080e25b3298a9ed5dab0d859e68a551aa6aa59",
+    "shadow_comparison_note": "Active Build16 and old ridge shadow can be algorithmically identical; do not claim they are independent pairs."
+  }
 }
