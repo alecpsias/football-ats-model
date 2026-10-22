@@ -1,15 +1,6 @@
 name: CFB Failure1 learned scoring forward-shadow integration
 
 on:
-  push:
-    branches: [cfb-failure1-quantitative-validation-20261022]
-    paths:
-      - 'cfb/failure1_learned_shadow.py'
-      - 'cfb/fresh_matchup.py'
-      - 'cfb/prospective.py'
-      - 'cfb/forward_monitor.py'
-      - 'cfb/test_cfb_failure1_learned_shadow.py'
-      - '.github/workflows/cfb-failure1-forward-integration.yml'
   workflow_dispatch:
 
 permissions:
