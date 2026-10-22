@@ -6,6 +6,7 @@ on:
       - 'cfb/free_odds.py'
       - 'cfb/recover_all_free_odds.py'
       - 'cfb/test_cfb_odds_hotfix.py'
+      - 'cfb/odds_parse_diagnostic.py'
       - '.github/workflows/cfb-free-odds-provider-fix.yml'
   workflow_dispatch:
 
@@ -23,6 +24,8 @@ jobs:
           python-version: '3.11'
       - name: Setup source-free test environment
         run: python -m pip install -r requirements-cfb.txt
+      - name: Diagnose exact live ESPN signed line rejection
+        run: python -m cfb.odds_parse_diagnostic
       - name: CFB original forecast, authentic quote, and archive regression suite
         run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
       - name: Reparse saved original pre-kickoff odds with source hashes and timestamps
