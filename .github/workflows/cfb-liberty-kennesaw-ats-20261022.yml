@@ -60,7 +60,7 @@ jobs:
               result['line_sensitivity'].append({'kennesaw_plus':line,
                  'home_cover_probability_raw':s['home_cover_probability_raw'],
                  'liberty_cover_probability_raw':s['away_cover_probability_raw'],
-                 'push_probability_raw':s['push_probability_raw'],
+                 'push_probability_raw_derived':round(1.-s['home_cover_probability_raw']-s['away_cover_probability_raw'],5),
                  'kennesaw_win_probability_raw':s['home_win_probability_raw'],
                  'score_liberty':s['mean_score_away'],'score_kennesaw':s['mean_score_home'],
                  'liberty_margin':-s['mean_margin_home'],
