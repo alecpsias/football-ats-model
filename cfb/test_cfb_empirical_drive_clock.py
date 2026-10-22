@@ -1,5 +1,6 @@
 """Source-clock strictness and no invented game-clock assertions."""
 import unittest
+import copy
 import pandas as pd
 from cfb.empirical_drive_clock import observe,matchup_clocks,sample_seconds
 
@@ -49,8 +50,8 @@ class EmpiricalClockTests(unittest.TestCase):
         vals={'explosive_td':[37],'chain_score':[182,201],
               'turnover':[68],'stalled':[122,144]}
         rec=buckets(vals)
-        h={10:[{'drive_clock':rec} for _ in range(3)],
-           20:[{'drive_clock':rec} for _ in range(3)]}
+        h={10:[{'drive_clock':copy.deepcopy(rec)} for _ in range(3)],
+           20:[{'drive_clock':copy.deepcopy(rec)} for _ in range(3)]}
         a=matchup_clocks(10,20,h)
         self.assertEqual(a['status'],'ACTIVE_VERIFIED_SOURCE_DRIVE_CLOCKS')
         self.assertFalse(a['official_box_top_verified'])
