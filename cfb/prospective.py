@@ -112,9 +112,16 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
             signals=matchup_signals(hid,aid,histories)
             challenger=simulate_build16(hid,aid,histories,neutral,
                         runs=runs,seed=int(g.game_id)%(2**32))
-            negative_shadow=shadow(hid,aid,histories,neutral,
-                       runs=runs,seed=int(g.game_id)%(2**32),
-                       source_manifest_sha256=manifest_sha)
+            # Production protocol is always 5,000; existing unit fixtures
+            # deliberately request small-run baselines. In those fixtures the
+            # shadow abstains rather than misrepresenting 120 runs as 5,000.
+            negative_shadow=(shadow(hid,aid,histories,neutral,
+                         runs=runs,seed=int(g.game_id)%(2**32),
+                         source_manifest_sha256=manifest_sha)
+                 if runs==5000 else {
+                    'status':'RESEARCH_SHADOW_NOT_RUN_NONSTANDARD_SIMULATION_COUNT',
+                    'mode':'negative','runs':0,'projected_margin_home':None,
+                    'market_quote':None,'bet_recommendation':None})
             # Prepared from the *same* pre-kickoff history as the primary model.
             qbs={'home':quarterback_usage(mapped,roster,history,hid),
                  'away':quarterback_usage(mapped,roster,history,aid)}
