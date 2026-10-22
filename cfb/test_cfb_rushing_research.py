@@ -59,6 +59,21 @@ class RushingResearchTests(unittest.TestCase):
                   x['home']['rush_share_delta']*
                   (.20-(-.1)),6),delta=.0002)
 
+    def test_clock_mode_uses_actual_source_seconds_not_play_proxy(self):
+        h,home,away=inputs()
+        x=experiment(1,2,h,home,away,'combined')
+        self.assertTrue(x['measured_clock_duration'])
+        self.assertIsNotNone(x['home']['clock'])
+        self.assertAlmostEqual(x['home']['clock']['own_seconds_per_drive'],175.0)
+        self.assertAlmostEqual(x['home']['clock']['opponent_allowed_seconds_per_drive'],182.0)
+        self.assertIn('projected_seconds_per_drive',x['home'])
+        self.assertTrue(abs(x['shared_tempo_delta'])<=.75)
+        missing=copy.deepcopy(h)
+        for row in missing[1]:row.pop('clock_time_sum')
+        invalid=experiment(1,2,missing,home,away,'pace')
+        self.assertEqual(invalid['status'],'UNAVAILABLE_SOURCE_VERIFIED_DRIVE_CLOCK')
+        self.assertNotIn('shared_tempo_delta',invalid)
+
     def test_missing_input_fails_closed_and_bad_configuration_raises(self):
         h,home,away=inputs()
         del h[1][0]['off_rush_n']
