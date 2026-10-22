@@ -1,0 +1,65 @@
+{
+  "schema": "cfb_failure1_paired_forward_first_snapshot_receipt_v1",
+  "date_utc": "2026-10-22",
+  "independent_verification_run_id": 39836648363,
+  "independent_verification_run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39836648363",
+  "verification": {
+    "unit_tests_passed": 299,
+    "first_paired_archive_files": 25,
+    "forecast_records_inspected": 1114,
+    "eligible_pair_archives": 45,
+    "distinct_first_eligible_pairs": 45,
+    "verified_5000_each_same_seed": true,
+    "pre_kickoff_pairs": 45,
+    "after_earliest_ever_forecast": 45,
+    "eligible_completed_finals": 0,
+    "observed_complete_pregame_spreads_for_paired_games": 0
+  },
+  "pre_game_differences": {
+    "avg_abs_projected_margin_change_points": 0.74187,
+    "severe_rushing_screen_games": 22,
+    "changed_outright_winner_direction_games": 3,
+    "highest_examples": [
+      {
+        "home": "Navy",
+        "away": "North Texas",
+        "kickoff_utc": "2026-10-24T19:30:00+00:00",
+        "build16_home_margin": 0.992,
+        "learned_home_margin": 2.77
+      },
+      {
+        "home": "Northwestern",
+        "away": "Rutgers",
+        "kickoff_utc": "2026-10-24T16:00:00+00:00",
+        "build16_home_margin": 8.616,
+        "learned_home_margin": 10.275
+      }
+    ],
+    "no_accuracy_claim": true
+  },
+  "observed_odds": {
+    "latest_actual_main_workflow_run": 39834744077,
+    "candidates_checked": 45,
+    "original_complete_public_ESPN_spreads_and_both_american_prices": 0,
+    "fetch_errors": 0,
+    "invalid_lines_not_backfilled": true,
+    "supported_ATS_result": null,
+    "commentary": "Same pre-kickoff observed line needed; do not infer spread or ATS sides from model score or postgame lines."
+  },
+  "honesty": {
+    "baseline_unchanged": true,
+    "Build16_standard_unmodified": true,
+    "one_challenger_policy": true,
+    "learned_correction_research_only": true,
+    "first_pair_is_not_first_original_forecast": true,
+    "no_completed_games_scored": true,
+    "margin_MAE_Brier_and_coverage": null,
+    "future_Ats_hit_rate": null,
+    "automatic_promotion": false
+  },
+  "pipeline_changes": [
+    "cfb/failure1_paired_forward.py enforces original source/file SHA, same-game reference and learned versions, 5000 draws each, same seed, pregame timestamps, earliest eligible candidate record",
+    "cfb/test_cfb_failure1_paired_forward.py verifies no baseline forecast replacement, synthetic true scores and one authentic common spread outcome, absent odds/final abstention, invalid seed rejection",
+    ".github/workflows/cfb-free-data.yml will produce append-only paired future scores and ATS research reports each scheduled run separately from original earliest-ever grader, without retraining or rewriting old predictions"
+  ]
+}
