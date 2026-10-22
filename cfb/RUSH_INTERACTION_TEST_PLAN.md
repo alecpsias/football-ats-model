@@ -87,3 +87,47 @@ symmetry; check small-sample loss of evidence does not turn into numeric zero.
 **Current status:** The study code and opt-in simulator path are staged;
 unit tests establish software correctness only. No fitted coefficients,
 no validated gain and no automatic deployment.
+
+## October 22, 2026 — verified-clock, NCAA box-stat audit outcome
+
+- 2026 ESPN source classifications must be kept in TWO views:
+  original provider `pass`/`rush` EPA concepts for the existing
+  scoring model; NCAA **box-statistical** attempts assign provider sacks
+  to team rushing rather than pass attempts. Do **not** relabel historical
+  EPA, sacks, pressure, passer EPA or TD play type.
+- Exact university-box verification: USC 40 rush/36 pass; San Jose
+  State 24/32; TCU 39/32; North Carolina 29/28. All eight counts
+  matched after reclassifying 2/1/3/3 verified quarterback sacks.
+- Possession clock: provider `drive.timeElapsed.displayValue`, checked
+  against drive start/end periods/clocks when present. Separately flag
+  up to two source-only elapsed drives per game. Two official game
+  possession totals within 13 seconds or less per team. Do not claim
+  510/510 games are complete: 321 passed, 189 partial.
+- Measured seconds, NOT scrimmage plays per drive, now feed the
+  **opt-in** pace and combined research modes. These fail closed if
+  pre-kickoff verified clock history is absent.
+- Chronological retrospective 92-game paired comparison, 5,000
+  actual draws per variant: original Build16 MAE 13.7508; mix 13.7549;
+  measured-clock pace 13.7754; combined 13.7716. None improved.
+  Bootstrap 95% intervals of paired gains included zero. The
+  stronger rushing model is **NOT DEPLOYED**.
+- Model and simulation independence preserved; unchanged baseline and
+  unchanged default Build16. Original user-investigation process and
+  5,000-run protocol are unaffected.
+- All 264 CFB unit tests passed in the research workflow. The
+  evaluation used a later archived source without independently
+  proved original row-publication times. It has NO bookmaker ATS
+  calibration and is not a prospective blind test.
+
+Permanent reproducibility receipt:
+`cfb/CLOCK_RUSH_VALIDATION_20261022.json`.
+Github Actions run `39801019522`, artifact
+`cfb-verified-clock-100-game-study`. Due to only 92
+genuinely eligible paired historical games, no missing clock data
+were substituted with zero and the study did not manufacture 100 games.
+
+**Current decision:** Reject these uncalibrated numerical effects for
+the live Challenger, retain the research code for prospective testing,
+and continue searching for better validated run/pass and scoring
+interactions. Pre-declare any future coefficient revision rather
+than fitting the postgame NM State result.

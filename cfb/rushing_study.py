@@ -18,6 +18,7 @@ import pandas as pd
 from cfb.pipeline import verify,iso_utc,normalize_pbp_teams
 from cfb.research_backtest import observed_game
 from cfb.mechanism_build16 import simulate_build16
+from cfb.clock_possession_validation import audit_game
 
 EXPERIMENTS=('reference','mix','pace','combined')
 
@@ -91,6 +92,7 @@ def study(snapshot, out, *, runs=5000,max_games=24,min_games=3):
     qb={int(t):set(g.athlete_id.dropna()) for t,g in
         roster.loc[roster.position_abbreviation.eq('QB')].groupby('team_id')}
     hist=defaultdict(list);pending=[];results=[];excluded=defaultdict(int)
+    clock_statuses=defaultdict(int)
     # Historical game outcome is used ONLY as a post-prediction label.
     # A result cannot enter training histories until 24h after kickoff.
     for kickoff,block in games.groupby('_kickoff',sort=True):
@@ -125,6 +127,8 @@ def study(snapshot, out, *, runs=5000,max_games=24,min_games=3):
                             'actual_total':float(g.home_points+g.away_points)})
             elif len(results)<max_games:
                 excluded['insufficient_prior_games']+=1
+            clock=audit_game(raw.get(g.game_id),g.game_id,home,away)
+            clock_statuses[clock['status']]+=1
             part=grouped.get(g.game_id)
             if part is None:continue
             h=observed_game(part,home,away,g.home_points,g.away_points,qb.get(home,set()),
@@ -132,6 +136,18 @@ def study(snapshot, out, *, runs=5000,max_games=24,min_games=3):
             a=observed_game(part,away,home,g.away_points,g.home_points,qb.get(away,set()),
                             special_plays=raw.get(g.game_id))
             if h is not None and a is not None:
+                if clock['status']=='COMPLETE_REGULATION_CLOCK_AUDIT' and clock['official_stat_classification_available']:
+                    for tid,other,rec in ((home,away,h),(away,home,a)):
+                        t=clock['teams'][str(tid)]
+                        enemy=clock['teams'][str(other)]
+                        rec.update({'clock_run_n':t['official_rush_attempts'],
+                                    'clock_pass_n':t['official_pass_attempts'],
+                                    'clock_def_run_n':enemy['official_rush_attempts'],
+                                    'clock_def_pass_n':enemy['official_pass_attempts'],
+                                    'clock_time_sum':t['observed_time_seconds'],
+                                    'clock_drive_n':t['valid_drives'],
+                                    'clock_def_time_sum':enemy['observed_time_seconds'],
+                                    'clock_def_drive_n':enemy['valid_drives']})
                 pending.extend(((kickoff+pd.Timedelta(hours=24),home,h),
                                 (kickoff+pd.Timedelta(hours=24),away,a)))
         if len(results)>=max_games:break
@@ -142,13 +158,14 @@ def study(snapshot, out, *, runs=5000,max_games=24,min_games=3):
          'NMSU_SHSU_GAME_USED_FOR_COEFFICIENT_FIT':False,
          'experiments':list(EXPERIMENTS),
          'evaluated_games':len(results),
-         'excluded':dict(excluded),'paired':paired_metrics(results),
+         'excluded':dict(excluded),'clock_statuses':dict(clock_statuses),
+         'paired':paired_metrics(results),
          'records':results,
          'deploy_automatically':False,
          'limitations':['2026 archived snapshot captured after historical games; row publication times not independently verified',
                         'No contemporaneous market quote means margin/winner assessment, NOT ATS',
                         'The rush ablation was proposed after NMSU-SHSU; retrospective cohort is exploratory, not untouched confirmation',
-                        'No rushing-clock seconds measured; drive length is scrimmage plays per drive',
+                        'Clock modes use source drive elapsed seconds, verified against regulation clock and capped for uncertain endpoints',
                         'Exactly one published CFB challenger; these are laboratory ablations only']}
     p=Path(out);p.parent.mkdir(parents=True,exist_ok=True)
     if p.exists():raise FileExistsError('Refusing to overwrite rushing study audit')

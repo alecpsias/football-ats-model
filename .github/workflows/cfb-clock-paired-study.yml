@@ -1,0 +1,42 @@
+name: CFB 100-game measured-clock paired validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 48
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Confirm software integrity and baseline immutability
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Collect public 2026 CFB sources once
+        run: python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/clock_paired_snapshot
+      - name: Independently check NCAA box counts and possession clocks
+        run: |
+          python -m cfb.clock_relationship_study \
+            --snapshot cfb_artifacts/clock_paired_snapshot \
+            --out cfb_artifacts/clock_paired_measurements.json
+          python -m cfb.box_reconciliation_gate --study cfb_artifacts/clock_paired_measurements.json
+      - name: Run up to 100 chronological matched games, four 5000-run variants
+        run: |
+          python -m cfb.rushing_study \
+            --snapshot cfb_artifacts/clock_paired_snapshot \
+            --out cfb_artifacts/clock_paired_simulations.json \
+            --runs 5000 --max-games 100
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-verified-clock-100-game-study
+          path: |
+            cfb_artifacts/clock_paired_measurements.json
+            cfb_artifacts/clock_paired_simulations.json
+          if-no-files-found: warn

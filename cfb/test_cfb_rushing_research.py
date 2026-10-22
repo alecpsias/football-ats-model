@@ -11,8 +11,19 @@ from cfb.test_cfb_integrated_build15 import histories
 from cfb.integrated_scoring import project_integrated
 
 
-def inputs():
+def clocked_histories():
     h=histories()
+    for games in h.values():
+        for rec in games:
+            rec.update({'clock_run_n':25,'clock_pass_n':35,
+                        'clock_def_run_n':26,'clock_def_pass_n':34,
+                        'clock_time_sum':1750.0,'clock_drive_n':10,
+                        'clock_def_time_sum':1820.0,'clock_def_drive_n':10})
+    return h
+
+
+def inputs():
+    h=clocked_histories()
     return h,project_integrated(1,2,h,False,'home')['components'],project_integrated(2,1,h,False,'away')['components']
 
 
@@ -48,6 +59,21 @@ class RushingResearchTests(unittest.TestCase):
                   x['home']['rush_share_delta']*
                   (.20-(-.1)),6),delta=.0002)
 
+    def test_clock_mode_uses_actual_source_seconds_not_play_proxy(self):
+        h,home,away=inputs()
+        x=experiment(1,2,h,home,away,'combined')
+        self.assertTrue(x['measured_clock_duration'])
+        self.assertIsNotNone(x['home']['clock'])
+        self.assertAlmostEqual(x['home']['clock']['own_seconds_per_drive'],175.0)
+        self.assertAlmostEqual(x['home']['clock']['opponent_allowed_seconds_per_drive'],182.0)
+        self.assertIn('projected_seconds_per_drive',x['home'])
+        self.assertTrue(abs(x['shared_tempo_delta'])<=.75)
+        missing=copy.deepcopy(h)
+        for row in missing[1]:row.pop('clock_time_sum')
+        invalid=experiment(1,2,missing,home,away,'pace')
+        self.assertEqual(invalid['status'],'UNAVAILABLE_SOURCE_VERIFIED_DRIVE_CLOCK')
+        self.assertNotIn('shared_tempo_delta',invalid)
+
     def test_missing_input_fails_closed_and_bad_configuration_raises(self):
         h,home,away=inputs()
         del h[1][0]['off_rush_n']
@@ -58,7 +84,7 @@ class RushingResearchTests(unittest.TestCase):
             experiment(1,2,h,home,away,'game_outcome_fitted')
 
     def test_same_seed_and_no_mutation_of_primary(self):
-        h=histories();before=copy.deepcopy(h)
+        h=clocked_histories();before=copy.deepcopy(h)
         baseline=project(h[1],h[2],False,'home',False)
         opposing=project(h[2],h[1],False,'away',False)
         frozen=simulate(baseline,opposing,runs=200,seed=77)
