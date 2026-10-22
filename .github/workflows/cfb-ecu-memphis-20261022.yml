@@ -1,0 +1,129 @@
+name: CFB ECU Memphis 2026-10-22 pregame Build16 5000
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-ecu-memphis-20261022.yml'
+permissions:
+  contents: read
+
+jobs:
+  frozen_pregame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free source/model dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Collect and verify fresh source data
+        run: |
+          mkdir -p cfb_artifacts
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/ecu_memphis_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/ecu_memphis_snapshot
+      - name: Resolve exact pregame fixture
+        run: |
+          python - <<'PY'
+          import os,pandas as pd
+          d=pd.read_parquet('cfb_artifacts/ecu_memphis_snapshot/schedule.parquet')
+          h=d.home_team.astype(str).str.lower()
+          a=d.away_team.astype(str).str.lower()
+          rows=d.loc[h.str.contains('memphis')&a.str.contains('east carolina')]
+          if len(rows)!=1:raise ValueError('Fixture ambiguous/missing: '+str(rows[['game_id','start_date','completed']].to_dict('records')))
+          g=rows.iloc[0]
+          if bool(g.completed):raise ValueError('Fixture completed, not pregame')
+          with open(os.environ['GITHUB_ENV'],'a') as f:
+              for k,v in {'CFB_HOME':str(g.home_team),'CFB_AWAY':str(g.away_team),'CFB_GAME_ID':str(g.game_id)}.items():
+                  f.write(k+'='+v+'\n')
+          print('FIXTURE',g.game_id,g.away_team,'at',g.home_team,'kickoff',g.start_date)
+          PY
+      - name: Build16 source-adjusted statistics followed by 5000 simulations
+        run: |
+          python -m cfb.fresh_matchup --mode pregame \
+            --team-a "$CFB_AWAY" --team-b "$CFB_HOME" --game-id "$CFB_GAME_ID" \
+            --snapshot cfb_artifacts/ecu_memphis_snapshot \
+            --odds cfb/_market_disabled --availability-dir cfb/availability \
+            --runs 5000 --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
+            --out cfb_artifacts/ecu_memphis_pregame.json > cfb_artifacts/ecu_memphis_stdout.log
+          python - <<'PY'
+          import json
+          x=json.load(open('cfb_artifacts/ecu_memphis_pregame.json'))
+          b=x.get('build16_challenger') or {}
+          print('ECU_MEMPHIS_FROZEN_RESULTS')
+          print(json.dumps({'status':x.get('status'),'home':x.get('home'),'away':x.get('away'),
+           'game_id':x.get('game_id'),'kickoff_utc':x.get('kickoff_utc'),
+           'generated_at':x.get('prediction_generated_at_utc'),
+           'snapshot_time':x.get('source_snapshot_at_utc'),
+           'games_home':x.get('completed_prior_games_home'),
+           'games_away':x.get('completed_prior_games_away'),
+           'baseline':x.get('simulation'),'challenger_status':b.get('status'),
+           'build16':b.get('simulation'),
+           'f1':b.get('failure1_scoring_status'),
+           'f2':b.get('failure2_scoring_attribution'),
+           'f3':b.get('failure3_sustainability'),
+           'rush':x.get('mandatory_rushing_audit'),
+           'matchup':x.get('matchup_evidence'),
+           'qb':x.get('quarterback_participation'),
+           'availability':x.get('availability_evidence'),
+           'missing':x.get('missing_statistical_fields'),
+           'market':x.get('market')},indent=2,default=str)[:55000])
+          PY
+      - name: Same-seed 5000-run ATS sensitivity at published market numbers
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          from cfb.pipeline import verify,iso_utc
+          from cfb.fresh_matchup import histories_asof
+          from cfb.mechanism_build16 import simulate_build16
+          from cfb.failure1_learned_shadow import correction
+          root=Path('cfb_artifacts/ecu_memphis_snapshot')
+          manifest=verify(root)
+          cutoff=iso_utc(manifest['captured_at_utc'])
+          sched=pd.read_parquet(root/'schedule.parquet')
+          pbp=pd.read_parquet(root/'pbp.parquet')
+          roster=pd.read_parquet(root/'roster.parquet')
+          future,_,histories,_=histories_asof(sched,pbp,roster,cutoff)
+          target=future.loc[future.game_id.astype(str).eq(str(__import__('os').environ['CFB_GAME_ID']))]
+          if len(target)!=1:raise ValueError('Fixture not pregame at snapshot')
+          g=target.iloc[0]
+          h,a=int(g.home_id),int(g.away_id)
+          rush=correction(h,a,histories)
+          base=dict(home_id=h,away_id=a,histories=histories,
+               neutral=bool(g.neutral_site),runs=5000,seed=int(g.game_id)%(2**32),
+               failure1_fit_margin_delta=rush['margin_delta_points'])
+          out={'schema':'ecu_memphis_5000_ats_v1','game_id':str(g.game_id),
+               'snapshot_utc':str(cutoff),'kickoff_utc':str(g.start_date),
+               'home':str(g.home_team),'away':str(g.away_team),
+               'markets_are_external_quotes_not_archived':True,
+               'calibrated_probability':False,'each_spread_runs':5000,'lines':[]}
+          for line in (-9.5,-10.,-10.5,-11.5):
+              s=simulate_build16(spread_home=line,**base)['simulation']
+              assert s['simulations']==5000
+              out['lines'].append({'memphis_spread':line,
+                  'memphis_cover_raw':s['home_cover_probability_raw'],
+                  'ecu_cover_raw':s['away_cover_probability_raw'],
+                  'push_raw_derived':round(1.-s['home_cover_probability_raw']-s['away_cover_probability_raw'],5),
+                  'memphis_win_raw':s['home_win_probability_raw'],
+                  'memphis_score':s['mean_score_home'],'ecu_score':s['mean_score_away'],
+                  'memphis_margin':s['mean_margin_home'],'total':s['mean_total'],
+                  'home_margin_p10_p50_p90':s['margin_p10_p50_p90']})
+          Path('cfb_artifacts/ecu_memphis_ats_5000.json').write_text(json.dumps(out,indent=2))
+          print('ECU_MEMPHIS_ATS_SENSITIVITY')
+          print(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ecu-memphis-frozen-pregame-5000-${{ github.run_id }}
+          path: |
+            cfb_artifacts/ecu_memphis_pregame.json
+            cfb_artifacts/ecu_memphis_pregame.md
+            cfb_artifacts/ecu_memphis_stdout.log
+            cfb_artifacts/ecu_memphis_ats_5000.json
+          if-no-files-found: warn
