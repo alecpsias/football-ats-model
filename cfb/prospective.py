@@ -67,7 +67,7 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
             continue
         h,a=int(g.home_id),int(g.away_id)
         ho=observed_game(part,h,a,g.home_points,g.away_points,qb_ids.get(h,set()),
-                         special_plays=raw_by_game.get(g.game_id))
+                         special_plays=raw_by_game.get(g.game_id),home_id=h)
         aw=observed_game(part,a,h,g.away_points,g.home_points,qb_ids.get(a,set()),
                          special_plays=raw_by_game.get(g.game_id))
         if ho is None or aw is None:continue
