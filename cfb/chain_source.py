@@ -78,7 +78,7 @@ def observed_chain(plays,team,opponent):
                     if nextdown==1:converted=True
                     elif nextdown==4:converted=False
                 if converted is None and any(
-                    c in valid.columns and z[c] is True
+                    c in valid.columns and pd.notna(z[c]) and bool(z[c])
                     for c in ('firstD_by_yards','firstD_by_penalty','rush_td','pass_td')):
                     converted=True
                 if converted is None and any(
