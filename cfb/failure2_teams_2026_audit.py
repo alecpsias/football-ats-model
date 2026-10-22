@@ -60,6 +60,8 @@ def evaluate(snapshot,game_id="401862807"):
                   'team_score':team_score,'opponent_score':opp_score,
                   'used_by_Build16_histories':record is not None,
                   'status':scoring['status'],
+                  'verification_method':scoring.get('verification_method'),
+                  'official_source':scoring.get('official_source'),
                   'reason':scoring.get('reason'),
                   'offensive_points':scoring['offensive_points'][label] if is_ok else None,
                   'defensive_return_points':scoring['defensive_return_points'][label] if is_ok else None,
@@ -106,7 +108,7 @@ def evaluate(snapshot,game_id="401862807"):
     return {'schema':'cfb_failure2_actual_2026_team_scoring_exceptions_v1',
             'fixture_id':str(game_id),'snapshot_at_utc':str(cutoff),
             'build16_failure2_status':activation['status'],
-            'strict_rule':'Requires every historical game for BOTH teams verified; a single ambiguous game disables mechanism',
+            'strict_rule':'Only verified per-game scoring enters the points-per-drive anchor; unverified games remain eligible for EPA, pace, turnovers and other context',
             'figures_verified_subtotals_only_until_failed_games_reconciled':True,
             'teams':team_reports}
 
