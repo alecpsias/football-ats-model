@@ -32,13 +32,21 @@ def _triple(raw,game_id):
         raise ValueError('Nonmonotone margin quantiles for '+game_id)
     return [float(z) for z in raw]
 
+def _reference(p):
+    """Unmodified Build16, even after the separate ridge was activated."""
+    active=(p.get('build16_active_failure1_rushing_correction') or {})
+    if active.get('status')=='APPLIED_IN_BUILD16_CHALLENGER':
+        return p.get('build16_uncorrected_reference')
+    return p.get('build16_challenger')
+
 def load_first_frozen_pairs(archive_root):
     """Select earliest valid eligible research pair, not earliest-ever forecast."""
     root=Path(archive_root)
     results={}
     counts={'forecast_archive_files':0,'archive_game_records':0,
             'eligible_pair_records':0,'historical_without_fitted_shadow':0,
-            'fitted_shadow_missing_evidence':0,'pair_before_kickoff':0}
+            'fitted_shadow_missing_evidence':0,'pair_before_kickoff':0,
+            'excluded_active_ridge_without_raw_reference':0}
     if not root.is_dir():return results,counts
     for file in sorted(root.glob('*.zip')):
         idx,records=verify_archive(file)
@@ -52,7 +60,10 @@ def load_first_frozen_pairs(archive_root):
                 if isinstance(z,dict):counts['fitted_shadow_missing_evidence']+=1
                 else:counts['historical_without_fitted_shadow']+=1
                 continue
-            ref=p.get('build16_challenger')
+            ref=_reference(p)
+            if ref is None:
+                counts['excluded_active_ridge_without_raw_reference']+=1
+                continue
             if not isinstance(ref,dict) or ref.get('status')!='AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY':
                 raise ValueError('Frozen learned candidate without same-snapshot Build16 '+gid)
             if z.get('protocol')!=PROTOCOL or z.get('runs')!=5000 or z.get('fitted_year')!=2023:
@@ -71,6 +82,14 @@ def load_first_frozen_pairs(archive_root):
             alt_margin=z.get('projected_margin_home')
             if not _valid_num(ref_margin) or not _valid_num(alt_margin):
                 raise ValueError('Nonfinite frozen paired margins '+gid)
+            active=(p.get('build16_active_failure1_rushing_correction') or {})
+            if active.get('status')=='APPLIED_IN_BUILD16_CHALLENGER':
+                corrected=p.get('build16_challenger') or {}
+                if (corrected.get('simulation',{}).get('simulations')!=5000 or
+                    corrected.get('simulation',{}).get('seed')!=common_seed or
+                    not _valid_num(corrected.get('mean_margin_home')) or
+                    abs(corrected['mean_margin_home']-alt_margin)>1e-8):
+                    raise ValueError('Active fitted Build16 and frozen ridge shadow disagree '+gid)
             pt=_date(p['prediction_generated_at_utc'],'paired issue time')
             kt=_date(p['kickoff_utc'],'fixture kickoff')
             if not pt<kt:raise ValueError('A purported pregame paired forecast was issued after kickoff '+gid)
@@ -157,7 +176,7 @@ def evaluate(forecast_root,odds_root,schedule,captured_at,source_url,source_sha2
     # This is NOT a statement of predictive accuracy or ATS value.
     model_shifts=[]
     for gid,p in pairs.items():
-        original=p['build16_challenger']
+        original=_reference(p)
         learned=p['failure1_learned_rush_shadow']
         base=float(original['mean_margin_home'])
         alt=float(learned['projected_margin_home'])
@@ -200,7 +219,7 @@ def evaluate(forecast_root,odds_root,schedule,captured_at,source_url,source_sha2
         if any(not math.isfinite(z) or z<0 or z>150 or z%1!=0 for z in (home,away)):
             raise ValueError('Invalid final score '+gid)
         actual=home-away
-        b=p['build16_challenger']
+        b=_reference(p)
         l=p['failure1_learned_rush_shadow']
         q_b=_triple(b.get('margin_p10_p50_p90'),gid)
         q_l=_triple(l.get('margin_p10_p50_p90'),gid)
@@ -214,6 +233,9 @@ def evaluate(forecast_root,odds_root,schedule,captured_at,source_url,source_sha2
           'fitted_model_sha256':l['frozen_fitted_model_sha256'],
           'source_snapshot_manifest_sha256':p['source_snapshot_manifest_sha256'],
           'same_seed_5000_each':True,
+          'reference_role':'UNCHANGED_BUILD16_NOT_CONCURRENT_ACTIVE_RIDGE',
+          'active_ridge_restored_reference_verified':bool(
+             (p.get('build16_active_failure1_rushing_correction') or {}).get('status')=='APPLIED_IN_BUILD16_CHALLENGER'),
           'actual_home_margin':actual,'actual_home_points':int(home),'actual_away_points':int(away),
           'build16_margin':float(b['mean_margin_home']),
           'learned_margin':float(l['projected_margin_home']),

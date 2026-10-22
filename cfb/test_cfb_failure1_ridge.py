@@ -28,7 +28,10 @@ class RidgeRushingCorrectionTests(unittest.TestCase):
         self.assertEqual(reference,unchanged)
         self.assertNotEqual(reference['mean_margin_home'],altered['mean_margin_home'])
         self.assertEqual(altered['simulation']['simulations'],350)
-        self.assertTrue(altered['not_deployed'])
+        # Concurrent main update explicitly activated the 2023 ridge inside Build16.
+        self.assertEqual(altered['failure1_scoring_status'],
+                         'ACTIVE_IN_BUILD16_CHALLENGER_UNCALIBRATED')
+        self.assertFalse(altered['not_deployed'])
         self.assertEqual(h,snapshot)
         with self.assertRaises(ValueError):
             simulate_build16(1,2,h,False,runs=350,seed=18,

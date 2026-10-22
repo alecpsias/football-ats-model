@@ -1,0 +1,51 @@
+name: CFB possession reconciled with active Build16 ridge
+on:
+  push:
+    branches: [cfb-possession-merge-reconciled-20261022]
+    paths:
+      - 'cfb/mechanism_build16.py'
+      - 'cfb/rush_possession_response.py'
+      - 'cfb/rush_possession_decision.py'
+      - 'cfb/test_cfb_rush_possession_response.py'
+      - 'cfb/prospective.py'
+      - 'cfb/failure1_paired_forward.py'
+      - 'cfb/test_cfb_failure1_paired_forward.py'
+      - '.github/workflows/cfb-possession-reconciled-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  confirm-single-build16:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Check complete CFB regressions after preserving other current main changes
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Assert current separate activated ridge and new possession model never run as a combined effect
+        run: |
+          python - <<'PY'
+          from cfb.mechanism_build16 import simulate_build16
+          from cfb.test_cfb_rush_possession_response import observed
+          from cfb.rush_possession_response import signal,response
+          h=observed()
+          fitted={'version':'cfb-possession-rushing-opponent-residual-v1',
+            'trained_year':2023,'train_games':180,
+            'continuation_points_per_extra_drive':-1.662395245}
+          z=response(fitted,signal(1,2,h))
+          regular=simulate_build16(1,2,h,False,runs=5000,seed=9)
+          revised=simulate_build16(1,2,h,False,runs=5000,seed=9,possession_response=z)
+          assert regular['simulation']['simulations']==revised['simulation']['simulations']==5000
+          assert regular['mean_margin_home']!=revised['mean_margin_home']
+          try:
+            simulate_build16(1,2,h,False,runs=5000,seed=9,possession_response=z,failure1_fit_margin_delta=1.)
+            raise AssertionError('Combined experiments wrongly permitted')
+          except ValueError:
+            pass
+          assert revised['not_deployed'] is True
+          print('SOURCE_VERIFIED_POSSESSION_LAB_EFFECT_ONLY; ACTIVE_OLDER_RIDGE_PRESERVED')
+          PY
