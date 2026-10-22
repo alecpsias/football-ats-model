@@ -1,0 +1,143 @@
+{
+  "schema": "cfb_failure1_improvement2_2023_fit_2024_26_validation_v1",
+  "date": "2026-10-22",
+  "repo": "alecpsias/football-ats-model",
+  "training": {
+    "year": 2023,
+    "n_training_games": 180,
+    "method": "Ridge no intercept, seven opponent-run features, lambda 250, correction bounded +/- 3 margin points",
+    "frozen_model_file": "cfb/FAILURE1_RIDGE_2023_FROZEN.json",
+    "fitting_did_not_read_2024_2025_2026_final_margins": true
+  },
+  "validation": {
+    "2024": {
+      "games": 180,
+      "reference_margin_mae": 13.80487,
+      "learned_margin_mae": 13.60782,
+      "mae_gain": 0.19706,
+      "paired_bootstrap95": [
+        0.02811,
+        0.36689
+      ],
+      "severe_games": 110,
+      "severe_margin_mae_gain": 0.28105,
+      "severe_bootstrap95": [
+        0.00864,
+        0.55052
+      ],
+      "reference_brier": 0.204335,
+      "learned_brier": 0.200785
+    },
+    "2025": {
+      "games": 180,
+      "reference_margin_mae": 13.50224,
+      "learned_margin_mae": 13.47102,
+      "mae_gain": 0.03122,
+      "paired_bootstrap95": [
+        -0.11983,
+        0.18449
+      ],
+      "severe_games": 105,
+      "severe_margin_mae_gain": 0.0847,
+      "severe_bootstrap95": [
+        -0.17778,
+        0.34152
+      ],
+      "reference_brier": 0.211833,
+      "learned_brier": 0.210866
+    },
+    "2026": {
+      "games": 180,
+      "reference_margin_mae": 14.92766,
+      "learned_margin_mae": 14.93041,
+      "mae_gain": -0.00275,
+      "reference_brier": 0.22458,
+      "learned_brier": 0.223861
+    }
+  },
+  "pooled": {
+    "games": 540,
+    "reference_margin_mae": 14.07826,
+    "learned_margin_mae": 14.00308,
+    "mae_gain": 0.07517,
+    "paired_bootstrap95": [
+      -0.01807,
+      0.17002
+    ],
+    "severe_ex_ante_games": 312,
+    "severe_reference_mae": 14.06528,
+    "severe_learned_mae": 13.94375,
+    "severe_mae_gain": 0.12153,
+    "severe_paired_bootstrap95": [
+      -0.03148,
+      0.27226
+    ],
+    "reference_brier": 0.213583,
+    "learned_brier": 0.211837,
+    "reference_margin80_coverage": 0.73704,
+    "learned_margin80_coverage": 0.75185,
+    "reference_winner_accuracy": 0.6537,
+    "learned_winner_accuracy": 0.66667
+  },
+  "old_fixed_negative_coefficient": {
+    "2023": {
+      "games": 180,
+      "baseline_margin_mae": 13.190639,
+      "candidate_margin_mae": 13.268561,
+      "gain": -0.077922
+    },
+    "2024": {
+      "games": 180,
+      "baseline_margin_mae": 13.804872,
+      "candidate_margin_mae": 13.839189,
+      "gain": -0.034317
+    },
+    "2025": {
+      "games": 180,
+      "baseline_margin_mae": 13.502239,
+      "candidate_margin_mae": 13.467717,
+      "gain": 0.034522
+    },
+    "2026": {
+      "games": 180,
+      "baseline_margin_mae": 14.927656,
+      "candidate_margin_mae": 14.82965,
+      "gain": 0.098006
+    }
+  },
+  "provenance": {
+    "fixed_correction_runs": "https://github.com/alecpsias/football-ats-model/actions/runs/39829182851",
+    "ridge_fit_2023_test_2024": "https://github.com/alecpsias/football-ats-model/actions/runs/39830339835",
+    "fit_2023_frozen_2025_2026": "https://github.com/alecpsias/football-ats-model/actions/runs/39831298860",
+    "fitted_2024_artifact": "https://github.com/alecpsias/football-ats-model/actions/runs/39830339835/artifacts/12448467239",
+    "test_iterations_per_matchup_variant": 5000,
+    "unit_suite_tests": 291
+  },
+  "evidence_gates": {
+    "minimum_300_future_year_games": true,
+    "overall_mae_gain_at_least_point_2": false,
+    "lower_95_bootstrap_positive": false,
+    "severe_subset_at_least_100": true,
+    "severe_subset_mean_gain_positive": true,
+    "brier_not_worse": true,
+    "margin_coverage_not_significantly_worse": true,
+    "real_pregame_bookmaker_spreads_and_calibrated_cover_probability": false
+  },
+  "decision": {
+    "promote_to_active_build16": false,
+    "baseline_unchanged": true,
+    "one_active_challenger_unchanged": true,
+    "new_learned_candidate": "Research shadow only, 5k simulations, source/model hash, not published ATS prediction",
+    "historical_fixed_negative_candidate": "retired for new reports",
+    "failure1_complete": false,
+    "expected_next_regular_model_prediction_scoring_unchanged": true
+  },
+  "warnings": [
+    "Training and historical holdouts use publicly captured retrospective PBP, not independently original as-of rows.",
+    "2026 source threshold selection previously inspected historical feature distributions: not a clean untouched blinded test.",
+    "Seven-feature correction effect modest and includes zero in pooled/severe confidence intervals.",
+    "No valid pre-kickoff bookmaker spreads for past years so ATS improvement cannot be claimed.",
+    "Winner direction is not ATS; adjusted margin simulations are uncalibrated.",
+    "Do not re-optimize coefficients on already examined 2024-26 outcomes. Use truly frozen forward games to decide."
+  ]
+}
