@@ -68,6 +68,7 @@ def cohort(snapshot,max_games=120):
                     'home':str(g.home_team),'away':str(g.away_team),
                     'home_id':home,'away_id':away,'kickoff':kickoff.isoformat(),
                     'neutral':bool(g.neutral_site),'actual_margin':float(g.home_points-g.away_points),
+                    'actual_total':float(g.home_points+g.away_points),
                     'historical':snap,'precheck':status})
                 target_counts[status]+=1
             additions.extend(((home,h),(away,a)))
