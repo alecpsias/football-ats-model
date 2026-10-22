@@ -56,7 +56,7 @@ class ClockAuditTests(unittest.TestCase):
 
     def test_duplicate_inconsistent_drive_owner_fails_closed(self):
         x=plays()
-        x.loc[x.game_play_number==3,'pos_team_id']=30
+        x.loc[x.game_play_number==5,'pos_team_id']=30
         z=audit_game(x,100,30,23)
         self.assertEqual(z['excluded']['ambiguous_offense_team'],1)
 
