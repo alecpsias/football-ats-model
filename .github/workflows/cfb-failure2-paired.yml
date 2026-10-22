@@ -17,7 +17,7 @@ permissions:
 jobs:
   paired:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
           python -m cfb.failure2_verify --snapshot cfb_artifacts/failure2_snapshot --out cfb_artifacts/failure2_actual_source_audit.json
       - name: Paired unchanged versus corrected Build16, 5000 games each
         run: |
-          python -m cfb.failure2_paired --snapshot cfb_artifacts/failure2_snapshot --out cfb_artifacts/failure2_paired_5000.json --max-games 12 --runs 5000
+          python -m cfb.failure2_paired --snapshot cfb_artifacts/failure2_snapshot --out cfb_artifacts/failure2_paired_5000.json --max-games 120 --runs 5000
       - name: Upload verification outputs
         if: always()
         uses: actions/upload-artifact@v4
