@@ -1,0 +1,117 @@
+{
+  "schema": "cfb_failure1_possession_mechanism_validated_research_v1",
+  "date": "2026-10-22",
+  "repository": "alecpsias/football-ats-model",
+  "motivation": "Quantify explicit opponent-designed-rush early success -> multi-series sustained drives -> scoring PPD and shared 60-minute clock opportunities, residual to Build16. Avoid re-adding raw rush EPA.",
+  "training": {
+    "season": 2023,
+    "paired_reference_games": 180,
+    "verified_clock_pairs": 115,
+    "model": "One coefficient ridge fit to pregame drive-chain excess versus Build16 signed margin residual, lambda=25",
+    "parameter_frozen": -1.662395245,
+    "parameters_file": "cfb/FAILURE1_RUSH_POSSESSION_2023_FROZEN.json",
+    "training_run": "https://github.com/alecpsias/football-ats-model/actions/runs/39843826367",
+    "unit_tests": 307
+  },
+  "validation": {
+    "run": "https://github.com/alecpsias/football-ats-model/actions/runs/39844166211",
+    "simulation_draws_per_game_per_variant": 5000,
+    "seasons": [
+      {
+        "season": 2024,
+        "games": 180,
+        "clock_verified": 128,
+        "base_MAE": 13.80487,
+        "candidate_MAE": 13.75349,
+        "MAE_gain": 0.05138,
+        "paired_bootstrap95": [
+          -0.03947,
+          0.14792
+        ],
+        "severe_groups": 135,
+        "severe_MAE_gain": 0.07305
+      },
+      {
+        "season": 2025,
+        "games": 180,
+        "clock_verified": 113,
+        "base_MAE": 13.50224,
+        "candidate_MAE": 13.48674,
+        "MAE_gain": 0.01549,
+        "paired_bootstrap95": [
+          -0.07936,
+          0.11288
+        ],
+        "severe_groups": 140,
+        "severe_MAE_gain": 0.04261
+      },
+      {
+        "season": 2026,
+        "games": 180,
+        "clock_verified": 64,
+        "base_MAE": 14.92766,
+        "candidate_MAE": 14.85967,
+        "MAE_gain": 0.06798,
+        "paired_bootstrap95": [
+          -0.0272,
+          0.16504
+        ],
+        "severe_groups": 131,
+        "severe_MAE_gain": 0.08547
+      }
+    ]
+  },
+  "pooled": {
+    "games": 540,
+    "base_margin_MAE": 14.07826,
+    "candidate_margin_MAE": 14.0333,
+    "MAE_gain": 0.04495,
+    "MAE_gain_bootstrap95": [
+      -0.01226,
+      0.10032
+    ],
+    "severe_games": 406,
+    "severe_base_MAE": 13.88091,
+    "severe_candidate_MAE": 13.81435,
+    "severe_gain": 0.06656,
+    "severe_bootstrap95": [
+      -0.00818,
+      0.13453
+    ],
+    "clock_verified_games": 305,
+    "clock_base_MAE": 13.01241,
+    "clock_candidate_MAE": 12.96588,
+    "clock_gain": 0.04653,
+    "clock_bootstrap95": [
+      -0.02888,
+      0.11472
+    ],
+    "reference_brier": 0.213583,
+    "candidate_brier": 0.212528,
+    "reference_80pct_margin_coverage": 0.73704,
+    "candidate_coverage": 0.74259
+  },
+  "promotion": {
+    "decision_run": "https://github.com/alecpsias/football-ats-model/actions/runs/39845044570",
+    "permission_to_promote": false,
+    "reasons": [
+      "No pooled or severe cohort paired-bootstrap 95% interval excluding zero",
+      "Pooled mean error reduction ~0.045 points per game, smaller than prespecified 0.15-point requirement",
+      "Fitted negative sign inconsistent with the intuitive causality that new sustained drives automatically add scoring beyond already modeled rush/third-down EPA",
+      "No prospectively archived ATS outcome for this new mechanism, regardless of authentic free odds now being captured"
+    ],
+    "active_Build16_score_parameters_unchanged": true,
+    "one_active_challenger_retained": true,
+    "existing_2023_ridge_shadow_unchanged": true,
+    "research_mode": "optional possession_response argument in same Build16 mechanism; never passed from standard pregame production"
+  },
+  "data_provenance": {
+    "source": "free historical ESPN/SportsDataverse college-football PBP; source captured retrospectively",
+    "clock": "Verified real regulation play/drive elapsed from strict clock audit, no time proxy",
+    "runs": "same random seed and actual 5000 outcomes per compared matchup",
+    "no_FCS_vs_FCS": true,
+    "motivating_game_included": false,
+    "historical_original_publication_times_authenticated": false
+  },
+  "conclusion": "Real possession-scoring/clock interaction is built, reproducibly tested and rejected for default promotion; primary predictions may still underweight a specific rushing matchup. Maintain mandatory matchup stress and collect forward evidence. Never claim the failure fixed."
+}
