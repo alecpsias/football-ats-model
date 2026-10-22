@@ -32,7 +32,8 @@ def team_row():
         'nonoffensive_points':7.,'defensive_return_points':7.,
         'defensive_return_td_count':1,'defensive_return_td_allowed':0,
         'special_teams_points':0.,'special_teams_td_count':0,
-        'opponent_turnovers_observed':2,'interceptions':2,'fumbles_lost':0,
+        'opponent_turnovers_observed':2,'offense_turnovers_observed_raw':2,
+        'interceptions':2,'fumbles_lost':0,
         'scoring_attribution':{'status':'VERIFIED_RAW_SCORE_RECONCILIATION'}}
 
 def rates_fixture():
