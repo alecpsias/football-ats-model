@@ -1,0 +1,63 @@
+name: CFB free 2026 odds provider fix and preserved pregame capture
+on:
+  push:
+    branches: [cfb-free-odds-source-reconciliation-20261022]
+    paths:
+      - 'cfb/free_odds.py'
+      - 'cfb/recover_all_free_odds.py'
+      - 'cfb/test_cfb_odds_hotfix.py'
+      - '.github/workflows/cfb-free-odds-provider-fix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-quotes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Setup source-free test environment
+        run: python -m pip install -r requirements-cfb.txt
+      - name: CFB original forecast, authentic quote, and archive regression suite
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Reparse saved original pre-kickoff odds with source hashes and timestamps
+        run: python -m cfb.recover_all_free_odds --root cfb/archive/odds
+      - name: Collect genuine pregame ESPN Draft Kings odds and prices now
+        run: |
+          python -m cfb.free_odds capture \
+             --forecasts cfb/archive/forecasts \
+             --out cfb_artifacts/free_odds_fixed \
+             --run-id "$GITHUB_RUN_ID" --days 7
+      - name: Independently verify 2026 quote coverage, unchanged raw evidence
+        run: |
+          python - <<'PY'
+          import json,zipfile,pathlib
+          from cfb.free_odds import verify_odds_archive,load_quotes
+          from cfb.archive import digest
+          root=pathlib.Path('cfb_artifacts/free_odds_fixed')
+          z=list(root.glob('*.zip'))
+          assert len(z)==1
+          idx,rows=verify_odds_archive(z[0])
+          before=len(load_quotes('cfb/archive/odds'))
+          print(json.dumps({'captured_games':idx['candidates'],
+             'genuine_complete_quotes_current_run':idx['complete_spread_prices'],
+             'recovered_unchanged_original_pregame_quotes_count':before,
+             'errors':idx['fetch_errors'],
+             'sample':[{ 'game_id':r['game_id'],'book':r['quote']['book'],
+                          'spread_home':r['quote']['spread_home'],
+                          'observed_at_utc':r['observed_at_utc'],
+                          'raw_sha256':r['raw_source_sha256']}
+                    for r in rows if r['quote'] is not None][:5]},indent=2))
+          assert idx['complete_spread_prices']>0, 'Actual public CFB quote source unavailable; no fake odds'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-free-actual-odds-fixed-provider-20261022
+          path: cfb_artifacts/free_odds_fixed/
+          if-no-files-found: warn
