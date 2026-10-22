@@ -376,5 +376,6 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         answer['not_deployed']=True
     if fitted_delta is not None:
         answer['failure1_fitted_rushing_margin_delta']=fitted_delta
-        answer['not_deployed']=True
+        answer['failure1_scoring_status']='ACTIVE_IN_BUILD16_CHALLENGER_UNCALIBRATED'
+        answer['not_deployed']=False
     return answer
