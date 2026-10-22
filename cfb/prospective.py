@@ -24,6 +24,7 @@ from cfb.personnel_effects import (quarterback_effects, skill_player_exposures,
 from cfb.pipeline import verify, split_games, normalize_pbp_teams, iso_utc
 from cfb.research_backtest import observed_game, project
 from cfb.failure1_shadow import include_prior_game,shadow
+from cfb.mandatory_rushing_audit import audit as rushing_audit, gate as rushing_gate
 
 
 def _json_bytes(obj):
@@ -97,6 +98,7 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
               'git_commit_sha':git_sha,'github_run_id':str(workflow_run_id) if workflow_run_id else None,
               'engine':'cfb.engine.v1','model_variant':'UNMODIFIED_UNCALIBRATED_BASELINE',
               'market_quote':None,'ats_prediction':None,'wager_grade':None,
+              'mandatory_rushing_audit':None,'rushing_ats_risk_gate':None,
               'trained_with_games_at_or_after_target_kickoff':False,
               'historical_source_publication_times_verified':False,
               'status':'INSUFFICIENT_OBSERVED_GAMES_RESEARCH_PASS',
@@ -110,8 +112,12 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
             ap=project(histories[aid],histories[hid],neutral,'away',False)
             sim=simulate(hp,ap,runs=runs,seed=int(g.game_id)%(2**32))
             signals=matchup_signals(hid,aid,histories)
+            rush_screen=rushing_audit(hid,aid,histories,signals)
             challenger=simulate_build16(hid,aid,histories,neutral,
-                        runs=runs,seed=int(g.game_id)%(2**32))
+                        runs=runs,seed=int(g.game_id)%(2**32),
+                        stress_runs=(5000 if runs==5000 and
+                                     rush_screen['requires_full_rush_stress'] else 0))
+            rush_gate=rushing_gate(rush_screen,challenger,None)
             # Production protocol is always 5,000; existing unit fixtures
             # deliberately request small-run baselines. In those fixtures the
             # shadow abstains rather than misrepresenting 120 runs as 5,000.
@@ -133,7 +139,9 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
                    'away':skill_player_exposures(mapped,history,roster,aid,statuses)}
             scenario=simulate_personnel_scenarios(hp,ap,pe['home'],pe['away'],
                 runs=runs,seed=int(g.game_id)%(2**32))
-            base.update({'failure1_negative_run_shadow':negative_shadow,
+            base.update({'mandatory_rushing_audit':rush_screen,
+                         'rushing_ats_risk_gate':rush_gate,
+                         'failure1_negative_run_shadow':negative_shadow,
                          'failure1_shadow_distinct_active_challenger':False,
                          'build16_challenger':challenger,
                          'build16_not_primary':True,
@@ -156,6 +164,9 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
                 'simulated_score_away':sim['mean_score_away'],
                 'simulation':sim})
         else:
+            rush_screen=rushing_audit(hid,aid,histories,None)
+            base.update({'mandatory_rushing_audit':rush_screen,
+                         'rushing_ats_risk_gate':rushing_gate(rush_screen,None,None)})
             base.update({'completed_prior_games_home':len(histories[hid]),
                          'completed_prior_games_away':len(histories[aid]),
                          'failure1_negative_run_shadow':{'status':'INSUFFICIENT_PRIOR_GAMES',
