@@ -1,14 +1,6 @@
 name: CFB Failure 1 earlier-year-fitted rushing correction holdout
 
 on:
-  push:
-    branches: [cfb-failure1-quantitative-validation-20261022]
-    paths:
-      - 'cfb/failure1_ridge_correction.py'
-      - 'cfb/failure1_fit_2023.py'
-      - 'cfb/failure1_quantitative_validation.py'
-      - 'cfb/mechanism_build16.py'
-      - '.github/workflows/cfb-failure1-fitted-holdout.yml'
   workflow_dispatch:
 
 permissions:
