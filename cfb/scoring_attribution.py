@@ -53,8 +53,17 @@ def attribute(raw, home_id, away_id, home_final, away_final):
             is_off=(str(pos)==str(team))
             if points==2:
                 return {**missing,'reason':'TWO_POINT_SCORING_ATTRIBUTION_AMBIGUOUS'}
-            if is_off and points in (3,6,7,8):off[side]+=float(points)
-            elif not is_off and points in (6,7,8):non[side]+=float(points)
+            # On same-team possession, require provider flag that an
+            # OFFENSE scored. A special-teams touchdown may otherwise
+            # be incorrectly counted as sustainable offensive production.
+            flag=frame.iloc[k].get('offense_score_play')
+            if is_off:
+                if pd.isna(flag) or not isinstance(flag,(bool,int)):
+                    return {**missing,'reason':'MISSING_OFFENSIVE_SCORE_CLASSIFICATION'}
+                if bool(flag) and points in (3,6,7,8):off[side]+=float(points)
+                elif not bool(flag) and points in (6,7,8):non[side]+=float(points)
+                else:return {**missing,'reason':'AMBIGUOUS_SCORING_EVENT'}
+            elif points in (6,7,8):non[side]+=float(points)
             else:return {**missing,'reason':'AMBIGUOUS_SCORING_EVENT'}
     if not (off[0]+non[0]==home_final and off[1]+non[1]==away_final):
         return {**missing,'reason':'SCORING_TOTAL_CHECK_FAILED'}
