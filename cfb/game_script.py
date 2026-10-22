@@ -273,6 +273,25 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                     ass+=pts;turnovers_a+=to.astype(np.int16)
                     short_a=np.where(mask,0.,short_a)
                     short_h=np.where(to,next_field_bonus(to),short_h)
+    # Failure 2: sample non-offensive points from actual earlier verified
+    # games, separately from offensive possessions. No invented historical
+    # rate and no duplicate credit to offensive PPD.
+    nonoff_home=np.zeros(n,dtype=np.int32)
+    nonoff_away=np.zeros(n,dtype=np.int32)
+    if mechanisms is not None:
+        samples=mechanisms.get('nonoffensive_score_samples')
+        if samples is not None:
+            if not isinstance(samples,dict):
+                raise ValueError('Invalid non-offensive scoring evidence')
+            for label,target in (('home',nonoff_home),('away',nonoff_away)):
+                observed=samples.get(label)
+                if not isinstance(observed,list) or len(observed)<3 or any(
+                        type(v) not in (int,float) or not np.isfinite(v)
+                        or v<0 or v>28 for v in observed):
+                    raise ValueError('Invalid verified non-offensive point sample')
+                target[:]=rng.choice(np.asarray(observed,dtype=np.int32),size=n)
+            hs+=nonoff_home
+            ass+=nonoff_away
     regulation_margin=hs.astype(float)-ass
     reg_ties=int(np.count_nonzero(hs==ass))
     if allow_overtime:
@@ -303,6 +322,8 @@ def simulate_script(home_projection, away_projection, home_history, away_history
        'margin_p10_p50_p90':[float(v) for v in np.quantile(margin,[.1,.5,.9])],
        'home_win_probability_raw':round(float(np.mean(margin>0)),5),
        'mean_total':round(float(scores.mean()),3),
+       'simulated_nonoffensive_points_home':round(float(nonoff_home.mean()),3),
+       'simulated_nonoffensive_points_away':round(float(nonoff_away.mean()),3),
        'simulated_turnovers_home':round(float(turnovers_h.mean()),3),
        'simulated_turnovers_away':round(float(turnovers_a.mean()),3),
        'simulated_regulation_drives_per_side':round(float((draws-burn.astype(int)).mean()),3),
