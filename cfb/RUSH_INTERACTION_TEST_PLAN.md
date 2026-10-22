@@ -1,0 +1,89 @@
+# CFB rushing-interaction test protocol — research, not model promotion
+
+**Objective.** Test whether the *same* independent CFB Build16 challenger
+benefits from changing expected run/pass share, drive length and available
+possessions when a specific offense faces a specific rushing defense.
+**Do not alter `cfb/engine.py`, `cfb/research_backtest.project` or the NFL
+model. Do not deploy an unvalidated new challenger.** Build16 is still the
+single active CFB challenger; all new arguments are opt-in laboratory toggles.
+
+## Hypotheses and units
+
+1. **Rush matchup:** Prior-game-only leave-opponent-out pass/rush EPA, offensive
+rush share, defensive rush share allowed; reliability-shrink both. More favorable
+rush/pass EPA and opponent rush tendency may increase offensive rush share.
+2. **Scoring interaction:** Build16 already blends both rushing and passing EPA.
+Only the **incremental shift in the share** times the difference in matched
+shrunk rush/pass EPA changes expected PPD. Directly adding rush advantage
+to PPD again is prohibited.
+3. **Drive length:** Prior offensive and opponent defensive **scrimmage plays
+per drive** estimate future plays/drive. This is **not** actual elapsed clock.
+Test PBP quarter/clock parsing versus official time of possession before
+calling this clock-consumption evidence.
+4. **Tempo:** Both offenses share a game clock. A change in expected plays
+per drive changes the **same** number of paired regulation possessions for
+both sides (capped). Do not award an extra possession to only one team.
+5. **Margin distribution:** Run the same sequential CFB game-script engine,
+same seed, 5,000 draws per scenario. Evaluate the entire margin quantile
+distribution, not only predicted winner or mean score.
+
+The staged research coefficients are stated in
+`cfb/rushing_interaction_research.py` as **unfitted hypotheses**, never
+identified from the already-examined NM State–Sam Houston game.
+
+## Four within-challenger ablations
+
+- `reference`: Existing Build16, unchanged.
+- `mix`: Opponent-specific rushing/pass selection and mix-only efficiency
+residual; no tempo change.
+- `pace`: Observed matchup plays/drive and common possession change only.
+- `combined`: Both changes, with game-state passing/turnover exposure.
+
+They are **NOT** four published challengers. The user continues to see one
+unchanged baseline and one current Build16 challenger.
+
+## Test process and pass/fail criteria
+
+**Phase 0 – data-contract:** Confirm source PBP drive IDs, scrimmage run/pass
+classifications and elapsed-clock fields using official game-by-game data.
+Where kickoff, punt or penalty-only possessions cannot be resolved, mark
+missing rather than imputing fictitious drives. Run same-seed determinism,
+home/away neutral-site swap, no-score-leakage and baseline immutability tests.
+
+**Phase 1 – retrospective exploratory:** Rebuild 2026 team observations as
+of each historical kickoff with a 24h final embargo; preserve source hashes
+and game IDs. Collect only the earliest consecutive eligible scheduled
+fixtures, without outcome or spread-based selection. Pair all four
+simulations on the **same** fixtures and 5,000 seeds/draws each. Measure:
+- Margin MAE, bias and RMSE
+- Scoring total MAE
+- Raw outright Brier score (winner probability is not ATS probability)
+- 10th–90th margin interval empirical coverage and excessive tail width
+- Observed versus projected rush share, plays/drive and regulation possessions
+- Error in high-rushing-advantage vs low-advantage matchup cohorts
+
+**Phase 2 – fit without leakage:** Estimate coefficients using ONLY a
+chronologically earlier, sufficiently large training period. Select ONE
+variant on a later validation period. Freeze that choice and all shrinkage
+parameters **before** reading an untouched test cohort. Require improvement
+over the **same** current Build16 comparator, not over a strawman baseline.
+
+**Phase 3 – prospective confirmation:** Because the NM State game motivated
+these hypotheses, the current 2026 historical snapshot is NOT a genuinely
+untouched holdout. Keep the existing challenger live until there is adequate
+new pre-kickoff frozen forward evidence. Suggested promotion gate:
+at least 120 completed eligible paired forward FBS games; >=0.3-point lower
+paired margin MAE; 95% paired-bootstrap interval excluding zero in the
+improving direction; no material worsening in outright Brier score or
+margin-tail coverage. ATS claims require timestamped pregame sportsbook
+lines available before kickoff and an independently sized ATS holdout.
+Do not optimize on the once-unblinded forward test. If no improvement, reject.
+
+**Stress and negative controls:** Opponent-label shuffle should kill
+matchup-specific signal; substitute zero shift to reproduce reference;
+run +/− turnover, tempo and run-share shocks; check neutral-site team-swap
+symmetry; check small-sample loss of evidence does not turn into numeric zero.
+
+**Current status:** The study code and opt-in simulator path are staged;
+unit tests establish software correctness only. No fitted coefficients,
+no validated gain and no automatic deployment.
