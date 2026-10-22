@@ -218,11 +218,49 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
                     'disruption_scoring_policy':'No incremental scoring coefficient until independent evidence'}}
 
 
+def _failure2_verified_scoring_histories(home_id, away_id, histories):
+    """Clean challenger-only scoring history; keep original baseline immutable.
+
+    Require complete verified scoring attribution for BOTH teams' eligible
+    games before replacing offensive points. Without it, keep previous
+    Build16 scoring (explicitly report missing evidence).
+    """
+    import copy
+    source_h=histories.get(home_id,())
+    source_a=histories.get(away_id,())
+    sides=(source_h,source_a)
+    if any(len(rows)<3 for rows in sides):
+        return histories, None, {'status':'INSUFFICIENT_VERIFIED_SCORING_GAMES'}
+    all_rows=[row for rows in sides for row in rows]
+    if any(row.get('scoring_attribution',{}).get('status')!='VERIFIED_RAW_SCORE_RECONCILIATION'
+           or row.get('offensive_points') is None
+           or row.get('offensive_points_conceded') is None
+           or row.get('nonoffensive_points') is None
+           for row in all_rows):
+        return histories,None,{'status':'UNVERIFIED_SCORING_ATTRIBUTION_LEGACY_BUILD16'}
+    modified={k:[copy.deepcopy(x) for x in rows] for k,rows in histories.items()}
+    for side in (home_id,away_id):
+        for r in modified[side]:
+            r['points']=float(r['offensive_points'])
+            r['conceded']=float(r['offensive_points_conceded'])
+    # Bootstrap ONLY observed earlier-game non-offensive scoring outcomes.
+    observed={'home':[float(r['nonoffensive_points']) for r in source_h],
+              'away':[float(r['nonoffensive_points']) for r in source_a]}
+    return modified,observed,{'status':'ACTIVE_OFFENSE_ONLY_PPD_SEPARATE_NONOFFENSIVE_SCORING',
+        'verified_home_games':len(source_h),'verified_away_games':len(source_a),
+        'average_nonoffensive_points_home_history':round(sum(observed['home'])/len(source_h),5),
+        'average_nonoffensive_points_away_history':round(sum(observed['away'])/len(source_a),5),
+        'baseline_unchanged':True,'ATS_calibrated':False}
+
+
 def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None):
     if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
         raise ValueError('Stress runs must be 0 or 100..10000')
+    source_histories=histories
+    histories,nonoff_samples,scoring_audit=_failure2_verified_scoring_histories(
+        home_id,away_id,histories)
     home=project_integrated(home_id,away_id,histories,neutral,'home')
     away=project_integrated(away_id,home_id,histories,neutral,'away')
     if home['projection'] is None or away['projection'] is None:
@@ -333,7 +371,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                                   'int_rate':away['components'].get('matched_interception_rate'),
                                   'fumble_rate':away['components'].get('matched_lost_fumble_rate'),
                                   'plays_per_drive':away['components'].get('plays_per_drive_observed')},
-                          'turnover_field':profile['turnover_field']})
+                          'turnover_field':profile['turnover_field'],
+                          'nonoffensive_score_samples':nonoff_samples})
     stress={}
     if stress_runs:
         shocks={'fewer_possessions':{'tempo_shift':-1.5},
@@ -364,7 +403,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
        'mean_score_home':out['mean_score_home'],'mean_score_away':out['mean_score_away'],
        'margin_p10_p50_p90':out['margin_p10_p50_p90'],
        'home':home,'away':away,'mechanism_evidence':profile,
-       'not_primary':True,'fitted':False,'ATS_calibrated':False}
+       'not_primary':True,'fitted':False,'ATS_calibrated':False,
+       'failure2_scoring_attribution':scoring_audit}
     if rush_evidence is not None:
         answer['rush_research']=rush_evidence
         answer['not_deployed']=True
