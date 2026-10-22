@@ -56,9 +56,9 @@ class OddsInlineRegressionTests(unittest.TestCase):
         # 'Draft Kings'. Previous parser silently discarded every price.
         obj = _inline()
         obj['provider']={**obj['provider'],'name':'Draft Kings'}
-        obj['homeTeamOdds']={**obj['homeTeamOdds'],
+        obj['homeTeamOdds']={**obj['homeTeamOdds'],'spreadOdds':-110.0,
           'current':{'pointSpread':{'alternateDisplayValue':'-14.0'}}}
-        obj['awayTeamOdds']={**obj['awayTeamOdds'],
+        obj['awayTeamOdds']={**obj['awayTeamOdds'],'spreadOdds':-110.0,
           'current':{'pointSpread':{'alternateDisplayValue':'+14.0'}}}
         original=json.dumps({'count':1,'items':[obj]}).encode()
         q,raw,provider=choose_espn_quote(original,expected_gid=G)
@@ -90,6 +90,15 @@ class OddsInlineRegressionTests(unittest.TestCase):
             'current':{'pointSpread':{'alternateDisplayValue':'+14'}}}
         q,_,_=choose_espn_quote(json.dumps({'items':[obj]}).encode(),expected_gid=G)
         self.assertIsNone(q)
+
+    def test_fractional_or_nonfinite_float_price_rejected(self):
+        for wrong in (-110.25,float('nan'),float('inf'),-99.0,0.0):
+            with self.subTest(value=wrong):
+                obj=_inline()
+                obj['provider']={**obj['provider'],'name':'Draft Kings'}
+                obj['homeTeamOdds']={**obj['homeTeamOdds'],'spreadOdds':wrong}
+                q,_,_=choose_espn_quote(json.dumps({'items':[obj]}).encode(),expected_gid=G)
+                self.assertIsNone(q)
 
     def test_unknown_similar_provider_name_not_accepted(self):
         obj=_inline()
