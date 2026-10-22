@@ -77,6 +77,8 @@ def audit_game(raw,game_id,home_id,away_id):
         result['missing']=sorted(required-set(g.columns))
         return result
     g=g.loc[g[did].notna()].sort_values('game_play_number')
+    has_sack='sack' in g.columns
+    result['official_stat_classification_available']=has_sack
     reasons=Counter()
     def reject(reason,drive_id,part):
         reasons[reason]+=1
@@ -96,8 +98,14 @@ def audit_game(raw,game_id,home_id,away_id):
         # require the owner from actual scrimmage plays rather than the
         # kicking/receiving team in a kickoff.
         p=_as_bool(part,'pass');r=_as_bool(part,'rush')
-        if p is None or r is None:
+        sk=_as_bool(part,'sack') if has_sack else None
+        if p is None or r is None or (has_sack and sk is None):
             reject('unknown_play_classification',drive_id,part);continue
+        # Provider pass/ rush are *EPA play concepts*. For the NCAA official
+        # box count, a sack is a RUSH attempt, not a pass attempt. Preserve
+        # the original EPA classification; this is a parallel counting lens.
+        # A sack lacking a provider pass or rush concept is not silently
+        # classified without independent play attribution.
         scrim=part.loc[p^r]
         if scrim.empty:
             reject('no_scrimmage_plays',drive_id,part);continue
@@ -130,8 +138,15 @@ def audit_game(raw,game_id,home_id,away_id):
                 reject('invalid_regulation_clock_delta',drive_id,part);continue
             if abs(difference-elapsed)>10:
                 reject('source_clock_disagreement',drive_id,part);continue
+        if has_sack and bool(sk.loc[scrim.index].any()):
+            if not bool((sk.loc[scrim.index] & p.loc[scrim.index] &
+                         ~r.loc[scrim.index]).eq(sk.loc[scrim.index]).all()):
+                reject('ambiguous_sack_play_classification',drive_id,part);continue
+        num_sacks=int(sk.loc[scrim.index].sum()) if has_sack else None
         numrun=int(r.loc[scrim.index].sum())
         numpass=int(p.loc[scrim.index].sum())
+        official_rushes=numrun+num_sacks if has_sack else None
+        official_pass_attempts=numpass-num_sacks if has_sack else None
         if numrun+numpass<1:
             reject('no_valid_run_pass_plays',drive_id,part);continue
         result['drives'].append({'drive_id':str(drive_id),'team_id':team,
@@ -139,6 +154,9 @@ def audit_game(raw,game_id,home_id,away_id):
                'clock_verification':'SOURCE_ELAPSED_ONLY' if provider_only
                        else 'ELAPSED_AND_ENDPOINTS_AGREE',
                'rush_plays':numrun,'pass_plays':numpass,
+               'official_rush_attempts':official_rushes,
+               'official_pass_attempts':official_pass_attempts,
+               'source_sacks_reclassified_as_rushes':num_sacks,
                'scrimmage_plays':numrun+numpass,
                'rush_share':round(numrun/(numrun+numpass),6)})
     result['excluded']=dict(reasons)
@@ -153,10 +171,18 @@ def audit_game(raw,game_id,home_id,away_id):
         n=len(sub);seconds=sum(d['duration_seconds'] for d in sub)
         run=sum(d['rush_plays'] for d in sub)
         pas=sum(d['pass_plays'] for d in sub)
+        box_rush=sum(d['official_rush_attempts'] for d in sub) if has_sack else None
+        box_pass=sum(d['official_pass_attempts'] for d in sub) if has_sack else None
+        sacks_reclass=sum(d['source_sacks_reclassified_as_rushes'] for d in sub) if has_sack else None
         result['teams'][str(tid)]={'valid_drives':n,'observed_time_seconds':seconds,
             'seconds_per_drive':round(seconds/n,4) if n else None,
             'run_share':round(run/(run+pas),6) if run+pas else None,
             'rush_plays':run,'pass_plays':pas,
+            'official_rush_attempts':box_rush,
+            'official_pass_attempts':box_pass,
+            'sack_reclassification_count':sacks_reclass,
+            'official_rush_share':round(box_rush/(box_rush+box_pass),6)
+                if has_sack and box_rush+box_pass else None,
             'scrimmage_plays_per_drive':round((run+pas)/n,4) if n else None}
     # Game clock possession is a 60 min zero-sum allocation in regulation.
     # This coverage threshold is a conservative source completeness guard,
