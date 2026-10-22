@@ -158,7 +158,7 @@ def study(snapshot,out,*,runs=5000,max_games=180,min_prior_games=3):
     strong=[r for r in chosen if r['severity_max_pregame']>=.04]
     report={'schema':'cfb_failure1_severity_negative_script_experiment_v1',
       'snapshot_captured_at_utc':str(snapshot_at),
-      'source':'Free SportsDataverse 2026 ESPN PBP',
+      'source':'Free SportsDataverse '+str(int(sched['_kickoff'].dt.year.mode().iloc[0]))+' ESPN PBP',
       'modes':MODES,'runs_per_game_per_mode':runs,
       'studied_games':len(chosen),'exclusions':dict(excluded),
       'feature_policy':'pre-play-score state only, missing never tied; designed rush excluding sacks',
