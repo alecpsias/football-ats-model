@@ -1,0 +1,77 @@
+{
+  "schema": "cfb_failure1_scorestate_and_shadow_forward_receipt_v1",
+  "date_utc": "2026-10-22",
+  "root_cause": "Original source contained pre-play scoreboard; history feature aggregator rejected any team-game with zero trailing rush attempts rather than ignoring valid zero denominators. Treat genuinely missing/contradictory and zero differently.",
+  "source_audit": {
+    "source": "SportsDataverse ESPN 2026 CFB PBP",
+    "pbp_columns": 505,
+    "events": 88293,
+    "preplay_score_non_null": 88293,
+    "independent_start_score_crosscheck_rows": 88293,
+    "preplay_score_missing_component_rows": 0,
+    "preplay_score_mismatch_rows": 0,
+    "source_probe_workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/39822280499"
+  },
+  "corrected_retrospective_audit": {
+    "study_workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/39823105918",
+    "valid_2026_matched_games": 180,
+    "trailing_script_matched_games_before_fix": 0,
+    "trailing_script_matched_games_after_fix": 8,
+    "severe_with_trailing_matched_games": 2,
+    "baseline_MAE_in_trailing_sample": 10.49612,
+    "resilience_MAE_in_trailing_sample": 10.51275,
+    "combined_MAE_in_trailing_sample": 10.32637,
+    "combined_MAE_gain": 0.16975,
+    "combined_paired_bootstrap95": [
+      -0.17,
+      0.50751
+    ],
+    "interpretation": "8-game sample noncredible for live adoption; resilience alone worse."
+  },
+  "prospective_dry_run": {
+    "run_id": 39823105918,
+    "frozen_utc": "2026-10-22T17:31:59.521474+00:00",
+    "source_snapshot_utc": "2026-10-22T17:29:53.324962+00:00",
+    "frozen_upcoming_games": 45,
+    "baseline_projection_eligible": 45,
+    "simulations_per_game_per_variant": 5000,
+    "source_manifest_sha256": "190d71c292d9e870bf6ad8c84662a318ab265c33c97d4fe528d53e759c94dc3d",
+    "actual_data_accessed_before_kickoff": true,
+    "original_run_uploaded_only_index_not_full_games": true,
+    "next_validation_workflow_updated_to_archive_all_game_files": true,
+    "permanent_main_archive_required": true
+  },
+  "tests": {
+    "cfb_suite_count": 281,
+    "conclusion": "PASS"
+  },
+  "recording_policy": {
+    "history_embargo_hours": 24,
+    "original_expected_baseline_unchanged": true,
+    "default_build16_unchanged": true,
+    "prior_games_source_snapshot_hash_attached": true,
+    "code_sha256_attached": true,
+    "candidate": "same Build16 plus only original frozen negative run ablation",
+    "only_emitted_if_runs_equals_5000": true,
+    "quote_type": "Actual observed ESPN free sportsbook spread and both American prices (when available)",
+    "bookmaker_original_publication_timestamp_verified": false,
+    "no_quote_yields_no_ATS_result": true,
+    "only_new_pre_kickoff_frozen_games_grade": true,
+    "later_final_does_not_trigger_resimulation": true
+  },
+  "decisions": {
+    "deploy_candidate": false,
+    "second_published_challenger_created": false,
+    "failure1_completely_resolved": false,
+    "forward_prospective_candidate_ready": true,
+    "future_promotion_min_margin_games": 120,
+    "minimum_untouched_later_block_games": 40,
+    "ats_certified": false
+  },
+  "limitations": [
+    "Eighth-game script effect cannot justify adoption",
+    "Source captures are frozen now, not proofs individual past PBP rows existed at older kickoff times",
+    "Actual non-postgame future bets are research comparisons only and cannot guarantee an ESPN spread is available",
+    "Earlier Oct 20 frozen games remain the earliest prediction for that fixture: do not overwrite them with later shadow"
+  ]
+}

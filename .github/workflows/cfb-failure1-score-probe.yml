@@ -1,0 +1,29 @@
+name: CFB Failure 1 scoreboard provenance probe
+on:
+  push:
+    branches: [cfb-failure1-prospective-shadow-20261022]
+    paths:
+      - 'cfb/failure1_score_probe.py'
+      - '.github/workflows/cfb-failure1-score-probe.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  score-probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - run: python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/failure1_probe
+      - run: python -m cfb.failure1_score_probe --snapshot cfb_artifacts/failure1_probe --out cfb_artifacts/failure1_score_probe.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-failure1-score-probe
+          path: cfb_artifacts/failure1_score_probe.json

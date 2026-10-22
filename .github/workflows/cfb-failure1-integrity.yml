@@ -1,0 +1,59 @@
+name: CFB Failure 1 source and forward-shadow integration tests
+on:
+  push:
+    branches: [cfb-failure1-prospective-shadow-20261022]
+    paths:
+      - 'cfb/failure1_*.py'
+      - 'cfb/prospective.py'
+      - 'cfb/forward_monitor.py'
+      - 'cfb/rush_severity_*.py'
+      - 'cfb/test_cfb_failure1_*.py'
+      - '.github/workflows/cfb-failure1-integrity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  validate-forward-shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Validate old baseline + default Build16 and frozen research tests
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Capture genuinely current 2026 free CFB inputs
+        run: python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/failure1_source
+      - name: Independently verify pre-play score consistency and availability
+        run: python -m cfb.failure1_score_probe --snapshot cfb_artifacts/failure1_source --out cfb_artifacts/preplay_score_validation.json
+      - name: Re-evaluate score-state eligible outcomes after zero-attempt correction
+        run: |
+          python -m cfb.severity_study \
+            --snapshot cfb_artifacts/failure1_source \
+            --out cfb_artifacts/failure1_retrospective_replay.json \
+            --runs 5000 --max-games 180
+      - name: Freeze actual future CFB shadow predictions before scheduled kickoffs
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          python -m cfb.prospective \
+            --snapshot cfb_artifacts/failure1_source \
+            --out cfb_artifacts/failure1_frozen \
+            --runs 5000 --days 7 \
+            --git-sha "$COMMIT_SHA" --github-run-id "$RUN_ID"
+      - name: Check immutable pregame summary
+        run: |
+          python -c "import json,pathlib; x=json.loads(pathlib.Path('cfb_artifacts/failure1_frozen/index.json').read_text()); assert x['status']=='CFB_PROSPECTIVE_RESEARCH_RECORDS_FROZEN'; print('FROZEN',x['game_records'],'GAMES')"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-failure1-prospective-integrity
+          path: |
+            cfb_artifacts/preplay_score_validation.json
+            cfb_artifacts/failure1_retrospective_replay.json
+            cfb_artifacts/failure1_frozen/
+          if-no-files-found: warn

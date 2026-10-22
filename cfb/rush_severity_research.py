@@ -18,9 +18,15 @@ def _rate(rows,k,n,minimum,minimum_games=3):
     try:
         x=[(r['mismatch_'+k],r['mismatch_'+n]) for r in rows
            if 'mismatch_'+k in r and 'mismatch_'+n in r]
-        if len(x)<minimum_games or any(type(a) not in (int,float) or type(b) not in (int,float)
-                           or not math.isfinite(a) or not math.isfinite(b)
-                           or a<0 or b<=0 or a>b for a,b in x):return None
+        # Legitimate zero-count score-state games must not poison all
+        # available history. They contribute no trials. Missing fields,
+        # negative counts, a positive numerator over zero, or impossible
+        # ratios still fail closed.
+        if any(type(a) not in (int,float) or type(b) not in (int,float)
+               or not math.isfinite(a) or not math.isfinite(b)
+               or a<0 or b<0 or a>b for a,b in x):return None
+        x=[(a,b) for a,b in x if b>0]
+        if len(x)<minimum_games:return None
         num=sum(v for v,_ in x);den=sum(v for _,v in x)
         return (num/den,den) if den>=minimum else None
     except (ValueError,TypeError,KeyError):return None

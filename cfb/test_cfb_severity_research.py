@@ -88,6 +88,20 @@ class SevereRushTest(unittest.TestCase):
         self.assertEqual(simulate_build16(1,2,h,False,runs=250,seed=25),active)
         self.assertNotIn('mismatch_research',active)
 
+    def test_zero_trailing_attempt_games_do_not_invalidate_valid_history(self):
+        from cfb.rush_severity_research import _rate
+        rows=[{'mismatch_off_trailing_rush_good':0,'mismatch_off_trailing_rush_n':0},
+              {'mismatch_off_trailing_rush_good':6,'mismatch_off_trailing_rush_n':10},
+              {'mismatch_off_trailing_rush_good':0,'mismatch_off_trailing_rush_n':0},
+              {'mismatch_off_trailing_rush_good':5,'mismatch_off_trailing_rush_n':10}]
+        z=_rate(rows,'off_trailing_rush_good','off_trailing_rush_n',12,minimum_games=2)
+        self.assertEqual(z,(.55,20))
+        rows[0]['mismatch_off_trailing_rush_good']=1
+        self.assertIsNone(_rate(rows,'off_trailing_rush_good','off_trailing_rush_n',12,minimum_games=2))
+        rows[0].pop('mismatch_off_trailing_rush_good')
+        # A truly absent numerator must never be implicitly zero-filled.
+        self.assertIsNotNone(_rate(rows,'off_trailing_rush_good','off_trailing_rush_n',12,minimum_games=2))
+
     def test_no_stored_pregame_score_state_cannot_create_trailing_effect(self):
         h=decorated()
         for row in h[1]:

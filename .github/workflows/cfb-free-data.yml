@@ -130,7 +130,9 @@ jobs:
               --out cfb/archive/odds/recovered/39452026663.zip
           fi
       - name: Collect freely observed ESPN spread and prices (if present)
-        if: ${{ vars.CFB_CAPTURE_ODDS == 'true' }}
+        # Freeze actual captured free sportsbook observations for matched
+        # Build16 vs Failure-1 shadow ATS research. Missing ESPN odds
+        # are recorded as missing; the run must not invent a quote.
         run: |
           python -m cfb.free_odds capture \
             --forecasts cfb/archive/forecasts \
