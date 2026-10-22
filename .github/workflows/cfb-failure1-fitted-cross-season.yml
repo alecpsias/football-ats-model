@@ -1,12 +1,6 @@
 name: CFB Failure 1 2023-trained learned correction cross-season validation
 
 on:
-  push:
-    branches: [cfb-failure1-quantitative-validation-20261022]
-    paths:
-      - 'cfb/failure1_fitted_decision.py'
-      - 'cfb/test_cfb_failure1_ridge.py'
-      - '.github/workflows/cfb-failure1-fitted-cross-season.yml'
   workflow_dispatch:
 
 permissions:
