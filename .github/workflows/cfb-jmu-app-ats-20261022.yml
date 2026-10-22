@@ -1,0 +1,89 @@
+name: CFB JMU App 2026-10-22 same-seed ATS 5000
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-jmu-app-ats-20261022.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Capture verified 2026 stats before kickoff
+        run: |
+          mkdir -p cfb_artifacts
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/jmu_app_ats_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/jmu_app_ats_snapshot
+      - name: Frozen matchup risk and spread sensitivity (5000 draws each)
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          from cfb.pipeline import verify,iso_utc
+          from cfb.fresh_matchup import histories_asof,resolve_fixture
+          from cfb.mechanism_build16 import simulate_build16
+          from cfb.failure1_learned_shadow import correction
+          root=Path('cfb_artifacts/jmu_app_ats_snapshot')
+          m=verify(root)
+          cutoff=iso_utc(m['captured_at_utc'])
+          sched=pd.read_parquet(root/'schedule.parquet')
+          pbp=pd.read_parquet(root/'pbp.parquet')
+          roster=pd.read_parquet(root/'roster.parquet')
+          future,mapped,histories,eligible=histories_asof(sched,pbp,roster,cutoff)
+          matches=future.loc[future.home_team.astype(str).str.contains('appalachian|app state',case=False,regex=True)&future.away_team.astype(str).str.contains('james madison',case=False,regex=False)]
+          if len(matches)!=1:raise ValueError('Fixture ambiguous or already kicked off')
+          game=matches.iloc[0]
+          h,a=int(game.home_id),int(game.away_id)
+          seed=int(game.game_id)%(2**32)
+          f1=correction(h,a,histories)
+          base=dict(home_id=h,away_id=a,histories=histories,
+              neutral=bool(game.neutral_site),runs=5000,seed=seed,
+              failure1_fit_margin_delta=f1['margin_delta_points'])
+          output={'schema':'jmu_app_2026_actual_5000_ats_v1',
+                'game_id':str(game.game_id),'kickoff_utc':str(game.start_date),
+                'snapshot_time_utc':str(cutoff),
+                'spread_inputs_from_public_pregame_2026_10_22_sites':True,
+                'ATS_calibrated':False,'source':'Real prior-game team records only',
+                'results':[]}
+          for spread_home in (9.5,10.5,11.5):
+              model=simulate_build16(spread_home=spread_home,**base)
+              s=model['simulation']
+              if s['simulations']!=5000:raise AssertionError('Must simulate 5000 each')
+              output['results'].append({
+                 'app_state_plus':spread_home,
+                 'app_cover_raw':s['home_cover_probability_raw'],
+                 'jmu_cover_raw':s['away_cover_probability_raw'],
+                 'push_raw':round(1.-s['home_cover_probability_raw']-s['away_cover_probability_raw'],5),
+                 'app_win_raw':s['home_win_probability_raw'],
+                 'mean_score_app':s['mean_score_home'],
+                 'mean_score_jmu':s['mean_score_away'],
+                 'mean_margin_jmu':-s['mean_margin_home'],
+                 'total':s['mean_total'],
+                 'home_margin_p10_p50_p90':s['margin_p10_p50_p90'],
+                 'simulation_seed':s['seed'],
+                 'failure2_status':model.get('failure2_scoring_attribution',{}).get('status'),
+                 'failure3_status':model.get('failure3_sustainability',{}).get('possession_process_status')
+              })
+          out=Path('cfb_artifacts/jmu_app_ats_5000.json')
+          out.write_text(json.dumps(output,indent=2))
+          print('VERIFIED_5000_DRAW_JMU_APP_ATS')
+          print(json.dumps(output,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jmu-app-ats-5000-${{ github.run_id }}
+          path: cfb_artifacts/jmu_app_ats_5000.json
+          if-no-files-found: warn
