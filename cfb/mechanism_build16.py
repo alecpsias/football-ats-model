@@ -253,14 +253,19 @@ def _failure2_verified_scoring_histories(home_id, away_id, histories):
         'baseline_unchanged':True,'ATS_calibrated':False}
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True):
     if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
         raise ValueError('Stress runs must be 0 or 100..10000')
-    source_histories=histories
-    histories,nonoff_samples,scoring_audit=_failure2_verified_scoring_histories(
-        home_id,away_id,histories)
+    if type(failure2_attribution) is not bool:
+        raise ValueError('Failure 2 scoring toggle must be boolean')
+    if failure2_attribution:
+        histories,nonoff_samples,scoring_audit=_failure2_verified_scoring_histories(
+            home_id,away_id,histories)
+    else:
+        nonoff_samples=None
+        scoring_audit={'status':'DISABLED_FOR_PAIRED_FAILURE2_REFERENCE'}
     home=project_integrated(home_id,away_id,histories,neutral,'home')
     away=project_integrated(away_id,home_id,histories,neutral,'away')
     if home['projection'] is None or away['projection'] is None:
