@@ -30,6 +30,28 @@ jobs:
         run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
       - name: Reparse saved original pre-kickoff odds with source hashes and timestamps
         run: python -m cfb.recover_all_free_odds --root cfb/archive/odds
+      - name: Verify same archived 5000-run matchup pairs have real original odds
+        run: |
+          python - <<'PY'
+          import json
+          from cfb.failure1_paired_forward import load_first_frozen_pairs
+          from cfb.free_odds import load_quotes
+          from cfb.market import _date
+          pairs,_=load_first_frozen_pairs('cfb/archive/forecasts')
+          quotes=load_quotes('cfb/archive/odds')
+          joined=[]
+          for gid,p in pairs.items():
+              q=quotes.get(gid)
+              if q and q['home']==p['home'] and q['away']==p['away'] and (
+                   max(_date(q['observed_at_utc'],'quote'),
+                       _date(p['prediction_generated_at_utc'],'forecast'))<
+                   _date(p['kickoff_utc'],'kickoff')):
+                  joined.append(gid)
+          print(json.dumps({'first_genuine_frozen_model_pairs':len(pairs),
+              'unique_originally_observed_pregame_quotes':len(quotes),
+              'paired_genuine_both_frozen_margin_and_observed_spread':len(joined)},indent=2))
+          assert len(joined)>0, 'No original pregame quotes matched model pair; refuse to claim ATS coverage'
+          PY
       - name: Collect genuine pregame ESPN Draft Kings odds and prices now
         run: |
           python -m cfb.free_odds capture \
