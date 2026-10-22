@@ -1,0 +1,68 @@
+name: CFB mandatory rushing mismatch gate validation
+on:
+  push:
+    branches: [cfb-failure1-mandatory-rush-audit-20261022]
+    paths:
+      - 'cfb/mandatory_rushing_audit.py'
+      - 'cfb/fresh_matchup.py'
+      - 'cfb/prospective.py'
+      - 'cfb/mechanism_build16.py'
+      - 'cfb/test_cfb_mandatory_rushing_audit.py'
+      - '.github/workflows/cfb-mandatory-rush-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Full unchanged baseline and CFB Challenger regression tests
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Collect public CFB as-of snapshot
+        run: python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/rushing_gate_snapshot
+      - name: Run mandatory rush audit across actual future games using 5000 draws
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          python -m cfb.prospective \
+             --snapshot cfb_artifacts/rushing_gate_snapshot \
+             --out cfb_artifacts/rushing_gate_frozen \
+             --runs 5000 --days 7 \
+             --git-sha "$COMMIT_SHA" --github-run-id "$RUN_ID"
+      - name: Verify all prospective eligible cases contain mandatory gate
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('cfb_artifacts/rushing_gate_frozen')
+          ix=json.loads((p/'index.json').read_text())
+          counts={'severe':0,'incomplete':0,'screened':0,'stress_verified':0}
+          for rec in ix['predictions']:
+              obj=json.loads((p/rec['file']).read_text())
+              a=obj.get('mandatory_rushing_audit')
+              g=obj.get('rushing_ats_risk_gate')
+              assert a and g, obj['game_id']
+              assert a['mandatory_for_every_cfb_pregame_prediction']
+              assert g['ats_recommendation_status'] is not None
+              if a['requires_full_rush_stress'] and obj['status']=='FROZEN_CFB_RESEARCH_MARGIN_NO_ATS_GRADE':
+                  assert g['stress_runs_per_scenario_verified']==5000 or g['ats_recommendation_status'].startswith('HOLD_')
+                  counts['severe']+=1
+                  counts['stress_verified']+=int(g['stress_runs_per_scenario_verified']==5000)
+              elif a['status'].startswith('REQUIRES_HUMAN'): counts['incomplete']+=1
+              else: counts['screened']+=1
+          print(json.dumps({'games_checked':len(ix['predictions']),**counts},indent=2))
+          assert len(ix['predictions'])>0
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-required-rushing-audit-proof
+          path: cfb_artifacts/rushing_gate_frozen/
+          if-no-files-found: warn

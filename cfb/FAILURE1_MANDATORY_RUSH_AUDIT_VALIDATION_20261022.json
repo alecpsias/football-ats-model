@@ -1,0 +1,42 @@
+{
+  "schema": "cfb_failure1_required_rushing_audit_release_v1",
+  "date": "2026-10-22",
+  "repository": "alecpsias/football-ats-model",
+  "branch": "cfb-failure1-mandatory-rush-audit-20261022",
+  "proof_workflow_run": "https://github.com/alecpsias/football-ats-model/actions/runs/39827879393",
+  "unit_tests": {
+    "run_count": 286,
+    "result": "PASS"
+  },
+  "prospective": {
+    "games_checked": 45,
+    "severe_signals": 22,
+    "without_severe_trigger": 23,
+    "incomplete": 0,
+    "fully_stressed_severe": 22,
+    "stress_simulations_per_scenario": 5000,
+    "scenarios_per_severe": 6
+  },
+  "implementation": [
+    "cfb/mandatory_rushing_audit.py: required offense vs defense early designed rush success, negative/nonpositive play rates, adverse-score-state rush, SOS rushing EPA",
+    "cfb/fresh_matchup.py: audit required on every named pregame and printed above projected score and market",
+    "cfb/prospective.py: audit required on every frozen batch forecast including insufficient data pass",
+    "cfb/mechanism_build16.py: report actual adverse script draw counts without changing scoring coefficients",
+    "cfb/test_cfb_mandatory_rushing_audit.py: reliability and gates"
+  ],
+  "ats_policy": {
+    "calibrated": false,
+    "auto_bet_recommendation": false,
+    "confidence_upgrade_automated": false,
+    "severe_rush_review_required": true,
+    "rush_scoring_weight_changed": false,
+    "baseline_changed": false,
+    "one_build16_challenger": true
+  },
+  "caveats": [
+    "Current 22/45 severity trigger proportion reflects exploratory, not optimized criteria",
+    "Six 5,000-run adverse scripts are counterfactual stresses, not new probability-weighted scenarios",
+    "No guarantee the next projected margin correctly values the rushing mismatch",
+    "No real independent forward ATS validation of gate performance yet"
+  ]
+}
