@@ -1,0 +1,137 @@
+{
+  "schema": "cfb_postgame_official_manual_causal_audit_v1",
+  "matchup": {
+    "game_id": "401871070",
+    "home": "Sam Houston",
+    "away": "New Mexico State",
+    "kickoff_local": "2026-10-21T19:05:00-05:00"
+  },
+  "official_source": {
+    "url": "https://nmstatesports.com/sports/football/stats/2026/sam-houston/boxscore/19279",
+    "recap": "https://nmstatesports.com/news/2026/10/21/football-nm-state-outlasts-sam-houston-in-wednesday-night-win.aspx",
+    "source_type": "official university final box score and recap",
+    "status": "FINAL_CONFIRMED_MANUAL_EXTERNAL_SOURCE_NOT_PBP_CAPTURE"
+  },
+  "original_locked_prediction": {
+    "latest_request_file": "cfb/archive/reviews/39686081485.json",
+    "execution_receipt": "cfb/archive/reviews/39686081485.proof.json",
+    "earliest_request_file": "cfb/archive/reviews/39543123238.json",
+    "run_count_per_model": 5000,
+    "baseline": {
+      "home_points": 25.699,
+      "away_points": 23.665,
+      "home_margin": 2.035,
+      "total": 49.364
+    },
+    "challenger": {
+      "home_points": 26.741,
+      "away_points": 25.184,
+      "home_margin": 1.557,
+      "total": 51.925
+    },
+    "last_user_facing_direction": "Sam Houston +3 Group C, 5.6/10",
+    "market_quote_at_lock_verified_in_archived_model": false,
+    "ats_calibrated": false
+  },
+  "observed_final": {
+    "home_points": 24,
+    "away_points": 30,
+    "home_margin": -6,
+    "total": 54,
+    "home_first_downs": 9,
+    "away_first_downs": 21,
+    "home_total_yards": 246,
+    "away_total_yards": 363,
+    "home_rush_yards": 11,
+    "away_rush_yards": 203,
+    "home_pass_yards": 235,
+    "away_pass_yards": 160,
+    "home_penalties": 13,
+    "home_penalty_yards": 118,
+    "away_penalties": 6,
+    "away_penalty_yards": 48,
+    "home_turnovers_lost": 2,
+    "away_turnovers_lost": 2,
+    "home_offensive_points": 17,
+    "home_special_teams_blocked_punt_td_points": 7,
+    "home_third_down_conversions": 3,
+    "home_third_down_attempts": 13,
+    "away_third_down_conversions": 2,
+    "away_third_down_attempts": 12,
+    "away_rushing_leader": "James Jones",
+    "away_rushing_leader_yards": 178,
+    "home_81_yard_pass_td": true
+  },
+  "errors": {
+    "ats_direction": "LOSS_SHSU_PLUS_3",
+    "cover_margin_error_points": -3,
+    "baseline_home_margin_prediction_error": 8.035,
+    "challenger_home_margin_prediction_error": 7.557,
+    "baseline_total_prediction_error": -4.636,
+    "challenger_total_prediction_error": -2.075,
+    "baseline_away_points_error": -6.335,
+    "baseline_home_points_error": 1.699,
+    "challenger_away_points_error": -4.816,
+    "challenger_home_points_error": 2.741
+  },
+  "mechanistic_findings": [
+    {
+      "priority": 1,
+      "signal": "RUSH_MATCHUP_ASYMMETRY",
+      "pregame_observed": true,
+      "evidence": "NMSU rush yards 203 vs SHSU 11, first downs 21 vs 9; prior pregame adjusted NMSU rush EPA >0 and weak SHSU rush defense",
+      "failure": "Prematch rushing and defensive mismatch was recognized qualitatively but not reflected sufficiently in predicted ATS margin",
+      "proposed_test": "Add run pass interaction and adverse-script/tempo dominance distribution on strictly historical pregame inputs; paired holdout ATS and MAE validation before coefficient adoption"
+    },
+    {
+      "priority": 2,
+      "signal": "OFFENSE_ONLY_SCORING",
+      "pregame_observed": "UNDECOMPOSED",
+      "evidence": "SHSU 24 final points but only 17 offensive; 7 scored on blocked NMSU punt; NMSU offensive 30",
+      "failure": "The team-points PPD anchor pools offensive, defensive and special teams scores; last game demonstrates false attribution risk",
+      "proposed_test": "Derive offense-only PPD and opponent nonoffensive score incidence from verified PBP scoring events; fail closed if scoring team ambiguous"
+    },
+    {
+      "priority": 3,
+      "signal": "THIRD_DOWN_PBP_ATTRIBUTION_QA",
+      "pregame_observed": true,
+      "evidence": "Pre-kickoff model output reported historical NMSU third conversion ~0.051 and SHSU ~0.079, much lower than quoted season rates of roughly 0.41 and 0.364; verify definitions against provider box scores across teams",
+      "failure": "Third down labels may materially undercount conversions; integrated_scoring applies -0.08 capped PPD to both",
+      "proposed_test": "Validate third-down flags versus next-play same-drive down reset and official conversions before changing scoring; do not call low rates confirmed until independent verification"
+    },
+    {
+      "priority": 4,
+      "signal": "PENALTY_DRIVE_KILLING",
+      "pregame_observed": true,
+      "evidence": "Sam Houston 13 penalties for 118 yards, NM State 6 for 48; late Sam Houston offensive holding and personal fouls destroyed field-position gains",
+      "failure": "CFB penalty EPA missing; first-down penalty residual not enough to capture drive-shaping downside",
+      "proposed_test": "Add free PBP verified offensive penalty yards plus drive reset/first-down impact and fit only on prior games"
+    },
+    {
+      "priority": 5,
+      "signal": "CONCENTRATED_EXPLOSIVES_AND_ST",
+      "pregame_observed": "RISKS_RECOGNIZED_NOT_MODELLED",
+      "evidence": "SHSU pass plays 81 and 53 accounted for 134 of 235 pass yards; blocked punt touchdown contributed 7 of 24 points",
+      "failure": "Outlier pass plays and unmodelled block special teams can boost score without sustaining series",
+      "proposed_test": "Separate team score from offensive score and decompose high-tail nonoffensive events without inventing deterministic future points"
+    }
+  ],
+  "calibration_policy": {
+    "auto_promote": false,
+    "new_challenger_created": false,
+    "test_requirements": [
+      "Validate PBP source semantics independently",
+      "Chronological freeze/no lookahead",
+      "Paired margin MAE and ATS validation over adequate forward samples",
+      "Stress results against adverse rushing script and turnover-neutral case"
+    ],
+    "not_empirical_validation": true
+  },
+  "pipeline_status": {
+    "postgame_issue": 8,
+    "github_actions_run_id": "39765962175",
+    "postgame_archive": "cfb/archive/reviews/39765962175.json",
+    "automated_result": "FINAL_NOT_AVAILABLE",
+    "note": "Official university final is verified; delayed source snapshot did not expose a final to the automated postgame path. Do not claim automated postgame calibration."
+  }
+}
