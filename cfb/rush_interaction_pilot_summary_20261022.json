@@ -1,0 +1,66 @@
+{
+  "schema": "cfb_rush_experiment_pilot_summary_v1",
+  "performed_utc": "2026-10-22T13:57:05Z",
+  "workflow_run_id": 39791304497,
+  "workflow_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39791304497",
+  "source": "public 2026 SportsDataverse snapshot",
+  "label": "EARLY_CHRONOLOGICAL_EXPLORATORY_NOT_UNTOUCHED_OR_ATS",
+  "games": 12,
+  "simulations_per_scenario_game": 5000,
+  "scenario_count": 4,
+  "model_policy": "one published CFB Build16 challenger with three opt-in research ablations; unchanged CFB baseline",
+  "mae": {
+    "reference": {
+      "margin": 16.0125,
+      "total": 13.1298,
+      "brier": 0.24929,
+      "p10p90coverage": 0.75,
+      "direction": 0.5833
+    },
+    "mix": {
+      "margin": 15.9818,
+      "total": 13.1251,
+      "brier": 0.24882,
+      "p10p90coverage": 0.75,
+      "direction": 0.5833,
+      "paired_improvement": 0.0307,
+      "bootstrap95": [
+        -0.0047,
+        0.0955
+      ]
+    },
+    "pace": {
+      "margin": 16.0499,
+      "total": 13.1557,
+      "brier": 0.25023,
+      "p10p90coverage": 0.75,
+      "direction": 0.5833,
+      "paired_improvement": -0.0374,
+      "bootstrap95": [
+        -0.0991,
+        0.0218
+      ]
+    },
+    "combined": {
+      "margin": 16.0277,
+      "total": 13.1599,
+      "brier": 0.24978,
+      "p10p90coverage": 0.75,
+      "direction": 0.5833,
+      "paired_improvement": -0.0152,
+      "bootstrap95": [
+        -0.0865,
+        0.0593
+      ]
+    }
+  },
+  "automatic_promotion": false,
+  "reason": "Early 12-game sample, possible retrospective publication leakage and 95% improvement intervals include zero; no line-backed ATS validation",
+  "cautions": [
+    "Actual elapsed possession seconds were not measured; only scrimmage plays per drive",
+    "NMSU-SHSU game motivated hypotheses; retrospective pilot is not independent holdout",
+    "Score PPD already uses rushing EPA; extra only mix reallocation",
+    "New experimental modes off by default; baseline unchanged"
+  ],
+  "artifact_download": "https://github.com/alecpsias/football-ats-model/actions/runs/39791304497/artifacts/12431915751"
+}
