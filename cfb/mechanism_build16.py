@@ -218,8 +218,8 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
                     'disruption_scoring_policy':'No incremental scoring coefficient until independent evidence'}}
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None):
-    if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,possession_response=None):
+    if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta,possession_response))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
         raise ValueError('Stress runs must be 0 or 100..10000')
@@ -321,6 +321,29 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         if not 6<=drives<=19:raise ValueError('Invalid expected drives')
         h['_ppd']=float(np.clip(h['_ppd']+fitted_delta/(2*drives),.35,5.5))
         a['_ppd']=float(np.clip(a['_ppd']-fitted_delta/(2*drives),.35,5.5))
+    # Opt-in empirical rushing-chain / real clock possession model.
+    # Pre-game evidence and earlier-year fit are produced by the caller.
+    # A scoring event still belongs to the SAME sequential drive simulation,
+    # not an independent additive "rushing EPA" point bonus.
+    possession_effect=None
+    if possession_response is not None:
+        if not isinstance(possession_response,dict) or possession_response.get('status')!='AVAILABLE_FROZEN_POSSESSION_RESPONSE':
+            raise ValueError('Only verified, earlier-year-fitted possession response accepted')
+        hh=possession_response.get('home_ppd_shift');aa=possession_response.get('away_ppd_shift')
+        td=possession_response.get('shared_clock_drives_shift')
+        for v in (hh,aa,td):
+            if type(v) not in (int,float) or not np.isfinite(v):raise ValueError('Invalid possession numeric input')
+        if abs(hh)>.22 or abs(aa)>.22 or abs(td)>.65:
+            raise ValueError('Excessive possession/clock correction')
+        if possession_response.get('real_clock_both_sides_valid') is False and abs(td)>1e-9:
+            raise ValueError('Cannot modify tempo without verified possession seconds')
+        h['_ppd']=float(np.clip(h['_ppd']+float(hh),.35,5.5))
+        a['_ppd']=float(np.clip(a['_ppd']+float(aa),.35,5.5))
+        # Two teams share the same sixty-minute regulation clock: never
+        # change one side's opportunities without the other.
+        h['expected_drives']=float(np.clip(h['expected_drives']+td,6,19))
+        a['expected_drives']=float(np.clip(a['expected_drives']+td,6,19))
+        possession_effect=possession_response
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
     out=simulate_script(h,a,histories[home_id],histories[away_id],runs=runs,seed=seed,
@@ -378,4 +401,7 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         answer['failure1_fitted_rushing_margin_delta']=fitted_delta
         answer['failure1_scoring_status']='ACTIVE_IN_BUILD16_CHALLENGER_UNCALIBRATED'
         answer['not_deployed']=False
+    if possession_effect is not None:
+        answer['failure1_possession_response']=possession_effect
+        answer['not_deployed']=True
     return answer
