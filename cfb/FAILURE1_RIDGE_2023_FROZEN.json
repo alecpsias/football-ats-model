@@ -1,0 +1,37 @@
+{
+  "version": "cfb-rushing-residual-ridge-v1",
+  "fit_year": 2023,
+  "n_training_games": 180,
+  "ridge_lambda": 250,
+  "feature_names": [
+    "home_rush_success_adv",
+    "away_rush_success_adv",
+    "home_negative_avoidance",
+    "away_negative_avoidance",
+    "sos_rush_epa",
+    "relative_run_share",
+    "joint_severity_difference"
+  ],
+  "features_scale": [
+    0.2,
+    0.2,
+    0.1,
+    0.1,
+    0.2,
+    0.2,
+    0.25
+  ],
+  "coefficients": [
+    0.4069600075,
+    0.448124208,
+    -0.0491174307,
+    0.1649562045,
+    1.3692674667,
+    0.3245924157,
+    0.214905427
+  ],
+  "max_delta_points": 3,
+  "training_captures_retrospective": true,
+  "ATS_calibrated": false,
+  "frozen_after_earlier_year": true
+}
