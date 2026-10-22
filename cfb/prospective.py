@@ -23,6 +23,7 @@ from cfb.personnel_effects import (quarterback_effects, skill_player_exposures,
                                    simulate_personnel_scenarios, other_position_availability)
 from cfb.pipeline import verify, split_games, normalize_pbp_teams, iso_utc
 from cfb.research_backtest import observed_game, project
+from cfb.failure1_shadow import include_prior_game,shadow
 
 
 def _json_bytes(obj):
@@ -68,6 +69,10 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
         aw=observed_game(part,a,h,g.away_points,g.home_points,qb_ids.get(a,set()),
                          special_plays=raw_by_game.get(g.game_id))
         if ho is None or aw is None:continue
+        # Historical features are captured from verified COMPLETED PBP rows
+        # at the currently observed snapshot, never from target-game rows.
+        # The new features do not affect existing baseline or Build16.
+        include_prior_game(ho,aw,part,h,a)
         ho['opponent_id']=a
         aw['opponent_id']=h
         histories[h].append(ho);histories[a].append(aw)
@@ -107,6 +112,9 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
             signals=matchup_signals(hid,aid,histories)
             challenger=simulate_build16(hid,aid,histories,neutral,
                         runs=runs,seed=int(g.game_id)%(2**32))
+            negative_shadow=shadow(hid,aid,histories,neutral,
+                       runs=runs,seed=int(g.game_id)%(2**32),
+                       source_manifest_sha256=manifest_sha)
             # Prepared from the *same* pre-kickoff history as the primary model.
             qbs={'home':quarterback_usage(mapped,roster,history,hid),
                  'away':quarterback_usage(mapped,roster,history,aid)}
@@ -118,7 +126,9 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
                    'away':skill_player_exposures(mapped,history,roster,aid,statuses)}
             scenario=simulate_personnel_scenarios(hp,ap,pe['home'],pe['away'],
                 runs=runs,seed=int(g.game_id)%(2**32))
-            base.update({'build16_challenger':challenger,
+            base.update({'failure1_negative_run_shadow':negative_shadow,
+                         'failure1_shadow_distinct_active_challenger':False,
+                         'build16_challenger':challenger,
                          'build16_not_primary':True,
                          'quarterback_participation':qbs,
                          'availability_evidence':statuses,
@@ -140,7 +150,10 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
                 'simulation':sim})
         else:
             base.update({'completed_prior_games_home':len(histories[hid]),
-                         'completed_prior_games_away':len(histories[aid])})
+                         'completed_prior_games_away':len(histories[aid]),
+                         'failure1_negative_run_shadow':{'status':'INSUFFICIENT_PRIOR_GAMES',
+                            'mode':'negative','runs':0,'projected_margin_home':None,
+                            'market_quote':None,'bet_recommendation':None}})
         if now is None and datetime.now(timezone.utc) >= g['_kickoff'].to_pydatetime():
             # Fail closed rather than publish a retrospective 'pregame' forecast.
             raise ValueError('Fixture kicked off during forecast generation; refusing freeze')
