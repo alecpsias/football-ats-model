@@ -109,3 +109,33 @@ happen only on chronologically earlier data. Do not substitute
 unobserved trailing plays or fit against the motivating outcome.
 
 See `cfb/FAILURE1_SEVERITY_VALIDATION_20261022.json`.
+
+## Separate-season replication: public 2025 PBP, completed October 22
+
+Without refitting the V2 coefficients, run
+[GitHub Actions 39813086131](https://github.com/alecpsias/football-ats-model/actions/runs/39813086131)
+tested a separate **2025** historical season (180 matched games)
+using the same 5,000 draws per actual model configuration:
+- Build16 reference margin MAE 13.50224.
+- Severe rushing interaction 13.48179: apparent gain +0.02044,
+  bootstrap95 [-0.04975,+0.09352]; no convincing gain.
+- Negative-designed-run avoidance 13.46772: apparent gain +0.03452,
+  bootstrap95 [-0.04378,+0.11572]; directionally same as 2026 but
+  **not statistically persuasive**.
+- Strict high-severity subset 29 games: reference 12.54155, severity
+  12.35190 (+0.18966), bootstrap95 [-0.21491,+0.57450];
+  too noisy for a claim.
+- Still zero qualifying trailing-script configurations; any claim that
+  adverse-script resilience was successfully validated is false.
+- The year 2025 is *earlier* than the 2026 exploratory cohort on
+  which V2 source thresholds were selected. Thus this is a
+  cross-season replication, NOT untouched chronological-forward
+  validation or a real ATS holdout.
+
+**Interpretation:** The negative-run candidate remains directionally
+favorable across two seasons but its effect size is very small and
+we lack a genuine later holdout, independent sportsbook lines,
+and complete score-state rushing observations. **Do not activate
+any experimental correction in the default Challenger.** Preserve
+both 2025 and 2026 run receipts in
+`cfb/FAILURE1_CROSS_SEASON_VALIDATION_20261022.json`.
