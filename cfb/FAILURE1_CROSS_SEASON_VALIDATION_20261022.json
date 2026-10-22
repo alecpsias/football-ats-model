@@ -1,0 +1,92 @@
+{
+  "schema": "cfb_failure1_2025_2026_cross_season_replication_receipt_v1",
+  "date": "2026-10-22",
+  "source": "2026 and 2025 public SportsDataverse ESPN CFB PBP (separately collected by explicit pipeline collect --season each year)",
+  "runs": [
+    {
+      "season": 2026,
+      "github_run_id": 39812589498,
+      "github_run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39812589498",
+      "artifact": "https://github.com/alecpsias/football-ats-model/actions/runs/39812589498/artifacts/12440926871",
+      "games": 180,
+      "reference_margin_mae": 14.92766,
+      "severity_margin_mae": 14.90531,
+      "severity_improvement": 0.02234,
+      "severity_bootstrap95": [
+        -0.02881,
+        0.07608
+      ],
+      "negative_margin_mae": 14.82965,
+      "negative_improvement": 0.09801,
+      "negative_bootstrap95": [
+        0.01251,
+        0.18416
+      ],
+      "severe_matchup_games": 23,
+      "severe_reference_mae": 15.02413,
+      "severe_severity_mae": 14.87791,
+      "severe_severity_improvement": 0.14622,
+      "severe_bootstrap95": [
+        -0.2031,
+        0.49216
+      ],
+      "resilience_evaluable_games": 0,
+      "unit_tests": 273
+    },
+    {
+      "season": 2025,
+      "github_run_id": 39813086131,
+      "github_run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39813086131",
+      "artifact": "https://github.com/alecpsias/football-ats-model/actions/runs/39813086131/artifacts/12440498226",
+      "games": 180,
+      "reference_margin_mae": 13.50224,
+      "severity_margin_mae": 13.48179,
+      "severity_improvement": 0.02044,
+      "severity_bootstrap95": [
+        -0.04975,
+        0.09352
+      ],
+      "negative_margin_mae": 13.46772,
+      "negative_improvement": 0.03452,
+      "negative_bootstrap95": [
+        -0.04378,
+        0.11572
+      ],
+      "severe_matchup_games": 29,
+      "severe_reference_mae": 12.54155,
+      "severe_severity_mae": 12.3519,
+      "severe_severity_improvement": 0.18966,
+      "severe_bootstrap95": [
+        -0.21491,
+        0.5745
+      ],
+      "resilience_evaluable_games": 0,
+      "unit_tests": 273
+    }
+  ],
+  "total_simulated_outcomes_on_paired_reference_severity_negative": 5400000,
+  "reproduction_note": "Cross-season workflow correctly downloaded --season 2025, but old runner emitted a hardcoded 2026 source-label string; the code has since been corrected so labels derive from the fixture's year.",
+  "interpretation": {
+    "severity": "Directionally improves margin MAE in both years, but effect is about 0.02 points/game on whole slate, bootstrap intervals contain zero, and severe subgroup is underpowered.",
+    "negative": "Negative-designed-run matchup interaction directionally improves margin MAE and Brier in both years, +0.098 in 2026 and +0.0345 in 2025. Neither a genuine forward untouched test nor stable ATS finding. Brier modest.",
+    "resilience": "No modeled evidence: all matchup comparisons missing sufficient source-observed trailing-versus-neutral rushing data, fail closed. No synthetic score-script outcomes claimed.",
+    "missing_2026_target": true,
+    "unfitted_hypothesis_coefficients": true,
+    "ats_calibrated": false,
+    "no_subscriptions": true,
+    "baseline_changed": false,
+    "default_build16_changed": false,
+    "one_challenger_policy": true,
+    "applied_in_standard_5000_runs": false,
+    "promotion_decision": "DO_NOT_PROMOTE",
+    "future_test": "Freeze one candidate after earlier training and validation; use new pregame 2026 source snapshots and timestamped sportsbook spread quotes to run a prospective paired ATS/margin calibration, with negative-run mechanism as prioritized candidate.",
+    "limitations": [
+      "V2 thresholds revised after inspection of 2026 feature distribution; replication year 2025 is earlier chronologically and not an untouched forward holdout",
+      "Repeated tests and selected candidate favor optimism; apparent positive bootstrap interval in 2026 not a multiple-testing adjusted guarantee",
+      "No reliable historical bookmaker quotes for scored games; cannot claim 2026 or 2025 ATS hit rate",
+      "Retrospective source captures from 2026; historical row-level publication times unverified",
+      "Severe 23 and 29 game cohorts have large intervals crossing zero",
+      "Score-state resilience/combined have zero valid simulations, not evidence of failure or success"
+    ]
+  }
+}
