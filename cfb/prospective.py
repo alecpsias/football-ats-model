@@ -69,7 +69,7 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
         ho=observed_game(part,h,a,g.home_points,g.away_points,qb_ids.get(h,set()),
                          special_plays=raw_by_game.get(g.game_id),home_id=h)
         aw=observed_game(part,a,h,g.away_points,g.home_points,qb_ids.get(a,set()),
-                         special_plays=raw_by_game.get(g.game_id))
+                         special_plays=raw_by_game.get(g.game_id),home_id=h)
         if ho is None or aw is None:continue
         # Historical features are captured from verified COMPLETED PBP rows
         # at the currently observed snapshot, never from target-game rows.
