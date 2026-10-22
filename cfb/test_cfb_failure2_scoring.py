@@ -158,7 +158,7 @@ class Failure2Tests(unittest.TestCase):
         out,samples,meta=_failure2_verified_scoring_histories(10,20,rows)
         self.assertIs(out,rows)
         self.assertIsNone(samples)
-        self.assertEqual(meta['status'],'UNVERIFIED_SCORING_ATTRIBUTION_LEGACY_BUILD16')
+        self.assertEqual(meta['status'],'INSUFFICIENT_INDIVIDUAL_VERIFIED_SCORING_GAMES')
 
     def test_turnover_conditional_td_and_st_are_separate_and_deterministic(self):
         source=rates_fixture()
