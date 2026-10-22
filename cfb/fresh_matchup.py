@@ -513,7 +513,6 @@ def markdown(report):
         else:
             lines.append('Required 5,000-draw adverse-script evidence unavailable; ATS confidence withheld.')
     lines += ['',f"**Risk conclusion:** {audit.get('risk_conclusion')}",
-           '',f"Snapshot captured: {report['source_snapshot_at_utc']}",
            f"Historical games: {report['home']} {report['completed_prior_games_home']}, "
            f"{report['away']} {report['completed_prior_games_away']}",
            '',f"**Projected score:** {report['home']} {report['simulated_score_home']:.1f}, "
