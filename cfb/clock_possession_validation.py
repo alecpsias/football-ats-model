@@ -107,27 +107,44 @@ def audit_game(raw,game_id,home_id,away_id):
         team=int(ids[0])
         reg_start=_reg_abs_clock(_one(part,START_PERIOD),_one(part,START_CLOCK))
         reg_end=_reg_abs_clock(_one(part,END_PERIOD),_one(part,END_CLOCK))
-        if reg_start is None or reg_end is None:
-            reject('missing_regulation_clock',drive_id,part);continue
-        difference=reg_start-reg_end
-        if not 0<=difference<=900:
-            reject('invalid_regulation_clock_delta',drive_id,part);continue
         elapsed=_seconds(_one(part,SOURCE_TIME))
         if elapsed is None or not 0<=elapsed<=900:
             reject('missing_or_invalid_source_elapsed',drive_id,part);continue
-        if abs(difference-elapsed)>10:
-            reject('source_clock_disagreement',drive_id,part);continue
+        # Source duration is first-hand ESPN drive data. When just ONE
+        # endpoint is missing, keep it only as a separately flagged,
+        # *non-clock-crosschecked* observation; never invent a timestamp.
+        # Later full-game external TOP validation is mandatory before
+        # treating the game as verified for timing research.
+        provider_only=(reg_start is None or reg_end is None)
+        if provider_only:
+            periods=[]
+            for column in ('period',START_PERIOD,END_PERIOD):
+                if column in part:
+                    periods.extend(pd.to_numeric(part[column],errors='coerce').dropna().tolist())
+            if not periods or any(not 1<=v<=4 for v in periods):
+                reject('missing_regulation_clock',drive_id,part);continue
+            difference=None
+        else:
+            difference=reg_start-reg_end
+            if not 0<=difference<=900:
+                reject('invalid_regulation_clock_delta',drive_id,part);continue
+            if abs(difference-elapsed)>10:
+                reject('source_clock_disagreement',drive_id,part);continue
         numrun=int(r.loc[scrim.index].sum())
         numpass=int(p.loc[scrim.index].sum())
         if numrun+numpass<1:
             reject('no_valid_run_pass_plays',drive_id,part);continue
         result['drives'].append({'drive_id':str(drive_id),'team_id':team,
                'duration_seconds':elapsed,'clock_delta_seconds':difference,
+               'clock_verification':'SOURCE_ELAPSED_ONLY' if provider_only
+                       else 'ELAPSED_AND_ENDPOINTS_AGREE',
                'rush_plays':numrun,'pass_plays':numpass,
                'scrimmage_plays':numrun+numpass,
                'rush_share':round(numrun/(numrun+numpass),6)})
     result['excluded']=dict(reasons)
     result['source_drive_count']=int(groups.ngroups)
+    result['source_only_elapsed_drive_count']=sum(
+        d['clock_verification']=='SOURCE_ELAPSED_ONLY' for d in result['drives'])
     result['valid_drive_count']=len(result['drives'])
     valid=result['drives']
     result['observed_seconds_total']=sum(d['duration_seconds'] for d in valid)
@@ -147,7 +164,8 @@ def audit_game(raw,game_id,home_id,away_id):
     result['regulation_clock_coverage']=round(result['observed_seconds_total']/3600,5)
     if (min(result['teams'][str(t)]['valid_drives'] for t in (home_id,away_id))>=6
             and len(valid)>=14 and
-            3150<=result['observed_seconds_total']<=3650):
+            3150<=result['observed_seconds_total']<=3650 and
+            result['source_only_elapsed_drive_count']<=2):
         result['status']='COMPLETE_REGULATION_CLOCK_AUDIT'
     else:
         result['status']='PARTIAL_CLOCK_COVERAGE'
