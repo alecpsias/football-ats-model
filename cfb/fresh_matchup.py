@@ -20,6 +20,8 @@ from cfb.engine import simulate
 from cfb.advanced_scoring import simulate_challenger
 from cfb.game_script import simulate_script, adverse_scripts
 from cfb.mechanism_build16 import simulate_build16
+from cfb.failure1_shadow import include_prior_game
+from cfb.mandatory_rushing_audit import audit as rushing_audit, gate as rushing_gate
 from cfb.market import _date
 from cfb.matchups import matchup_signals
 from cfb.matchup_cycle import _market, postgame as compare_postgame, markdown as legacy_markdown, normalized
@@ -80,6 +82,7 @@ def histories_asof(schedule, pbp, roster, cutoff):
         a=observed_game(part,aid,hid,g.away_points,g.home_points,qb_ids.get(aid,set()),
                         special_plays=raw_by_game.get(g.game_id))
         if h is None or a is None:continue
+        include_prior_game(h,a,part,hid,aid)
         h['opponent_id']=aid; a['opponent_id']=hid
         h['source_game_id']=str(g.game_id);a['source_game_id']=str(g.game_id)
         histories[hid].append(h);histories[aid].append(a)
@@ -216,6 +219,7 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
         'conditional_personnel_scenarios':None,
         'personnel_adjustment_to_model_points':None,
         'market':{'status':'NO_SOURCE_OBSERVED_PREKICKOFF_SPREAD','ats_research_side':None},
+        'mandatory_rushing_audit':None,'rushing_ats_risk_gate':None,
         'locked_market_evidence':None,
         'limitations':['Quarterback usage measured from prior games; next-game starters are NOT verified',
           'Only source-backed optional availability snapshots are displayed; no uncalibrated injury point deductions',
@@ -229,6 +233,7 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
         hp=project(histories[hid],histories[aid],neutral,'home',False)
         ap=project(histories[aid],histories[hid],neutral,'away',False)
         signals=matchup_signals(hid,aid,histories)
+        rush_screen=rushing_audit(hid,aid,histories,signals)
         q=quote_asof(odds_root,str(g.game_id),stamp)
         qmap={str(g.game_id):q} if q else {}
         sim=simulate(hp,ap,runs=runs,seed=int(g.game_id)%(2**32),
@@ -236,12 +241,14 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
         challenger=simulate_build16(hid,aid,histories,neutral,runs=runs,
                      seed=int(g.game_id)%(2**32),
                      spread_home=q['quote']['spread_home'] if q else None,
-                     stress_runs=max(100,min(400,runs//8)))
+                     stress_runs=(5000 if rush_screen['requires_full_rush_stress']
+                                  else max(100,min(400,runs//8))))
         personnel=simulate_personnel_scenarios(hp,ap,qb_effects['home'],qb_effects['away'],
                      runs=runs,seed=int(g.game_id)%(2**32))
         # _market validates fixture, source observation and model creation time.
         proxy={**result,'simulated_margin_home':sim['mean_margin_home']}
         market=_market(proxy,qmap)
+        rush_gate=rushing_gate(rush_screen,challenger,market)
         scripts_stress=adverse_scripts(hp,ap,histories[hid],histories[aid],
                     runs=max(100,min(600,runs//5)),seed=int(g.game_id)%(2**32))
         result.update({'status':'FRESH_PREGAME_PROJECTION_LOCKED',
@@ -249,7 +256,10 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
                        'build16_not_primary':True,
                        'conditional_personnel_scenarios':personnel,
                        'home_projection':hp,'away_projection':ap,
-                       'matchup_evidence':signals,'simulation':sim,
+                       'matchup_evidence':signals,
+                       'mandatory_rushing_audit':rush_screen,
+                       'rushing_ats_risk_gate':rush_gate,
+                       'simulation':sim,
                        'stress_tests':sensitivity(hp,ap,g.game_id),
                        'simulated_margin_home':sim['mean_margin_home'],
                        'simulated_score_home':sim['mean_score_home'],
@@ -257,6 +267,10 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
                        'model_projected_winner':result['home'] if sim['mean_margin_home']>0
                            else result['away'] if sim['mean_margin_home']<0 else 'TIE',
                        'market':market,'locked_market_evidence':q})
+    if result['mandatory_rushing_audit'] is None:
+        check=rushing_audit(hid,aid,histories,None)
+        result['mandatory_rushing_audit']=check
+        result['rushing_ats_risk_gate']=rushing_gate(check,None,None)
     if now is None and datetime.now(timezone.utc)>=kickoff:
         raise ValueError('Kickoff occurred during analysis; refusing hindsight publication')
     return result
