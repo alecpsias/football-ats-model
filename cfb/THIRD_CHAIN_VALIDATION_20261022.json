@@ -1,0 +1,119 @@
+{
+  "schema": "cfb_early_rush_third_down_chain_experiment_v1",
+  "date_utc": "2026-10-22",
+  "source": "SportsDataverse free 2026 ESPN PBP; official USC Athletics box, Aug 29 2026",
+  "workflow_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39807158589",
+  "artifact_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39807158589/artifacts/12438258335",
+  "source_captured_at_utc": "2026-10-22T15:41:42Z",
+  "research_branch": "cfb-third-down-chain-research-20261022",
+  "run": {
+    "simulations_per_mode_per_game": 5000,
+    "paired_games": 160,
+    "modes": [
+      "reference",
+      "distance",
+      "sustain",
+      "combined"
+    ],
+    "simulated_outcomes": 3200000,
+    "full_suite_tests": 268,
+    "unit_tests": "PASS",
+    "full_workflow": "SUCCESS"
+  },
+  "official_third_down_source_audit": [
+    {
+      "team": "USC",
+      "game_id": 401864494,
+      "official_conversions": 9,
+      "official_attempts": 13,
+      "source_attempts": 13,
+      "source_identified_conversions": 9,
+      "source_resolved_denominator": 12,
+      "source_unresolved_plays": 1
+    },
+    {
+      "team": "San Jose State",
+      "game_id": 401864494,
+      "official_conversions": 5,
+      "official_attempts": 11,
+      "source_attempts": 11,
+      "source_identified_conversions": 5,
+      "source_resolved_denominator": 6,
+      "source_unresolved_plays": 5
+    }
+  ],
+  "official_source_url": "https://d3jycsk0m72ya7.cloudfront.net/sports/football/stats/2026/san-jose-state/boxscore/35264",
+  "known_classification_warning": "Correct total third-down attempts and identified successful conversions do NOT establish a full play-level 0/1 outcome label for every attempt. Unresolved third-down outcomes remain missing; no false failure imputation.",
+  "metrics": {
+    "reference": {
+      "margin_mae": 15.35353,
+      "margin_rmse": 19.39477,
+      "total_mae": 12.76457,
+      "outright_brier": 0.224211,
+      "margin_p10p90_coverage": 0.68125,
+      "win_direction_accuracy": 0.625
+    },
+    "distance": {
+      "margin_mae": 15.35558,
+      "mae_change_vs_reference": -0.00206,
+      "bootstrap95": [
+        -0.02951,
+        0.02322
+      ],
+      "total_mae": 12.77806,
+      "outright_brier": 0.224227,
+      "interval_coverage": 0.675,
+      "win_direction_accuracy": 0.625
+    },
+    "sustain": {
+      "margin_mae": 15.38519,
+      "mae_change_vs_reference": -0.03166,
+      "bootstrap95": [
+        -0.0834,
+        0.01854
+      ],
+      "total_mae": 12.77472,
+      "outright_brier": 0.22476,
+      "interval_coverage": 0.675,
+      "win_direction_accuracy": 0.63125
+    },
+    "combined": {
+      "margin_mae": 15.36998,
+      "mae_change_vs_reference": -0.01646,
+      "bootstrap95": [
+        -0.07407,
+        0.03821
+      ],
+      "total_mae": 12.76824,
+      "outright_brier": 0.22501,
+      "interval_coverage": 0.68125,
+      "win_direction_accuracy": 0.63125
+    }
+  },
+  "scope": {
+    "latest_fixture_kickoff_in_pair": "2026-10-10T23:30:00Z",
+    "postgame_motivation_fixture": "401871070",
+    "motivation_fixture_in_training_or_evaluation": false,
+    "ats_bookmaker_lines_verified": false,
+    "early_matchups_missing_prior_games": 279
+  },
+  "magnitude": {
+    "mean_absolute_home_ppd_increment_combined": 0.022035,
+    "estimated_mean_absolute_relative_margin_effect_points_combined": 0.2865,
+    "interpretation": "very small within-model residual; this does not capture large rushing script swings"
+  },
+  "decision": {
+    "baseline_changed": false,
+    "existing_build16_normal_path_changed": false,
+    "optional_research_mode": "implemented but disabled by default",
+    "promote": false,
+    "reason": "No improvement to margin MAE; all improvements bootstrap interval includes zero; Brier worse. Motived after result. No ATS calibration."
+  },
+  "limitations": [
+    "Source PBP captured retrospectively; row publication times unverified",
+    "Several third downs have unresolved terminal outcomes; source attempts independently checked for USC vs SJSU only",
+    "Operational sustained drive means 3+ first-down series, not an official first-down sum",
+    "Bigger game-script effects require a distinct causal/empirical mechanism validated on historical earlier data",
+    "One challenger policy preserved; three modes are opt-in ablations of Build16, not separate published challengers"
+  ]
+}

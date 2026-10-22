@@ -1,0 +1,34 @@
+name: CFB rush-to-third-down chain research validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  paired-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Regression tests for standard baseline, current challenger and source extractor
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Capture independent free 2026 CFB PBP
+        run: python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/third_chain_snapshot
+      - name: Chronological same-seed 5000-run comparisons, up to 160 paired FBS games
+        run: |
+          python -m cfb.chain_study \
+             --snapshot cfb_artifacts/third_chain_snapshot \
+             --out cfb_artifacts/third_chain_research.json \
+             --runs 5000 --max-games 160
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-third-chain-research
+          path: cfb_artifacts/third_chain_research.json
+          if-no-files-found: warn
