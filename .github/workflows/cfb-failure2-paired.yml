@@ -1,0 +1,49 @@
+name: CFB Failure 2 real-source paired verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-failure2-paired.yml'
+      - 'cfb/failure2_paired.py'
+      - 'cfb/failure2_verify.py'
+
+permissions:
+  contents: read
+
+jobs:
+  paired:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Unit tests
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Get verified actual 2026 source snapshot
+        run: |
+          mkdir -p cfb_artifacts
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/failure2_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/failure2_snapshot
+      - name: Real-game official-score reconciliation coverage
+        run: |
+          python -m cfb.failure2_verify --snapshot cfb_artifacts/failure2_snapshot --out cfb_artifacts/failure2_actual_source_audit.json
+      - name: Paired unchanged versus corrected Build16, 5000 games each
+        run: |
+          python -m cfb.failure2_paired --snapshot cfb_artifacts/failure2_snapshot --out cfb_artifacts/failure2_paired_5000.json --max-games 12 --runs 5000
+      - name: Upload verification outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure2-actual-source-5000-paired-${{ github.run_id }}
+          path: |
+            cfb_artifacts/failure2_actual_source_audit.json
+            cfb_artifacts/failure2_paired_5000.json
+          if-no-files-found: warn
