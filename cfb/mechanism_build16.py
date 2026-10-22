@@ -343,7 +343,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                            'mean_away_score':r['mean_score_away'],
                            'scenario_inputs':change}
     answer={'status':'AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY','version':VERSION,
-       'adverse_sensitivity':{'counterfactuals':stress,'not_fitted':True},
+       'adverse_sensitivity':{'counterfactuals':stress,'not_fitted':True,
+                              'simulations_per_scenario':stress_runs},
        'simulation':out,'mean_margin_home':out['mean_margin_home'],
        'mean_score_home':out['mean_score_home'],'mean_score_away':out['mean_score_away'],
        'margin_p10_p50_p90':out['margin_p10_p50_p90'],
