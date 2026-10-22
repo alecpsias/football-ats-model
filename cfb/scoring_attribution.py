@@ -58,7 +58,7 @@ def attribute(raw, home_id, away_id, home_final, away_final):
             # be incorrectly counted as sustainable offensive production.
             flag=frame.iloc[k].get('offense_score_play')
             if is_off:
-                if pd.isna(flag) or not isinstance(flag,(bool,int)):
+                if pd.isna(flag) or flag not in (True,False):
                     return {**missing,'reason':'MISSING_OFFENSIVE_SCORE_CLASSIFICATION'}
                 if bool(flag) and points in (3,6,7,8):off[side]+=float(points)
                 elif not bool(flag) and points in (6,7,8):non[side]+=float(points)
