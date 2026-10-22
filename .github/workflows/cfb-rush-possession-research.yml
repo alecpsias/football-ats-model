@@ -1,0 +1,47 @@
+name: CFB Failure1 possession-based rushing scoring research
+on:
+  push:
+    branches: [cfb-possession-rush-mechanism-20261022]
+    paths:
+      - 'cfb/rush_possession_response.py'
+      - 'cfb/rush_possession_study.py'
+      - 'cfb/rush_possession_fit_2023.py'
+      - 'cfb/mechanism_build16.py'
+      - 'cfb/test_cfb_rush_possession_response.py'
+      - '.github/workflows/cfb-rush-possession-research.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  train-2023:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Verify all baseline/Build16 unit regressions and new possession-only interactions
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Collect open 2023 season final/clock/rushing data
+        run: python -m cfb.pipeline collect --season 2023 --out cfb_artifacts/possession_2023_source
+      - name: Simulate unchanged Build16 5000 times per game and build 2023 training records
+        run: |
+          python -m cfb.rush_possession_study \
+             --snapshot cfb_artifacts/possession_2023_source \
+             --out cfb_artifacts/possession_2023_fit_inputs.json \
+             --runs 5000 --max-games 180
+      - name: Freeze single drive-continuation coefficient on 2023 only
+        run: |
+          python -m cfb.rush_possession_fit_2023 \
+             --train-2023 cfb_artifacts/possession_2023_fit_inputs.json \
+             --out cfb_artifacts/possession_2023_frozen_fit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-possession-rush-2023-earlier-training
+          path: |
+            cfb_artifacts/possession_2023_fit_inputs.json
+            cfb_artifacts/possession_2023_frozen_fit.json
+          if-no-files-found: warn
