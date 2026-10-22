@@ -149,6 +149,15 @@ jobs:
             --out "cfb/archive/grades/${GITHUB_RUN_ID}.json"
           mkdir -p cfb_artifacts/forward_audit
           cp "cfb/archive/grades/${GITHUB_RUN_ID}.json" cfb_artifacts/forward_audit/latest.json
+      - name: Compare earliest same-snapshot frozen Build16 vs learned-rushing pair
+        run: |
+          mkdir -p cfb/archive/failure1_pairs
+          python -m cfb.failure1_paired_forward \
+            --forecasts cfb/archive/forecasts \
+            --odds cfb/archive/odds \
+            --schedule "$SNAPSHOT/schedule.parquet" \
+            --manifest "$SNAPSHOT/manifest.json" \
+            --out "cfb/archive/failure1_pairs/${GITHUB_RUN_ID}.json"
       - name: Evaluate genuine forward candidates without automatic promotion
         run: |
           python -m cfb.learn_forward \
@@ -159,7 +168,7 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add cfb/archive/forecasts cfb/archive/odds cfb/archive/finals cfb/archive/grades cfb/archive/learning
+          git add cfb/archive/forecasts cfb/archive/odds cfb/archive/finals cfb/archive/grades cfb/archive/learning cfb/archive/failure1_pairs
           git diff --cached --quiet && { echo "Nothing to archive"; exit 0; }
           git commit -m "Archive CFB forecasts, source-observed odds and final-score audit ${GITHUB_RUN_ID}"
           git pull --rebase origin main
