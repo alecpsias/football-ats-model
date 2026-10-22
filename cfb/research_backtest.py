@@ -154,7 +154,20 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays
     attack_side='home' if str(home_id)==str(team) else 'away'
     defense_side='away' if attack_side=='home' else 'home'
     verified=attribution['status']=='VERIFIED_RAW_SCORE_RECONCILIATION'
+    def turnovers_observed(df):
+        if not {'int','pos_fumble_lost'}.issubset(df.columns):
+            return None
+        if df[['int','pos_fumble_lost']].isna().any().any():
+            return None
+        return int((df['int'].eq(True)|df['pos_fumble_lost'].eq(True)).sum())
+    opp_turnovers=turnovers_observed(opp)
     return {'scoring_attribution':attribution,
+            'defensive_return_points':attribution['defensive_return_points'][attack_side] if verified else None,
+            'defensive_return_td_count':attribution['defensive_return_tds'][attack_side] if verified else None,
+            'defensive_return_td_allowed':attribution['defensive_return_tds'][defense_side] if verified else None,
+            'special_teams_points':attribution['special_teams_points'][attack_side] if verified else None,
+            'special_teams_td_count':attribution['special_teams_tds'][attack_side] if verified else None,
+            'opponent_turnovers_observed':opp_turnovers,
             'offensive_points':attribution['offensive_points'][attack_side] if verified else None,
             'offensive_points_conceded':attribution['offensive_points'][defense_side] if verified else None,
             'nonoffensive_points':attribution['nonoffensive_points'][attack_side] if verified else None,
