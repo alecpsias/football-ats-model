@@ -14,6 +14,7 @@ from cfb.research_backtest import observed_game
 from cfb.mechanism_build16 import simulate_build16
 from cfb.rush_severity_source import extract,append_training_record
 from cfb.mandatory_rushing_audit import audit as rushing_audit
+from cfb.failure1_ridge_correction import feature_vector,score as fitted_score
 
 def grade(rows,subset=None):
     if subset is not None:rows=[r for r in rows if subset(r)]
@@ -22,7 +23,9 @@ def grade(rows,subset=None):
     truth=np.array([r['actual_home_margin'] for r in rows],float)
     total=np.array([r['actual_total'] for r in rows],float)
     win=(truth>0).astype(float)
-    for label in ('reference','correction'):
+    labels=['reference','correction']
+    if all('learned_candidate' in r for r in rows):labels.append('learned_candidate')
+    for label in labels:
         p=np.array([r[label]['margin'] for r in rows],float)
         t=np.array([r[label]['total'] for r in rows],float)
         prob=np.array([r[label]['home_win_probability_raw'] for r in rows],float)
@@ -46,7 +49,7 @@ def grade(rows,subset=None):
         abs(r['correction']['margin']-r['reference']['margin']) for r in rows])),6)
     return summary
 
-def run(snapshot,out,*,max_games=180,runs=5000,min_prior_games=3):
+def run(snapshot,out,*,max_games=180,runs=5000,min_prior_games=3,fitted_model=None):
     if runs!=5000:raise ValueError('Every paired variant must have exactly 5000 draws')
     root=Path(snapshot);m=verify(root)
     cutoff=iso_utc(m['captured_at_utc'])
@@ -86,7 +89,18 @@ def run(snapshot,out,*,max_games=180,runs=5000,min_prior_games=3):
                     from cfb.matchups import matchup_signals
                     signal=matchup_signals(hid,aid,history)
                     screen=rushing_audit(hid,aid,history,signal)
-                    rows.append({'game_id':str(g.game_id),'kickoff':kickoff.isoformat(),
+                    features=feature_vector(hid,aid,history)
+                    correction_score=(fitted_score(fitted_model,features)
+                                      if fitted_model is not None else None)
+                    learned=None
+                    if (correction_score is not None and
+                        correction_score['status']=='VALID_FROZEN_MODEL_PREGAME_RUSH_CORRECTION'):
+                        learned=simulate_build16(hid,aid,history,bool(g.neutral_site),
+                          runs=runs,seed=seed,failure1_fit_margin_delta=correction_score['margin_points'])
+                    one={'game_id':str(g.game_id),'kickoff':kickoff.isoformat(),
+                      'year':int(kickoff.year),
+                      'features':features['vector'] if features['status']=='AVAILABLE_PREGAME_RUSH_VECTOR' else None,
+                      'fitted_model_evidence':correction_score,
                       'home':str(g.home_team),'away':str(g.away_team),
                       'prior_games_home':len(history[hid]),'prior_games_away':len(history[aid]),
                       'severe_screen_ex_ante':screen['requires_full_rush_stress'],
@@ -97,7 +111,12 @@ def run(snapshot,out,*,max_games=180,runs=5000,min_prior_games=3):
                       'actual_total':float(g.home_points+g.away_points),
                       'seed':seed,'reference':stats(ref),'correction':stats(alt),
                       'unfitted_ppd_home':alt['mismatch_research']['ppd_home_delta'],
-                      'unfitted_ppd_away':alt['mismatch_research']['ppd_away_delta']})
+                      'unfitted_ppd_away':alt['mismatch_research']['ppd_away_delta'],
+                      'reference_margin':ref['mean_margin_home'],
+                      'actual_margin':float(g.home_points-g.away_points)}
+                    if learned is not None and learned.get('simulation') is not None:
+                        one['learned_candidate']=stats(learned)
+                    rows.append(one)
                 else:
                     fail['candidate_or_reference_missing']+=1
             elif len(rows)<max_games:fail['insufficient_prior_games']+=1
@@ -127,6 +146,10 @@ def run(snapshot,out,*,max_games=180,runs=5000,min_prior_games=3):
              'ordinary':grade(rows,lambda r:not r['severe_screen_ex_ante']),
              'negative_advantage_home':grade(rows,lambda r:r['home_negative_rate_excess'] is not None and r['home_negative_rate_excess']<-.03),
              'negative_advantage_away':grade(rows,lambda r:r['away_negative_rate_excess'] is not None and r['away_negative_rate_excess']<-.03)},
+       'fitted_model_year':fitted_model['fit_year'] if fitted_model else None,
+       'qualified_ridge_feature_games':sum(r['features'] is not None for r in rows),
+       'tested_ridge_candidate_games':sum('learned_candidate' in r for r in rows),
+       'learned_candidate_qualified_metrics':grade([r for r in rows if 'learned_candidate' in r]),
        'replays':rows,'promotion_automatically_authorized':False,
        'requires_untouched_prospective_ATS':True,
        'uncertainties':['Retroactively captured rows are not point-in-time proof',
@@ -143,6 +166,8 @@ if __name__=='__main__':
     p=argparse.ArgumentParser()
     p.add_argument('--snapshot',required=True);p.add_argument('--out',required=True)
     p.add_argument('--runs',type=int,default=5000);p.add_argument('--max-games',type=int,default=180)
+    p.add_argument('--fitted-model')
     a=p.parse_args()
-    d=run(a.snapshot,a.out,max_games=a.max_games,runs=a.runs)
+    frozen=json.loads(Path(a.fitted_model).read_text()) if a.fitted_model else None
+    d=run(a.snapshot,a.out,max_games=a.max_games,runs=a.runs,fitted_model=frozen)
     print(json.dumps({k:v for k,v in d.items() if k!='replays'},indent=2))
