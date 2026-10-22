@@ -74,6 +74,25 @@ class ClockAuditTests(unittest.TestCase):
         self.assertEqual(r['usc_possession_seconds']+r['sjsu_possession_seconds'],3600)
         self.assertEqual((r['usc_rushes'],r['sjsu_rushes']),(40,24))
 
+    def test_sacks_are_rushing_attempts_in_ncaabox_not_pass_attempts(self):
+        x=plays()
+        x['sack']=False
+        x.loc[x.game_play_number==4,'sack']=True
+        z=audit_game(x,100,30,23)
+        self.assertEqual(z['teams']['30']['rush_plays'],2)
+        self.assertEqual(z['teams']['23']['pass_plays'],2)
+        self.assertEqual(z['teams']['30']['official_rush_attempts'],2)
+        self.assertEqual(z['teams']['23']['official_rush_attempts'],1)
+        self.assertEqual(z['teams']['23']['official_pass_attempts'],1)
+        self.assertEqual(z['teams']['23']['sack_reclassification_count'],1)
+
+    def test_sack_reclassification_ambiguous_fails_closed(self):
+        x=plays()
+        x['sack']=False
+        x.loc[x.game_play_number==2,'sack']=True # rush flagged, bad input
+        z=audit_game(x,100,30,23)
+        self.assertEqual(z['excluded']['ambiguous_sack_play_classification'],1)
+
     def test_prediction_metric_uses_fixed_cohort(self):
         self.assertEqual(_metric([1,2],[1,3])['mae'],.5)
 
