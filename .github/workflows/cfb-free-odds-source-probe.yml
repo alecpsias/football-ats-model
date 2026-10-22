@@ -1,0 +1,23 @@
+name: CFB public odds endpoint source diagnosis
+on:
+  push:
+    branches: [cfb-free-odds-source-reconciliation-20261022]
+    paths: ['cfb/free_odds_source_probe.py','.github/workflows/cfb-free-odds-source-probe.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m cfb.free_odds_source_probe --out cfb_artifacts/free_odds_source_probe.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-public-odds-source-structure-20261022
+          path: cfb_artifacts/free_odds_source_probe.json
