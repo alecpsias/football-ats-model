@@ -219,6 +219,8 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
 
 
 def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None):
+    if sum(v is not None for v in (rush_research,chain_research,mismatch_research))>1:
+        raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
         raise ValueError('Stress runs must be 0 or 100..10000')
     home=project_integrated(home_id,away_id,histories,neutral,'home')
