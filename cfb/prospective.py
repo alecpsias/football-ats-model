@@ -23,7 +23,8 @@ from cfb.personnel_effects import (quarterback_effects, skill_player_exposures,
                                    simulate_personnel_scenarios, other_position_availability)
 from cfb.pipeline import verify, split_games, normalize_pbp_teams, iso_utc
 from cfb.research_backtest import observed_game, project
-from cfb.failure1_shadow import include_prior_game,shadow
+from cfb.failure1_shadow import include_prior_game
+from cfb.failure1_learned_shadow import shadow as fitted_rush_shadow
 from cfb.mandatory_rushing_audit import audit as rushing_audit, gate as rushing_gate
 
 
@@ -118,16 +119,18 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
                         stress_runs=(5000 if runs==5000 and
                                      rush_screen['requires_full_rush_stress'] else 0))
             rush_gate=rushing_gate(rush_screen,challenger,None)
-            # Production protocol is always 5,000; existing unit fixtures
-            # deliberately request small-run baselines. In those fixtures the
-            # shadow abstains rather than misrepresenting 120 runs as 5,000.
-            negative_shadow=(shadow(hid,aid,histories,neutral,
+            # Replace the unvalidated fixed negative-run shadow with the
+            # 2023-only-fitted rushing mismatch mechanism. The one published
+            # Build16 Challenger is unchanged; this is a research counterfactual.
+            # Existing 120-run software fixtures abstain, never fake 5000.
+            learned_shadow=(fitted_rush_shadow(hid,aid,histories,neutral,
                          runs=runs,seed=int(g.game_id)%(2**32),
                          source_manifest_sha256=manifest_sha)
                  if runs==5000 else {
-                    'status':'RESEARCH_SHADOW_NOT_RUN_NONSTANDARD_SIMULATION_COUNT',
-                    'mode':'negative','runs':0,'projected_margin_home':None,
-                    'market_quote':None,'bet_recommendation':None})
+                    'status':'NOT_RUN_NONSTANDARD_SIMULATION_COUNT',
+                    'mode':'previously_fitted_rushing_interaction','runs':0,
+                    'projected_margin_home':None,'market_quote':None,
+                    'bet_recommendation':None})
             # Prepared from the *same* pre-kickoff history as the primary model.
             qbs={'home':quarterback_usage(mapped,roster,history,hid),
                  'away':quarterback_usage(mapped,roster,history,aid)}
@@ -141,7 +144,10 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
                 runs=runs,seed=int(g.game_id)%(2**32))
             base.update({'mandatory_rushing_audit':rush_screen,
                          'rushing_ats_risk_gate':rush_gate,
-                         'failure1_negative_run_shadow':negative_shadow,
+                         'failure1_negative_run_shadow':{
+                             'status':'RETIRED_BY_2023_FITTED_LEARNED_SHADOW',
+                             'runs':0,'mode':'negative','bet_recommendation':None},
+                         'failure1_learned_rush_shadow':learned_shadow,
                          'failure1_shadow_distinct_active_challenger':False,
                          'build16_challenger':challenger,
                          'build16_not_primary':True,
@@ -169,9 +175,13 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
                          'rushing_ats_risk_gate':rushing_gate(rush_screen,None,None)})
             base.update({'completed_prior_games_home':len(histories[hid]),
                          'completed_prior_games_away':len(histories[aid]),
-                         'failure1_negative_run_shadow':{'status':'INSUFFICIENT_PRIOR_GAMES',
-                            'mode':'negative','runs':0,'projected_margin_home':None,
-                            'market_quote':None,'bet_recommendation':None}})
+                         'failure1_negative_run_shadow':{
+                            'status':'RETIRED_BY_2023_FITTED_LEARNED_SHADOW','runs':0},
+                         'failure1_learned_rush_shadow':{
+                            'status':'INSUFFICIENT_PRIOR_GAMES',
+                            'mode':'previously_fitted_rushing_interaction','runs':0,
+                            'projected_margin_home':None,'market_quote':None,
+                            'bet_recommendation':None}})
         if now is None and datetime.now(timezone.utc) >= g['_kickoff'].to_pydatetime():
             # Fail closed rather than publish a retrospective 'pregame' forecast.
             raise ValueError('Fixture kicked off during forecast generation; refusing freeze')
