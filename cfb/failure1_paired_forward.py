@@ -153,6 +153,30 @@ def evaluate(forecast_root,odds_root,schedule,captured_at,source_url,source_sha2
     first_all=load_all_archives(forecast_root)
     pairs,load_info=load_first_frozen_pairs(forecast_root)
     quotes=load_quotes(odds_root)
+    # Describe frozen pregame disagreement even before any final exists.
+    # This is NOT a statement of predictive accuracy or ATS value.
+    model_shifts=[]
+    for gid,p in pairs.items():
+        original=p['build16_challenger']
+        learned=p['failure1_learned_rush_shadow']
+        base=float(original['mean_margin_home'])
+        alt=float(learned['projected_margin_home'])
+        model_shifts.append({'game_id':gid,'home':p['home'],'away':p['away'],
+            'kickoff_utc':p['kickoff_utc'],
+            'build16_predicted_home_margin':round(base,5),
+            'learned_predicted_home_margin':round(alt,5),
+            'forecast_margin_change':round(alt-base,5),
+            'severe_rushing_screen':bool((p.get('mandatory_rushing_audit') or {}).get('requires_full_rush_stress'))})
+    average_abs_shift=(round(sum(abs(x['forecast_margin_change']) for x in model_shifts)/
+                      len(model_shifts),5) if model_shifts else None)
+    quoted_pairs=0
+    for gid,p in pairs.items():
+        q=quotes.get(gid)
+        if q and q['home']==p['home'] and q['away']==p['away'] and (
+             max(_date(q['observed_at_utc'],'market'),
+                 _date(p['prediction_generated_at_utc'],'pair issued'))<
+             _date(p['kickoff_utc'],'kickoff')):
+            quoted_pairs+=1
     source={str(x.game_id):x for x in schedule.itertuples(index=False)}
     scored=[];pending=[]
     for gid,p in sorted(pairs.items(),key=lambda x:(x[1]['kickoff_utc'],x[0])):
@@ -233,6 +257,17 @@ def evaluate(forecast_root,odds_root,schedule,captured_at,source_url,source_sha2
         'final_schedule_observed_at_utc':cutoff.isoformat(),
         'source_archive_verification':load_info,
         'first_eligible_paired_forecast_games':len(pairs),
+        'pregame_paired_model_differences':{
+            'games':len(model_shifts),
+            'avg_abs_change_in_predicted_margin':average_abs_shift,
+            'most_divergent_upcoming_margins':sorted(model_shifts,
+                 key=lambda x:-abs(x['forecast_margin_change']))[:5],
+            'severe_rushing_screen_games':sum(x['severe_rushing_screen'] for x in model_shifts),
+            'changed_outright_winner_direction':sum(
+                 (x['build16_predicted_home_margin']>0)!=
+                 (x['learned_predicted_home_margin']>0) for x in model_shifts),
+            'not_a_forward_accuracy_measure':True},
+        'first_eligible_paired_games_with_any_real_pre_kickoff_quote':quoted_pairs,
         'first_paired_not_first_ever_forecast':sum(
              bool(first_all.get(gid) and first_all[gid]['original_forecast_run_id']!=p['paired_forecast_archive_run_id'])
              for gid,p in pairs.items()),
