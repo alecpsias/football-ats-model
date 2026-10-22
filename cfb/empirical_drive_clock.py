@@ -11,7 +11,7 @@ from collections import Counter
 import math
 import numpy as np
 import pandas as pd
-from cfb.clock_possession_validation import audit_game
+from cfb.clock_possession_validation import audit_game, _identifier
 
 LABELS=('explosive_td','chain_score','turnover','stalled')
 VERSION='cfb-verified-drive-clock-outcome-v1'
@@ -51,6 +51,8 @@ def observe(raw,plays,team,opponent,home_id):
              'excluded_drive_reasons':audit.get('excluded',{})}
     if audit['status']!='COMPLETE_REGULATION_CLOCK_AUDIT':
         return summary
+    raw_drive_column=_identifier(raw)
+    if raw_drive_column is None:return {**summary,'status':'MISSING_RAW_DRIVE_IDENTIFIER'}
     clocks={str(d['drive_id']):d for d in audit['drives']
             if d['clock_verification']=='ELAPSED_AND_ENDPOINTS_AGREE'}
     groups={}
@@ -61,7 +63,7 @@ def observe(raw,plays,team,opponent,home_id):
         for drive_id,g in scrim.groupby('drive_id',sort=False):
             clock=clocks.get(str(drive_id))
             if clock is None or clock['team_id']!=int(tid):continue
-            p=raw_drive.loc[raw_drive.drive_id.eq(drive_id)]
+            p=raw_drive.loc[raw_drive[raw_drive_column].astype(str).eq(str(drive_id))]
             category=_category(g,p)
             duration=clock['duration_seconds']
             if category is None or not type(duration) in (int,float) or not 0<=duration<=900:
