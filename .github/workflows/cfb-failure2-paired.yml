@@ -8,6 +8,8 @@ on:
       - '.github/workflows/cfb-failure2-paired.yml'
       - 'cfb/failure2_paired.py'
       - 'cfb/failure2_verify.py'
+      - 'cfb/game_script.py'
+      - 'cfb/mechanism_build16.py'
 
 permissions:
   contents: read
