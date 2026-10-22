@@ -79,7 +79,10 @@ class Failure2Tests(unittest.TestCase):
                           'game_play_number':[170],'home_score':[38],
                           'away_score':[20], 'pos_team_id':[235],
                           'type.text':['Punt Return Touchdown'],
-                          'text':['Cam Bates 72 yd punt return TOUCHDOWN']})
+                          'text':['Cam Bates 72 yd punt return TOUCHDOWN'],
+                          'offense_score_play':[False],
+                          'pass':[False],'rush':[False],
+                          'int':[False],'pos_fumble_lost':[False]})
         out=attribute(raw,999,235,38,20)
         self.assertEqual(out['status'],'VERIFIED_RAW_SCORE_RECONCILIATION')
         self.assertEqual(out['verification_method'],
@@ -93,7 +96,10 @@ class Failure2Tests(unittest.TestCase):
                           'game_play_number':[192],'home_score':[30],
                           'away_score':[17],'pos_team_id':[151],
                           'type.text':['Interception Return Touchdown'],
-                          'text':['Gulley interception return TOUCHDOWN']})
+                          'text':['Gulley interception return TOUCHDOWN'],
+                          'offense_score_play':[False],
+                          'pass':[True],'rush':[False],
+                          'int':[True],'pos_fumble_lost':[False]})
         out=attribute(raw,5,151,30,17)
         self.assertEqual(out['status'],'VERIFIED_RAW_SCORE_RECONCILIATION')
         self.assertEqual(out['defensive_return_points']['home'],6)
