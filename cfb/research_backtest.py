@@ -289,7 +289,7 @@ def replay(snapshot, out, runs=1500, min_games=3):
             if plays is None:
                 continue
             h=observed_game(plays,home,away,g.home_points,g.away_points,qb_ids.get(home,set()),
-                            special_plays=raw_by_game.get(g.game_id))
+                            special_plays=raw_by_game.get(g.game_id),home_id=home)
             a=observed_game(plays,away,home,g.away_points,g.home_points,qb_ids.get(away,set()),
                             special_plays=raw_by_game.get(g.game_id))
             if h is None or a is None:
