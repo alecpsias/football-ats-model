@@ -45,9 +45,9 @@ class Failure3Tests(unittest.TestCase):
 
     def test_bounded_opponent_matchup_and_conservative_missing(self):
         h=decorated()
-        frozen=copy.deepcopy(h)
         for rows in h.values():
             for row in rows:row['sustainability']=rec()
+        frozen=copy.deepcopy(h)
         result=correction(1,2,h)
         self.assertEqual(result['status'],'ACTIVE_BUILD16_UNCALIBRATED_FAILURE3')
         self.assertTrue(-.32<=result['ppd_home']<0)
@@ -59,7 +59,7 @@ class Failure3Tests(unittest.TestCase):
         self.assertNotEqual(a['simulation']['mean_total'],b['simulation']['mean_total'])
         self.assertEqual(a['simulation']['simulations'],5000)
         self.assertEqual(b['simulation']['simulations'],5000)
-        self.assertEqual(h,frozen if False else h)
+        self.assertEqual(h,frozen)
         self.assertEqual(a['failure3_sustainability']['status'],
                          'DISABLED_FOR_PAIRED_FAILURE3_REFERENCE')
         self.assertEqual(b['failure3_sustainability']['status'],
