@@ -1,0 +1,57 @@
+name: CFB rushing possession 2023-fit independent 2024-2026 holdout
+on:
+  push:
+    branches: [cfb-possession-rush-mechanism-20261022]
+    paths: ['.github/workflows/cfb-rush-possession-holdout.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  holdout:
+    strategy:
+      fail-fast: false
+      matrix:
+        season: [2024, 2025, 2026]
+    runs-on: ubuntu-latest
+    timeout-minutes: 48
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Ensure baseline and one unchanged standard Build16 pass regressions
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - uses: actions/download-artifact@v4
+        with:
+          name: cfb-possession-rush-2023-earlier-training
+          repository: alecpsias/football-ats-model
+          run-id: 39843826367
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: cfb_artifacts/frozen_training
+      - name: Apply the identical 2023-only fitted parameter
+        run: |
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('cfb_artifacts/frozen_training/possession_2023_frozen_fit.json')
+          x=json.loads(p.read_text())
+          assert x['trained_year']==2023
+          assert x['train_games']>=75
+          print('FROZEN_PREVALIDATION_FIT',json.dumps(x))
+          PY
+      - name: Collect independent free source year ${{ matrix.season }}
+        run: python -m cfb.pipeline collect --season ${{ matrix.season }} --out cfb_artifacts/possession_${{ matrix.season }}_source
+      - name: Validate actual 5000-draw same-seed possession + baseline distribution
+        run: |
+          python -m cfb.rush_possession_study \
+             --snapshot cfb_artifacts/possession_${{ matrix.season }}_source \
+             --out cfb_artifacts/possession_${{ matrix.season }}_holdout.json \
+             --frozen-fit cfb_artifacts/frozen_training/possession_2023_frozen_fit.json \
+             --runs 5000 --max-games 180
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-possession-rushing-holdout-${{ matrix.season }}
+          path: cfb_artifacts/possession_${{ matrix.season }}_holdout.json
+          if-no-files-found: warn
