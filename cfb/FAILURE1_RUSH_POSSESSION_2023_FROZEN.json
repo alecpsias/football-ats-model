@@ -1,0 +1,12 @@
+{
+  "version": "cfb-possession-rushing-opponent-residual-v1",
+  "trained_year": 2023,
+  "train_games": 180,
+  "ridge_prior_strength": 25,
+  "continuation_points_per_extra_drive": -1.662395245,
+  "absolute_ppd_cap": 0.22,
+  "max_verified_clock_shared_drives_shift": 0.65,
+  "clock_reliability_prior_drives": 60,
+  "not_ATS_calibrated": true,
+  "trained_on_reference_margin_residual_only": true
+}
