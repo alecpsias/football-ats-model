@@ -7,6 +7,9 @@ on:
     paths:
       - '.github/workflows/cfb-failure3-paired.yml'
       - 'cfb/sustainability.py'
+      - 'cfb/drive_sustainability_process.py'
+      - 'cfb/game_script.py'
+      - 'cfb/test_cfb_failure3_possession.py'
       - 'cfb/failure3_paired.py'
       - 'cfb/test_cfb_failure3_sustainability.py'
       - 'cfb/mechanism_build16.py'
