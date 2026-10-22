@@ -162,6 +162,34 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                     'build16_same_game_absolute_error':round(abs(base16-actual),5),
                     'mae_gain_vs_frozen_build16':round(abs(base16-actual)-abs(float(value)-actual),5),
                     'recomputed_after_kickoff':False,'not_deployed':True}
+        # New single within-Build16 scored rushing shadow: only earliest
+        # source-hashed PRE-KICKOFF 2023-model parameters, never refit after
+        # discovering the result or given a new opponent game box score.
+        learned=p.get('failure1_learned_rush_shadow')
+        if isinstance(learned,dict) and learned.get('status')=='FROZEN_2023_FITTED_RUSH_SHADOW_5000':
+            if learned.get('runs')!=5000 or learned.get('fitted_year')!=2023:
+                raise ValueError('Invalid frozen learned rushing protocol '+gid)
+            if learned.get('source_manifest_sha256')!=p.get('source_snapshot_manifest_sha256'):
+                raise ValueError('Learned rushing source manifest mismatch '+gid)
+            if not isinstance(learned.get('frozen_fitted_model_sha256'),str) or len(learned['frozen_fitted_model_sha256'])!=64:
+                raise ValueError('Unverified frozen fitted model checksum '+gid)
+            value=learned.get('projected_margin_home')
+            if type(value) not in (int,float) or not math.isfinite(value):
+                raise ValueError('Invalid originally frozen rush forecast '+gid)
+            if 'build16_challenger' not in row:raise ValueError('Missing same-game frozen Build16')
+            baseline=row['build16_challenger']['projected_home_margin']
+            row['failure1_learned_rush_shadow']={
+                'status':'ORIGINAL_FROZEN_FITTED_RUSH_RESEARCH',
+                'protocol':learned['protocol'],'trained_year':2023,
+                'fitted_model_sha256':learned['frozen_fitted_model_sha256'],
+                'source_manifest_sha256':learned['source_manifest_sha256'],
+                'projected_home_margin':float(value),
+                'frozen_margin_delta_points':learned['margin_delta_points'],
+                'frozen_simulation_count':5000,
+                'margin_absolute_error':round(abs(value-actual),5),
+                'same_game_build16_absolute_error':round(abs(baseline-actual),5),
+                'margin_mae_gain_vs_build16':round(abs(baseline-actual)-abs(value-actual),5),
+                'resimulated_after_kickoff':False,'not_deployed':True}
         # Personnel cases were frozen as counterfactual sensitivities. Without
         # independently confirmed pregame starter assignments they cannot be
         # selected with hindsight and scored as an honest forward prediction.
@@ -223,6 +251,19 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                     sh['ats_correct_excluding_push_noedge']=(
                         side==outcome if side!='NO_EDGE' and outcome!='PUSH' else None)
                     sh['book_original_publication_time_verified']=False
+                # Same real jointly observed pre-kickoff quote, no invented
+                # sportsbook publication clock and no back-dated bet.
+                learned=row.get('failure1_learned_rush_shadow')
+                if isinstance(learned,dict):
+                    ed=learned['projected_home_margin']+spread
+                    side='HOME' if ed>1e-8 else 'AWAY' if ed< -1e-8 else 'NO_EDGE'
+                    learned.update({'observed_signed_spread_home':spread,
+                       'quote_observed_at_utc':m['observed_at_utc'],
+                       'research_ats_side_at_capture':side,
+                       'ats_result':outcome,
+                       'cover_correct_no_push_or_no_edge':(side==outcome if
+                          side!='NO_EDGE' and outcome!='PUSH' else None),
+                       'original_book_quote_time_verified':False})
                 # Same verified, jointly pre-kickoff quote: compare the ONE
                 # frozen Build16 alternative independently of baseline.
                 build16=row.get('build16_challenger')
@@ -277,6 +318,26 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
        'ats_accuracy_excluding_push_or_noedge':(round(sum(x is True for x in f1_actual)/len(f1_actual),5) if f1_actual else None),
        'ats_calibrated':False,'future_promotion_automatic':False,
        'research_only':True}
+    learned_pairs=[r['failure1_learned_rush_shadow'] for r in scored
+                   if 'failure1_learned_rush_shadow' in r]
+    learned_quoted=[z for z in learned_pairs if 'research_ats_side_at_capture' in z]
+    learned_decisions=[z['cover_correct_no_push_or_no_edge'] for z in learned_quoted
+                       if z['cover_correct_no_push_or_no_edge'] is not None]
+    learned_forward={'status':'PROSPECTIVE_FROZEN_NOT_DEPLOYED',
+       'paired_margin_games':len(learned_pairs),
+       'reference_margin_mae':(round(sum(z['same_game_build16_absolute_error']
+           for z in learned_pairs)/len(learned_pairs),5) if learned_pairs else None),
+       'learned_margin_mae':(round(sum(z['margin_absolute_error']
+           for z in learned_pairs)/len(learned_pairs),5) if learned_pairs else None),
+       'paired_gain':(round(sum(z['margin_mae_gain_vs_build16']
+           for z in learned_pairs)/len(learned_pairs),5) if learned_pairs else None),
+       'same_pre_kickoff_quote_cases':len(learned_quoted),
+       'decisive_quote_cases':len(learned_decisions),
+       'quoted_cover_correct':sum(x is True for x in learned_decisions),
+       'quoted_cover_wrong':sum(x is False for x in learned_decisions),
+       'cover_accuracy_research_only':(round(sum(x is True for x in learned_decisions)/
+          len(learned_decisions),5) if learned_decisions else None),
+       'not_deployed':True,'no_automatic_promotion':True,'ATS_calibrated':False}
     personnel_forward={'status':'NOT_GRADED_UNCONFIRMED_PREGAME_STARTERS',
         'games_with_frozen_conditional_evidence':sum('conditional_personnel_research' in r for r in scored),
         'games_with_conditional_scenarios':sum(r.get('conditional_personnel_research',{}).get('scenario_count',0)>0 for r in scored),
@@ -307,6 +368,7 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                   if any('build16_challenger' in r for r in scored) else None),
               'not_primary':True},
           'failure1_negative_run_shadow_forward':f1_forward,
+          'failure1_learned_rush_shadow_forward':learned_forward,
           'personnel_conditional_forward':personnel_forward,
           'ats_provisional':{'complete_observed_quoted_games':len(ats),
             'research_decisions':len(graded),'wins':w,'losses':losses,'pushes':pushes,
