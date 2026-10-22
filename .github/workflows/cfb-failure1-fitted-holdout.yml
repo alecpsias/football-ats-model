@@ -1,0 +1,47 @@
+name: CFB Failure 1 earlier-year-fitted rushing correction holdout
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  strictly-chronological:
+    runs-on: ubuntu-latest
+    timeout-minutes: 48
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Full CFB baseline and Build16 regressions
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Train SOURCE games strictly from 2023
+        run: |
+          python -m cfb.pipeline collect --season 2023 --out cfb_artifacts/f1_ridge_train_source
+          python -m cfb.failure1_quantitative_validation \
+             --snapshot cfb_artifacts/f1_ridge_train_source \
+             --out cfb_artifacts/f1_ridge_2023_train.json \
+             --runs 5000 --max-games 180
+          python -m cfb.failure1_fit_2023 \
+             --train-2023 cfb_artifacts/f1_ridge_2023_train.json \
+             --out cfb_artifacts/f1_ridge_frozen_2023.json
+      - name: Test frozen learned coefficient ONLY on 2024
+        run: |
+          python -m cfb.pipeline collect --season 2024 --out cfb_artifacts/f1_ridge_holdout_source
+          python -m cfb.failure1_quantitative_validation \
+             --snapshot cfb_artifacts/f1_ridge_holdout_source \
+             --out cfb_artifacts/f1_ridge_2024_holdout.json \
+             --runs 5000 --max-games 180 \
+             --fitted-model cfb_artifacts/f1_ridge_frozen_2023.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-failure1-2023-fit-2024-fitted-holdout
+          path: |
+            cfb_artifacts/f1_ridge_2023_train.json
+            cfb_artifacts/f1_ridge_frozen_2023.json
+            cfb_artifacts/f1_ridge_2024_holdout.json
+          if-no-files-found: warn

@@ -1,0 +1,38 @@
+name: CFB Failure 1 quantitative rushing correction independent seasons
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixed-season:
+    strategy:
+      fail-fast: false
+      matrix:
+        season: [2023, 2024]
+    runs-on: ubuntu-latest
+    timeout-minutes: 48
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Check baseline and existing Challenger regressions
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Collect independent free PBP season
+        run: python -m cfb.pipeline collect --season ${{ matrix.season }} --out cfb_artifacts/f1_${{ matrix.season }}_source
+      - name: Frozen correction 5000-draw paired simulation
+        run: |
+          python -m cfb.failure1_quantitative_validation \
+            --snapshot cfb_artifacts/f1_${{ matrix.season }}_source \
+            --out cfb_artifacts/f1_${{ matrix.season }}_results.json \
+            --runs 5000 --max-games 180
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-f1-negative-run-frozen-${{ matrix.season }}
+          path: cfb_artifacts/f1_${{ matrix.season }}_results.json
+          if-no-files-found: warn

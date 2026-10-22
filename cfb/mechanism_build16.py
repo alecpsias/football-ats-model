@@ -218,8 +218,8 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
                     'disruption_scoring_policy':'No incremental scoring coefficient until independent evidence'}}
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None):
-    if sum(v is not None for v in (rush_research,chain_research,mismatch_research))>1:
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None):
+    if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
         raise ValueError('Stress runs must be 0 or 100..10000')
@@ -306,6 +306,21 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         if mismatch_research in ('resilience','combined'):
             profile['home']['trailing_rush_resilience_ppd']=mismatch_evidence['home_trailing_only_ppd']
             profile['away']['trailing_rush_resilience_ppd']=mismatch_evidence['away_trailing_only_ppd']
+    # Lab-only, learned in an EARLIER year and bounded in home-margin points.
+    # Translate one signed margin change into PPD using equal-and-opposite
+    # shifts to the two teams' drive scoring. This changes actual simulated
+    # margin distributions, NOT a posthoc edit to the mean prediction.
+    fitted_delta=None
+    if failure1_fit_margin_delta is not None:
+        if type(failure1_fit_margin_delta) not in (float,int):
+            raise ValueError('Fitted rushing margin adjustment must be numeric')
+        fitted_delta=float(failure1_fit_margin_delta)
+        if not np.isfinite(fitted_delta) or abs(fitted_delta)>3.0:
+            raise ValueError('Fitted rushing correction must be capped at ±3.0 points')
+        drives=(float(h['expected_drives'])+float(a['expected_drives']))/2
+        if not 6<=drives<=19:raise ValueError('Invalid expected drives')
+        h['_ppd']=float(np.clip(h['_ppd']+fitted_delta/(2*drives),.35,5.5))
+        a['_ppd']=float(np.clip(a['_ppd']-fitted_delta/(2*drives),.35,5.5))
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
     out=simulate_script(h,a,histories[home_id],histories[away_id],runs=runs,seed=seed,
@@ -358,5 +373,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         answer['not_deployed']=True
     if mismatch_evidence is not None:
         answer['mismatch_research']=mismatch_evidence
+        answer['not_deployed']=True
+    if fitted_delta is not None:
+        answer['failure1_fitted_rushing_margin_delta']=fitted_delta
         answer['not_deployed']=True
     return answer

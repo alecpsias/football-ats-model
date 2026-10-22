@@ -1,0 +1,64 @@
+name: CFB Failure1 learned scoring forward-shadow integration
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 48
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: All CFB baseline, Build16 and prospective frozen test cases
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Collect current free 2026 as-of data
+        run: python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/f1_new_shadow_source
+      - name: Freeze real future 5000-run model and learned shadow only
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          python -m cfb.prospective \
+            --snapshot cfb_artifacts/f1_new_shadow_source \
+            --out cfb_artifacts/f1_new_shadow_frozen \
+            --runs 5000 --days 7 \
+            --git-sha "$COMMIT_SHA" --github-run-id "$RUN_ID"
+      - name: Gate 2023-model and source hash in every eligible frozen fixture
+        run: |
+          python - <<'PY'
+          import hashlib,json,pathlib
+          folder=pathlib.Path('cfb_artifacts/f1_new_shadow_frozen')
+          i=json.loads((folder/'index.json').read_text())
+          model_hash=hashlib.sha256(pathlib.Path('cfb/FAILURE1_RIDGE_2023_FROZEN.json').read_bytes()).hexdigest()
+          c={'frozen_games':i['game_records'],'evaluated':0,'unavailable':0,'valid_fitted':0}
+          for item in i['predictions']:
+              g=json.loads((folder/item['file']).read_text())
+              assert g['failure1_negative_run_shadow']['status'].startswith('RETIRED_')
+              z=g.get('failure1_learned_rush_shadow')
+              assert z
+              assert g.get('mandatory_rushing_audit') and g.get('rushing_ats_risk_gate')
+              if g['status']=='FROZEN_CFB_RESEARCH_MARGIN_NO_ATS_GRADE':
+                  c['evaluated']+=1
+                  assert z['runs']==5000
+                  assert z['frozen_fitted_model_sha256']==model_hash
+                  assert z['source_manifest_sha256']==g['source_snapshot_manifest_sha256']
+                  c['valid_fitted']+=int(z['status']=='FROZEN_2023_FITTED_RUSH_SHADOW_5000')
+                  c['unavailable']+=int(z['status']=='UNAVAILABLE_PREKICKOFF_RUSH_EVIDENCE')
+              else:
+                  assert z['status']=='INSUFFICIENT_PRIOR_GAMES'
+          print(json.dumps(c,indent=2))
+          assert c['frozen_games']>0
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-failure1-forward-learned-shadow-provenance
+          path: cfb_artifacts/f1_new_shadow_frozen/
+          if-no-files-found: warn

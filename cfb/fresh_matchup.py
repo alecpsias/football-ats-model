@@ -21,6 +21,7 @@ from cfb.advanced_scoring import simulate_challenger
 from cfb.game_script import simulate_script, adverse_scripts
 from cfb.mechanism_build16 import simulate_build16
 from cfb.failure1_shadow import include_prior_game
+from cfb.failure1_learned_shadow import shadow as learned_rushing_shadow
 from cfb.mandatory_rushing_audit import audit as rushing_audit, gate as rushing_gate
 from cfb.market import _date
 from cfb.matchups import matchup_signals
@@ -220,6 +221,7 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
         'personnel_adjustment_to_model_points':None,
         'market':{'status':'NO_SOURCE_OBSERVED_PREKICKOFF_SPREAD','ats_research_side':None},
         'mandatory_rushing_audit':None,'rushing_ats_risk_gate':None,
+        'failure1_learned_rush_shadow':None,
         'locked_market_evidence':None,
         'limitations':['Quarterback usage measured from prior games; next-game starters are NOT verified',
           'Only source-backed optional availability snapshots are displayed; no uncalibrated injury point deductions',
@@ -249,6 +251,11 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
         proxy={**result,'simulated_margin_home':sim['mean_margin_home']}
         market=_market(proxy,qmap)
         rush_gate=rushing_gate(rush_screen,challenger,market)
+        learned_shadow=(learned_rushing_shadow(hid,aid,histories,neutral,
+                       runs=runs,seed=int(g.game_id)%(2**32),
+                       source_manifest_sha256=manifest_sha)
+                 if runs==5000 else {'status':'NOT_RUN_NONSTANDARD_SIMULATION_COUNT',
+                                    'runs':0,'not_deployed':True})
         scripts_stress=adverse_scripts(hp,ap,histories[hid],histories[aid],
                     runs=max(100,min(600,runs//5)),seed=int(g.game_id)%(2**32))
         result.update({'status':'FRESH_PREGAME_PROJECTION_LOCKED',
@@ -259,6 +266,7 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
                        'matchup_evidence':signals,
                        'mandatory_rushing_audit':rush_screen,
                        'rushing_ats_risk_gate':rush_gate,
+                       'failure1_learned_rush_shadow':learned_shadow,
                        'simulation':sim,
                        'stress_tests':sensitivity(hp,ap,g.game_id),
                        'simulated_margin_home':sim['mean_margin_home'],
@@ -541,6 +549,18 @@ def markdown(report):
     else:
         lines+=['', '## Build 16 — research challenger unavailable',
                 'Reason: '+str(build16.get('status','MISSING'))]
+    frozen_rush=report.get('failure1_learned_rush_shadow') or {}
+    if frozen_rush.get('status')=='FROZEN_2023_FITTED_RUSH_SHADOW_5000':
+        lines+=['','## Experimental 2023-fitted rushing mismatch correction — NOT PRIMARY',
+                f"Research-only modeled home margin: {frozen_rush['projected_margin_home']:+.2f} "
+                f"(bounded pregame rushing-adjustment input "
+                f"{frozen_rush['margin_delta_points']:+.2f} points).",
+                'This is a separate 5,000-draw counterfactual inside Build16, '
+                'not the established ATS pick. Its 2024–26 cross-year '
+                'improvement did not clear statistical/ATS promotion requirements.']
+    elif frozen_rush:
+        lines+=['','## Experimental rushing correction unavailable',
+                str(frozen_rush.get('status'))]
     personnel=report.get('conditional_personnel_scenarios') or {}
     lines += ['', '## Personnel replacement evidence (conditional, NOT the primary forecast)']
     for side in ('home','away'):
