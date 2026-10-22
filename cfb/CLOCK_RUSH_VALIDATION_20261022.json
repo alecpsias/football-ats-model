@@ -1,0 +1,136 @@
+{
+  "schema": "cfb_clock_ncaabox_rush_ablation_verification_v1",
+  "captured_utc": "2026-10-22T15:02:44Z",
+  "github_run_id": 39801019522,
+  "github_run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39801019522",
+  "github_artifact_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39801019522/artifacts/12435712859",
+  "season": 2026,
+  "source": "SportsDataverse public ESPN CFB PBP and university official box scores",
+  "audit": {
+    "games_from_schedule": 510,
+    "regulation_clock_quality_passed": 321,
+    "partial_coverage": 189,
+    "official_box_comparisons": {
+      "USC_San_Jose_State": {
+        "game_id": "401864494",
+        "status": "ALL_4_COUNTS_EXACT",
+        "USC": {
+          "rushes": 40,
+          "passes": 36,
+          "sacks_reclassified": 2
+        },
+        "SJSU": {
+          "rushes": 24,
+          "passes": 32,
+          "sacks_reclassified": 1
+        },
+        "max_top_error_seconds": 13,
+        "url": "https://usctrojans.com/sports/football/stats/2026/san-jos-state/boxscore/35264"
+      },
+      "TCU_North_Carolina": {
+        "game_id": "401856766",
+        "status": "ALL_4_COUNTS_EXACT",
+        "TCU": {
+          "rushes": 39,
+          "passes": 32,
+          "sacks_reclassified": 3
+        },
+        "UNC": {
+          "rushes": 29,
+          "passes": 28,
+          "sacks_reclassified": 3
+        },
+        "max_top_error_seconds": 5,
+        "url": "https://goheels.com/sports/football/stats/2026/tcu/boxscore/26876"
+      }
+    },
+    "reason": "ESPN pass is an EPA concept; NCAA box team rushing attempts include quarterback sacks. Separate official-statistical counting lens, original EPA categories untouched."
+  },
+  "observed_association": {
+    "games": 320,
+    "team_games": 640,
+    "seconds_per_plus_10_percent_rush_share": 8.4614,
+    "bootstrap95": [
+      7.2392,
+      9.6169
+    ],
+    "adjusted_for": "observed scrimmage plays per drive",
+    "causal": false
+  },
+  "chronological_skill": {
+    "predictions": 98,
+    "distinct_games": 49,
+    "rush_share_mae_unadjusted": 0.08847,
+    "rush_share_mae_opponent_adjusted": 0.08404,
+    "clock_seconds_per_drive_mae_unadjusted": 30.68024,
+    "clock_seconds_per_drive_mae_opponent_adjusted": 28.67261
+  },
+  "paired_5000_simulation_research": {
+    "eligible_completed_games": 92,
+    "requested_cap": 100,
+    "simulations_per_game_per_mode": 5000,
+    "total_sampled_games": 1840000,
+    "excluded_first_games_insufficient_prior": 282,
+    "missing_pace_evidence": 136,
+    "reference": {
+      "margin_mae": 13.7508,
+      "total_mae": 13.1761,
+      "brier": 0.23236,
+      "margin_p10p90_coverage": 0.75,
+      "win_direction_accuracy": 0.6087
+    },
+    "mix": {
+      "margin_mae": 13.7549,
+      "total_mae": 13.1884,
+      "brier": 0.23294,
+      "improvement_mae": -0.004,
+      "bootstrap95": [
+        -0.0338,
+        0.0247
+      ]
+    },
+    "pace": {
+      "margin_mae": 13.7754,
+      "total_mae": 13.3411,
+      "brier": 0.2334,
+      "improvement_mae": -0.0246,
+      "bootstrap95": [
+        -0.0515,
+        0.0029
+      ]
+    },
+    "combined": {
+      "margin_mae": 13.7716,
+      "total_mae": 13.35,
+      "brier": 0.23289,
+      "improvement_mae": -0.0208,
+      "bootstrap95": [
+        -0.0541,
+        0.0131
+      ],
+      "margin_p10p90_coverage": 0.7391,
+      "win_direction_accuracy": 0.5978
+    }
+  },
+  "unit_tests": {
+    "count": 264,
+    "result": "PASS"
+  },
+  "baseline_status": "UNMODIFIED",
+  "active_challenger": "BUILD16_DEFAULT_NO_RUSH_ABLATION",
+  "experimental_clock_change": "Opponent-conditioned recorded drive elapsed seconds required for pace modes. Shared tempo adjustment from 3600/(home + away durations); shrunk and capped, no per-team extra possession.",
+  "deployment_policy": {
+    "deployed": false,
+    "ats_validated": false,
+    "trained_coefficients": false,
+    "reason": "All paired MAE differences are <= 0, confidence intervals overlap zero. No prospective frozen lines."
+  },
+  "limitations": [
+    "Retrospective dataset snapshot; row-level historical publication times unverified",
+    "Two independent official box games only, not all 2026 game reconciliations",
+    "For source drive start/end incomplete, up to two source-reported elapsed times accepted and flagged per game",
+    "Self-selected sample restricted to complete clocks, other games missing; potential selection bias",
+    "Explanatory rush-clock association is not causal",
+    "Spread ATS edges not measured (no frozen historical sportsbook observations)"
+  ]
+}
