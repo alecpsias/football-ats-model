@@ -221,33 +221,47 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
                     'disruption_scoring_policy':'No incremental scoring coefficient until independent evidence'}}
 
 
-def _failure2_verified_scoring_histories(home_id, away_id, histories):
-    """Correct scoring *before* estimating PPD, with linked turnover return risk.
+def _failure2_verified_scoring_histories(home_id,away_id,histories):
+    """Use each *verified* earlier game's offensive-only PPD evidence.
 
-    Requires fully source-reconciled game histories for both teams; abstains
-    rather than substituting unknown return scoring with fabricated values.
-    Baseline histories are never modified, nor are prior-game counts relabeled.
+    Do not discard 12 sound games because one is ambiguous. Do not treat
+    unknown non-offensive scoring as zero, and never substitute synthetic
+    points for missing records. Unknown rows remain eligible for EPA,
+    pace, personnel, defense etc, but are excluded from scoring PPD only.
+    The untouched baseline continues to use original scoreboard points.
     """
     import copy
-    source_h=histories.get(home_id,())
-    source_a=histories.get(away_id,())
-    if min(len(source_h),len(source_a))<3:
+    home=list(histories.get(home_id,()))
+    away=list(histories.get(away_id,()))
+    if min(len(home),len(away))<3:
         return histories,None,{'status':'INSUFFICIENT_VERIFIED_SCORING_GAMES'}
     required=('offensive_points','offensive_points_conceded',
         'defensive_return_points','defensive_return_td_count',
         'defensive_return_td_allowed','special_teams_points',
         'special_teams_td_count','nonoffensive_points',
         'opponent_turnovers_observed','interceptions','fumbles_lost')
-    all_rows=[r for rows in (source_h,source_a) for r in rows]
-    if any((r.get('scoring_attribution') or {}).get('status')!='VERIFIED_RAW_SCORE_RECONCILIATION'
-           or any(r.get(k) is None for k in required)
-           for r in all_rows):
-        return histories,None,{'status':'UNVERIFIED_SCORING_ATTRIBUTION_LEGACY_BUILD16'}
+    def good(r):
+        return ((r.get('scoring_attribution') or {}).get('status')
+                =='VERIFIED_RAW_SCORE_RECONCILIATION'
+                and all(r.get(k) is not None for k in required))
+    h_valid=[r for r in home if good(r)]
+    a_valid=[r for r in away if good(r)]
+    if min(len(h_valid),len(a_valid))<3:
+        return histories,None,{'status':'INSUFFICIENT_INDIVIDUAL_VERIFIED_SCORING_GAMES',
+                               'verified_home_games':len(h_valid),
+                               'verified_away_games':len(a_valid),
+                               'unverified_home_games':len(home)-len(h_valid),
+                               'unverified_away_games':len(away)-len(a_valid)}
+    # Preserve unrelated historical statistics, and isolate scoring PPD
+    # eligibility explicitly from offensive/defensive EPA and drive pace.
     modified={k:[copy.deepcopy(x) for x in rows] for k,rows in histories.items()}
-    for team in (home_id,away_id):
-        for r in modified[team]:
-            r['points']=float(r['offensive_points'])
-            r['conceded']=float(r['offensive_points_conceded'])
+    for team_id in (home_id,away_id):
+        for r in modified[team_id]:
+            valid=good(r)
+            r['scoring_ppd_eligible']=valid
+            if valid:
+                r['points']=float(r['offensive_points'])
+                r['conceded']=float(r['offensive_points_conceded'])
     def record(rows):
         return [{'defensive_return_tds':int(r['defensive_return_td_count']),
                  'defensive_return_tds_allowed':int(r['defensive_return_td_allowed']),
@@ -258,7 +272,7 @@ def _failure2_verified_scoring_histories(home_id, away_id, histories):
                  'defense_opportunities':int(r['opponent_turnovers_observed'])}
                 for r in rows]
     observed={'mode':'turnover_linked_defensive_returns_and_separate_special_teams',
-              'home':record(source_h),'away':record(source_a)}
+              'home':record(h_valid),'away':record(a_valid)}
     for side in ('home','away'):
         for r in observed[side]:
             if (r['defensive_return_tds']>r['defense_opportunities']
@@ -267,11 +281,18 @@ def _failure2_verified_scoring_histories(home_id, away_id, histories):
                 or not 0<=r['defensive_return_points']<=28
                 or r['defensive_return_points'] and not r['defensive_return_tds']):
                 return histories,None,{'status':'INCONSISTENT_VERIFIED_RETURN_SCORING'}
-    return modified,observed,{'status':'ACTIVE_LINKED_DEFENSE_AND_SPECIAL_TEAMS_SCORING',
-        'verified_home_games':len(source_h),'verified_away_games':len(source_a),
-        'baseline_unchanged':True,'ATS_calibrated':False,
-        'nonoffensive_components':['turnover_return_td','special_teams_td'],
-        'source':'Earlier official-score-reconciled raw play events only'}
+    full=(len(home)==len(h_valid) and len(away)==len(a_valid))
+    return modified,observed,{
+       'status':('ACTIVE_LINKED_DEFENSE_AND_SPECIAL_TEAMS_SCORING' if full
+                 else 'ACTIVE_PARTIAL_VERIFIED_SCORING_ONLY'),
+       'verified_home_games':len(h_valid),'verified_away_games':len(a_valid),
+       'unverified_home_games':len(home)-len(h_valid),
+       'unverified_away_games':len(away)-len(a_valid),
+       'unverified_scoring_used_as_offensive_ppd':False,
+       'all_other_historical_features_preserved':True,
+       'baseline_unchanged':True,'ATS_calibrated':False,
+       'nonoffensive_components':['turnover_return_td','special_teams_td'],
+       'source':'Earlier fully reconciled actual games only, including individually documented official event summaries'}
 
 
 
