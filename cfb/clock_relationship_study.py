@@ -79,6 +79,7 @@ def study(snapshot,out,min_games=3,max_games=None):
         observed_official.update({'source_drive_count':ref['source_drive_count'],
           'valid_drive_count':ref['valid_drive_count'],
           'excluded_drives':ref['excluded'],
+          'excluded_drive_examples':ref['excluded_drive_examples'],
           'excluded_seconds_from_clock':3600-ref['observed_seconds_total'],
           'game_id':str(off['game_id']),
           'source':'USC Athletics 2026 box score Aug 29 2026',
