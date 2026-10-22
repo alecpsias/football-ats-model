@@ -11,8 +11,19 @@ from cfb.test_cfb_integrated_build15 import histories
 from cfb.integrated_scoring import project_integrated
 
 
-def inputs():
+def clocked_histories():
     h=histories()
+    for games in h.values():
+        for rec in games:
+            rec.update({'clock_run_n':25,'clock_pass_n':35,
+                        'clock_def_run_n':26,'clock_def_pass_n':34,
+                        'clock_time_sum':1750.0,'clock_drive_n':10,
+                        'clock_def_time_sum':1820.0,'clock_def_drive_n':10})
+    return h
+
+
+def inputs():
+    h=clocked_histories()
     return h,project_integrated(1,2,h,False,'home')['components'],project_integrated(2,1,h,False,'away')['components']
 
 
@@ -58,7 +69,7 @@ class RushingResearchTests(unittest.TestCase):
             experiment(1,2,h,home,away,'game_outcome_fitted')
 
     def test_same_seed_and_no_mutation_of_primary(self):
-        h=histories();before=copy.deepcopy(h)
+        h=clocked_histories();before=copy.deepcopy(h)
         baseline=project(h[1],h[2],False,'home',False)
         opposing=project(h[2],h[1],False,'away',False)
         frozen=simulate(baseline,opposing,runs=200,seed=77)
