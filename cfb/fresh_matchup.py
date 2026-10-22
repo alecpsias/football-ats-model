@@ -81,7 +81,7 @@ def histories_asof(schedule, pbp, roster, cutoff):
         h=observed_game(part,hid,aid,g.home_points,g.away_points,qb_ids.get(hid,set()),
                         special_plays=raw_by_game.get(g.game_id),home_id=hid)
         a=observed_game(part,aid,hid,g.away_points,g.home_points,qb_ids.get(aid,set()),
-                        special_plays=raw_by_game.get(g.game_id))
+                        special_plays=raw_by_game.get(g.game_id),home_id=hid)
         if h is None or a is None:continue
         include_prior_game(h,a,part,hid,aid)
         h['opponent_id']=aid; a['opponent_id']=hid
