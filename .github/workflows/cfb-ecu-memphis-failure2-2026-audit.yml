@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/cfb-ecu-memphis-failure2-2026-audit.yml'
       - 'cfb/failure2_teams_2026_audit.py'
+      - 'cfb/failure2_event_probe.py'
 
 permissions:
   contents: read
@@ -26,6 +27,8 @@ jobs:
           mkdir -p cfb_artifacts
           python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/ecu_memphis_f2_snapshot
           python -m cfb.pipeline verify --snapshot cfb_artifacts/ecu_memphis_f2_snapshot
+      - name: Probe verified 2026 scoring event types and turnover timing
+        run: python -m cfb.failure2_event_probe --snapshot cfb_artifacts/ecu_memphis_f2_snapshot
       - name: Reconcile every ECU and Memphis game and identify exactly why Build16 fails closed
         run: |
           python -m cfb.failure2_teams_2026_audit \
