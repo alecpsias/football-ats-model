@@ -124,6 +124,28 @@ class PairTests(unittest.TestCase):
              '2026-10-24T18:00:00+00:00','https://example.com/schedule','d'*64)
         self.assertEqual(x['ATS_at_joint_observed_spread']['fair_paired_decisive_spreads'],0)
 
+    def test_concurrently_activated_ridge_requires_distinct_uncorrected_reference(self):
+        pair=projection(100005,'2026-10-22T15:00:00+00:00',True)
+        pair['build16_active_failure1_rushing_correction']={
+            'status':'APPLIED_IN_BUILD16_CHALLENGER','margin_delta_points':2.}
+        pair['build16_challenger']['mean_margin_home']=4.0
+        source=self.root/'activated_ridge_only'
+        pack(source,100005,'2026-10-22T15:00:00+00:00',pair)
+        invalid,counts=load_first_frozen_pairs(source)
+        self.assertEqual(invalid,{})
+        self.assertEqual(counts['excluded_active_ridge_without_raw_reference'],1)
+        pair['build16_uncorrected_reference']={
+            'status':'AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY',
+            'mean_margin_home':1.0,'margin_p10_p50_p90':[-16,1,18],
+            'simulation':{'simulations':5000,'seed':int(GAME)%2**32,
+                          'home_win_probability_raw':.54}}
+        eligible=self.root/'activated_ridge_with_baseline'
+        pack(eligible,100006,'2026-10-22T15:00:00+00:00',pair)
+        valid,counts=load_first_frozen_pairs(eligible)
+        self.assertEqual(len(valid),1)
+        self.assertEqual(valid[GAME]['build16_uncorrected_reference']['mean_margin_home'],1.0)
+        self.assertEqual(valid[GAME]['build16_challenger']['mean_margin_home'],4.0)
+
     def test_mismatched_simulation_seed_is_rejected(self):
         p=projection(100003,'2026-10-22T15:00:00+00:00',True)
         p['failure1_learned_rush_shadow']['seed']=1
