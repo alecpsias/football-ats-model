@@ -47,3 +47,26 @@ def shadow(home_id,away_id,histories,neutral,*,runs,seed,source_manifest_sha256)
        'score_home':sim['mean_score_home'],'score_away':sim['mean_score_away'],
        'genuine_5000_run_distribution':True,
        'not_resimulated_after_kickoff':True}
+
+
+def correction(home_id,away_id,histories):
+    """Return the frozen pregame rushing adjustment for the ACTIVE Build16 challenger.
+
+    If evidence is incomplete, retain unchanged Build16 scoring and expose the
+    reason. Do not use current-game results, refit parameters or manufacture
+    missing inputs. This deliberately does not validate ATS calibration.
+    """
+    raw=MODEL.read_bytes()
+    model=json.loads(raw)
+    if model['fit_year']!=2023 or model['n_training_games']!=180:
+        raise ValueError('Frozen rushing model unexpectedly changed')
+    vector=feature_vector(home_id,away_id,histories)
+    fitted=score(model,vector)
+    valid=fitted['status']=='VALID_FROZEN_MODEL_PREGAME_RUSH_CORRECTION'
+    return {'status':'APPLIED_IN_BUILD16_CHALLENGER' if valid else
+            'UNCHANGED_BUILD16_MISSING_RUSH_EVIDENCE',
+            'margin_delta_points':fitted['margin_points'] if valid else None,
+            'reason':None if valid else fitted['status'],
+            'model_sha256':hashlib.sha256(raw).hexdigest(),
+            'trained_year':2023,'training_games':180,'ATS_calibrated':False,
+            'baseline_unchanged':True}
