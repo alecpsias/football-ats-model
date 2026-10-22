@@ -136,6 +136,32 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                     'margin_p10_p90_covered':(float(interval[0])<=actual<=float(interval[2])
                         if len(interval)==3 else None),
                     'recomputed_after_kickoff':False,'not_primary':True}
+        # Failure 1: score ONLY pre-kickoff frozen negative-run shadow.
+        # No source re-read, coefficient refit or target-game resimulation.
+        frozen_shadow=p.get('failure1_negative_run_shadow')
+        if isinstance(frozen_shadow,dict):
+            if frozen_shadow.get('status')=='FROZEN_NEGATIVE_RUN_SHADOW_5000':
+                if frozen_shadow.get('runs')!=5000 or frozen_shadow.get('mode')!='negative':
+                    raise ValueError('Invalid frozen Failure 1 shadow protocol '+gid)
+                if frozen_shadow.get('source_manifest_sha256')!=p.get('source_snapshot_manifest_sha256'):
+                    raise ValueError('Failure 1 shadow source manifest mismatch '+gid)
+                value=frozen_shadow.get('projected_margin_home')
+                if not isinstance(value,(int,float)) or not math.isfinite(value):
+                    raise ValueError('Invalid frozen shadow margin '+gid)
+                if 'build16_challenger' not in row:
+                    raise ValueError('Shadow without same-game frozen Build16 '+gid)
+                base16=row['build16_challenger']['projected_home_margin']
+                row['failure1_negative_shadow']={
+                    'status':'ORIGINAL_FROZEN_RESEARCH_ONLY',
+                    'protocol':frozen_shadow['protocol'],
+                    'mode':'negative','projected_home_margin':float(value),
+                    'frozen_source_code_sha256':frozen_shadow.get('candidate_source_sha256'),
+                    'source_manifest_sha256':frozen_shadow['source_manifest_sha256'],
+                    'frozen_run_count':5000,
+                    'margin_absolute_error':round(abs(float(value)-actual),5),
+                    'build16_same_game_absolute_error':round(abs(base16-actual),5),
+                    'mae_gain_vs_frozen_build16':round(abs(base16-actual)-abs(float(value)-actual),5),
+                    'recomputed_after_kickoff':False,'not_deployed':True}
         # Personnel cases were frozen as counterfactual sensitivities. Without
         # independently confirmed pregame starter assignments they cannot be
         # selected with hindsight and scored as an honest forward prediction.
@@ -184,6 +210,19 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                        'research_side':decision,'result':outcome,
                        'correct_excluding_push_or_no_edge':success,
                        'flat_stake_unit_profit_research_only':round(pnl,5)}
+                # Freeze/quote linkage: eligible pre-kickoff ESPN quote only.
+                # The shadow did NOT select a bet at forecast generation.
+                sh=row.get('failure1_negative_shadow')
+                if sh is not None:
+                    ed=sh['projected_home_margin']+spread
+                    side=('HOME' if ed>1e-8 else 'AWAY' if ed<-1e-8 else 'NO_EDGE')
+                    sh['observed_signed_spread_home']=spread
+                    sh['joint_quote_observed_at_utc']=m['observed_at_utc']
+                    sh['ats_research_side_at_capture']=side
+                    sh['ats_research_outcome']=outcome
+                    sh['ats_correct_excluding_push_noedge']=(
+                        side==outcome if side!='NO_EDGE' and outcome!='PUSH' else None)
+                    sh['book_original_publication_time_verified']=False
                 # Same verified, jointly pre-kickoff quote: compare the ONE
                 # frozen Build16 alternative independently of baseline.
                 build16=row.get('build16_challenger')
@@ -223,6 +262,21 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
         'observed_p10_p90_coverage':(round(sum(p['margin_p10_p90_covered'] for p in script_paired if p['margin_p10_p90_covered'] is not None)/sum(p['margin_p10_p90_covered'] is not None for p in script_paired),4)
             if any(p['margin_p10_p90_covered'] is not None for p in script_paired) else None),
         'candidate_selected_automatically':False}
+    f1=[r['failure1_negative_shadow'] for r in scored if 'failure1_negative_shadow' in r]
+    f1q=[x for x in f1 if 'ats_research_side_at_capture' in x]
+    f1_actual=[x['ats_correct_excluding_push_noedge'] for x in f1q
+               if x['ats_correct_excluding_push_noedge'] is not None]
+    f1_forward={'status':'FROZEN_PREKICKOFF_UNFITTED_NOT_DEPLOYED',
+       'paired_margin_games':len(f1),
+       'mean_build16_absolute_error':(round(sum(x['build16_same_game_absolute_error'] for x in f1)/len(f1),5) if f1 else None),
+       'mean_negative_shadow_absolute_error':(round(sum(x['margin_absolute_error'] for x in f1)/len(f1),5) if f1 else None),
+       'mae_gain_vs_build16':(round(sum(x['mae_gain_vs_frozen_build16'] for x in f1)/len(f1),5) if f1 else None),
+       'quoted_games':len(f1q),'decisive_quote_samples':len(f1_actual),
+       'observed_ats_research_correct':sum(x is True for x in f1_actual),
+       'observed_ats_research_incorrect':sum(x is False for x in f1_actual),
+       'ats_accuracy_excluding_push_or_noedge':(round(sum(x is True for x in f1_actual)/len(f1_actual),5) if f1_actual else None),
+       'ats_calibrated':False,'future_promotion_automatic':False,
+       'research_only':True}
     personnel_forward={'status':'NOT_GRADED_UNCONFIRMED_PREGAME_STARTERS',
         'games_with_frozen_conditional_evidence':sum('conditional_personnel_research' in r for r in scored),
         'games_with_conditional_scenarios':sum(r.get('conditional_personnel_research',{}).get('scenario_count',0)>0 for r in scored),
@@ -252,6 +306,7 @@ def grade(forecast_root, market_root, schedule, captured_at_utc, source_url,
                   sum('build16_challenger' in r for r in scored),5)
                   if any('build16_challenger' in r for r in scored) else None),
               'not_primary':True},
+          'failure1_negative_run_shadow_forward':f1_forward,
           'personnel_conditional_forward':personnel_forward,
           'ats_provisional':{'complete_observed_quoted_games':len(ats),
             'research_decisions':len(graded),'wins':w,'losses':losses,'pushes':pushes,
