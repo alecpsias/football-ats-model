@@ -74,6 +74,18 @@ def _odds_item(item):
         if spread<0 and not (h_fav and not a_fav):return None
         if spread>0 and not (a_fav and not h_fav):return None
         if spread==0 and h_fav==a_fav==True:return None
+        # ESPN returns 'spread' as the signed HOME-team line in the
+        # observed CFB core collection. When both current home/away team
+        # point-spreads are present, cross-validate rather than assuming.
+        h_current=home.get('current',{});a_current=away.get('current',{})
+        if isinstance(h_current,dict) and isinstance(a_current,dict):
+            hp=h_current.get('pointSpread');ap=a_current.get('pointSpread')
+            if hp is not None or ap is not None:
+                if not isinstance(hp,dict) or not isinstance(ap,dict):return None
+                hline=float(hp['alternateDisplayValue'])
+                aline=float(ap['alternateDisplayValue'])
+                if not math.isfinite(hline) or not math.isfinite(aline):return None
+                if abs(hline-spread)>1e-8 or abs(hline+aline)>1e-8:return None
     except (KeyError,TypeError,ValueError,OverflowError):
         return None
     return {'book':book,'spread_home':spread,'home_odds_american':home_odds,
