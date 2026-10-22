@@ -147,10 +147,15 @@ def study(snapshot,out,*,runs=5000,max_games=180,min_prior_games=3):
     # These subgroup choices are functions of PRE-KICKOFF features only.
     # The quartile cutpoint is reported, not claimed as an untouched holdout.
     max_signal=[r['severity_max_pregame'] for r in chosen]
-    cutoff_q75=float(np.quantile(max_signal,.75)) if chosen else None
-    strong=[r for r in chosen if r['severity_max_pregame']>=.08]
-    top_quartile=[r for r in chosen if r['severity_max_pregame']>=cutoff_q75] if chosen else []
-    others=[r for r in chosen if r['severity_max_pregame']<cutoff_q75] if chosen else []
+    ranked=sorted(chosen,key=lambda r:(-r['severity_max_pregame'],
+            -abs(r['severity_asymmetry_pregame']),r['kickoff'],r['game_id']))
+    top_count=int(np.ceil(.25*len(ranked)))
+    top_quartile=ranked[:top_count]
+    others=ranked[top_count:]
+    cutoff_q75=top_quartile[-1]['severity_max_pregame'] if top_quartile else None
+    # V2 exploratory severe threshold selected only from published
+    # marginal feature distributions, never from final-game labels.
+    strong=[r for r in chosen if r['severity_max_pregame']>=.04]
     report={'schema':'cfb_failure1_severity_negative_script_experiment_v1',
       'snapshot_captured_at_utc':str(snapshot_at),
       'source':'Free SportsDataverse 2026 ESPN PBP',
@@ -159,17 +164,21 @@ def study(snapshot,out,*,runs=5000,max_games=180,min_prior_games=3):
       'feature_policy':'pre-play-score state only, missing never tied; designed rush excluding sacks',
       'past_games_after_2026_10_20_filtered':True,
       'motivation_game_included':False,
-      'predeclared_strong_joint_severity_cutoff':.08,
+      'feature_distribution_selected_strong_joint_severity_cutoff':.04,
+      'V2_threshold_revised_after_inspecting_source_feature_distributions':True,
       'sample_quartile_cutoff':round(cutoff_q75,6) if cutoff_q75 is not None else None,
+      'strict_large_mismatch_cohort_games':len(strong),
+      'top_quartile_selected_game_count':len(top_quartile),
       'cohorts':{'all':paired_score(chosen),
-                 'strict_08_severity':paired_score(strong),
+                 'strict_04_severity':paired_score(strong),
                  'top_quartile_exante_signal':paired_score(top_quartile),
                  'other_three_quartiles':paired_score(others),
                  'with_resilience_verified':paired_score(chosen,('reference','resilience','combined')),
                  'severe_with_resilience_verified':paired_score(strong,('reference','resilience','combined'))},
       'records':chosen,'deploy':False,'ATS_calibrated':False,
       'coefficients_fitted':False,
-      'limitations':['Retrospective dataset release, historical row publication times not independently authenticated',
+      'limitations':['V2 source severity cutpoints chosen after seeing retrospective marginal feature distributions; all result comparisons exploratory',
+                     'Retrospective dataset release, historical row publication times not independently authenticated',
                      'Mode uses unfitted hypotheses; no score-line timing or true pregame market odds',
                      'Conditional rushing trailing-state samples may be sparse and selected',
                      'Severe matchup quantile is picked from ex-ante features, not results',
