@@ -50,6 +50,8 @@ class RidgeRushingCorrectionTests(unittest.TestCase):
 
     def test_feature_missing_does_not_invent_opponent_quality(self):
         h=decorated()
+        for records in h.values():
+            for record in records:record.pop('opponent_id',None)
         z=feature_vector(1,2,h)
         self.assertEqual(z['status'],'UNAVAILABLE_REQUIRED_ASOF_RUSH_INPUTS')
         self.assertFalse(z.get('no_outcomes_used',False))
