@@ -18,6 +18,7 @@ import numpy as np
 
 from cfb.engine import CFB_RULES, _resolve_overtime, validate_projection
 from cfb.return_scoring import scoring_rates, touchdown_points
+from cfb.drive_sustainability_process import chain_draws, draw_possession, duration_multiplier, MAX_EXTRA_CYCLES
 
 VERSION = 'cfb-game-script-research-v1'
 # Hypotheses, explicitly not empirical fitted coefficients.
@@ -201,6 +202,25 @@ def simulate_script(home_projection, away_projection, home_history, away_history
     st_pts_home=np.zeros(n,dtype=np.int32)
     st_pts_away=np.zeros(n,dtype=np.int32)
     suppressed_shortfields=np.zeros(n,dtype=np.int16)
+    # Failure3 uses an independent source of game-to-game chain persistence,
+    # leaving the baseline / Failure1 / Failure2 core RNG unchanged.
+    sustain_config=(mechanisms.get('failure3_score_process')
+                    if mechanisms is not None else None)
+    if sustain_config is not None and (
+          not isinstance(sustain_config,dict) or
+          not {'home','away'}.issubset(sustain_config)):
+        raise ValueError('Invalid Failure3 pregame scoring evidence')
+    sustain_rng=np.random.default_rng(seed ^ 0xF333ACE)
+    sustain_factor={side:chain_draws(sustain_config[side],sustain_rng,n)
+        for side in ('home','away')} if sustain_config is not None else None
+    elapsed_sec=np.zeros(n,dtype=float)
+    base_sec=3600./(2.*draws)
+    possessions_h=np.zeros(n,dtype=np.int16)
+    possessions_a=np.zeros(n,dtype=np.int16)
+    explosive_h=np.zeros(n,dtype=np.int16)
+    explosive_a=np.zeros(n,dtype=np.int16)
+    chain_scores_h=np.zeros(n,dtype=np.int16)
+    chain_scores_a=np.zeros(n,dtype=np.int16)
     short_h=np.zeros(n,dtype=float);short_a=np.zeros(n,dtype=float)
     def state_propensity(side,original,delta):
         """Observed game-state passing shifts affect only interception exposure.
@@ -267,7 +287,13 @@ def simulate_script(home_projection, away_projection, home_history, away_history
         if clock_response:
             halfway=(i==draws//2)
             burn=burn | (halfway&(np.abs(hs-ass)>=LARGE_LEAD_HALFTIME_POINTS)&(rng.random(n)<RUNAWAY_CLOCK_REDUCTION_PROB))
-        active=(i<draws-burn.astype(int))
+        # Existing fixed-cycle script remains untouched on the reference path.
+        # Source-qualified Failure3 stops when shared regulation clock is spent,
+        # allowing at most two extra cycles after rapid scoring / turnovers.
+        active=((i<np.minimum(19,draws+MAX_EXTRA_CYCLES-burn.astype(int)))&
+                (elapsed_sec<3600.)
+                if sustain_config is not None
+                else (i<draws-burn.astype(int)))
         # Within each series, possession order matters for turnovers and
         # field position; players are assigned per-game random opening side.
         for hfirst in (True,False):
@@ -276,8 +302,19 @@ def simulate_script(home_projection, away_projection, home_history, away_history
             for side in (('home','away') if hfirst else ('away','home')):
                 if side=='home':
                     prop=state_propensity('home',to_h,hs-ass)
-                    pts,to=_regulation_draw(h,rng,prop,latent_h+global_env+
-                        trailing_rush_resilience_ppd('home',hs-ass),short_h,mask)
+                    if sustain_config is not None:
+                        pts,to,exp_td,chain_score=draw_possession(
+                            h,rng,prop,latent_h+global_env+
+                            trailing_rush_resilience_ppd('home',hs-ass),
+                            short_h,mask,sustain_config['home'],sustain_factor['home'])
+                        elapsed_sec+=np.where(mask,base_sec*
+                            duration_multiplier(pts,to,exp_td),0.)
+                        explosive_h+=exp_td.astype(np.int16)
+                        chain_scores_h+=chain_score.astype(np.int16)
+                        possessions_h+=mask.astype(np.int16)
+                    else:
+                        pts,to=_regulation_draw(h,rng,prop,latent_h+global_env+
+                            trailing_rush_resilience_ppd('home',hs-ass),short_h,mask)
                     hs+=pts;turnovers_h+=to.astype(np.int16)
                     short_h=np.where(mask,0.,short_h)
                     # A defensive return TD happens ON this turnover, not as
@@ -295,8 +332,19 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                     short_a=np.where(to,next_field_bonus(to & ~td_return),short_a)
                 else:
                     prop=state_propensity('away',to_a,ass-hs)
-                    pts,to=_regulation_draw(a,rng,prop,latent_a+global_env+
-                        trailing_rush_resilience_ppd('away',ass-hs),short_a,mask)
+                    if sustain_config is not None:
+                        pts,to,exp_td,chain_score=draw_possession(
+                            a,rng,prop,latent_a+global_env+
+                            trailing_rush_resilience_ppd('away',ass-hs),
+                            short_a,mask,sustain_config['away'],sustain_factor['away'])
+                        elapsed_sec+=np.where(mask,base_sec*
+                            duration_multiplier(pts,to,exp_td),0.)
+                        explosive_a+=exp_td.astype(np.int16)
+                        chain_scores_a+=chain_score.astype(np.int16)
+                        possessions_a+=mask.astype(np.int16)
+                    else:
+                        pts,to=_regulation_draw(a,rng,prop,latent_a+global_env+
+                            trailing_rush_resilience_ppd('away',ass-hs),short_a,mask)
                     ass+=pts;turnovers_a+=to.astype(np.int16)
                     short_a=np.where(mask,0.,short_a)
                     td_return=(to & (return_rng.random(n)<
@@ -359,6 +407,14 @@ def simulate_script(home_projection, away_projection, home_history, away_history
        'margin_p10_p50_p90':[float(v) for v in np.quantile(margin,[.1,.5,.9])],
        'home_win_probability_raw':round(float(np.mean(margin>0)),5),
        'mean_total':round(float(scores.mean()),3),
+       'failure3_possession_process_active':sustain_config is not None,
+       'failure3_explosive_touchdowns_home':round(float(explosive_h.mean()),5),
+       'failure3_explosive_touchdowns_away':round(float(explosive_a.mean()),5),
+       'failure3_chain_scoring_drives_home':round(float(chain_scores_h.mean()),5),
+       'failure3_chain_scoring_drives_away':round(float(chain_scores_a.mean()),5),
+       'failure3_possessions_home':round(float(possessions_h.mean()),4) if sustain_config is not None else None,
+       'failure3_possessions_away':round(float(possessions_a.mean()),4) if sustain_config is not None else None,
+       'failure3_clock_model':'BOUNDED_UNFITTED_EVENT_DURATION_PROXIES' if sustain_config is not None else 'OFF',
        'simulated_nonoffensive_points_home':round(float(nonoff_home.mean()),3),
        'simulated_nonoffensive_points_away':round(float(nonoff_away.mean()),3),
        'simulated_defensive_return_points_home':round(float(def_pts_home.mean()),3),
