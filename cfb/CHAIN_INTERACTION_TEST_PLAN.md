@@ -57,3 +57,43 @@ margin distribution**.
 
 **Never automatically promote.** If evidence is inconclusive or worse,
 retain Build16 unchanged and archive the negative result.
+
+## October 22 empirical study — completed, rejected for production
+
+GitHub Actions run [39807158589](https://github.com/alecpsias/football-ats-model/actions/runs/39807158589)
+passed all 268 CFB unit tests and executed **160 complete paired games**,
+4 variants × 5,000 seeded draws = **3,200,000 actual simulated outcomes**.
+The source-cohort's last fixture occurred October 10, before the motivating
+October 21 NM State–Sam Houston game (excluded from both replay and fitting).
+
+| Laboratory setting | Margin MAE | +/- paired 95% improvement interval |
+| --- | ---: | --- |
+| Existing Build16 | 15.35353 | reference |
+| Third-down distance | 15.35558 | [-0.02951, +0.02322] |
+| Sustained-drive | 15.38519 | [-0.08340, +0.01854] |
+| Combined | 15.36998 | [-0.07407, +0.03821] |
+
+No tested version improved margin MAE. Any nominal improvement in outright
+winner classification in the latter two scenarios is not an ATS advantage.
+The combined variant's typical absolute home PPD change was ~0.022, with
+average absolute implied **relative score spread** change roughly 0.29 points.
+
+**University box cross-check:** USC converted 9/13 and SJSU 5/11 third downs.
+The same ESPN PBP extraction counted precisely **13 USC attempts with 9
+positively identified conversions**, **11 SJSU attempts with 5 positively
+identified conversions**, but only **12/13 USC** and **6/11 SJSU**
+attempts had definitive 0/1 outcomes (six terminal situations unresolved
+across both teams). Do not treat those unresolved third-down snaps as
+known failures. The experiment predicts the *manageable third-down share*
+from known pre-snap down/distance and uses *sustained-drive series* rather
+than building a fake conversion rate from unverified terminal flags.
+
+**Outcome:** DO NOT enable `chain_research` in ordinary games. Tests cover
+the code path, not fitted coefficients. The pilot uses retrospective
+provider releases, not an independently frozen historical as-of feed, and
+contains no authentic pre-kickoff ATS lines. Next attempt should test
+verified end-of-drive events, game state, and offensive rush-success
+interaction on earlier training periods, with a real later holdout rather
+than retroactively tuning this experiment.
+
+Archived report: `cfb/THIRD_CHAIN_VALIDATION_20261022.json`.
