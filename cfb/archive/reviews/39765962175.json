@@ -1,0 +1,27 @@
+{
+  "forward_learning_research": {
+    "build16_paired_games": 0,
+    "build16_status": "AWAITING_GENUINE_FORWARD_COMPARISON",
+    "completed_forward_games": 0,
+    "deploy_automatically": false,
+    "minimum_forward_games": 120,
+    "selection": "requires >=0.5-point validation margin MAE gain; ATS still separately unvalidated",
+    "status": "INSUFFICIENT_GENUINE_FORWARD_GAMES"
+  },
+  "game_id": "401871070",
+  "mode": "postgame",
+  "original_personnel_scenarios": {
+    "personnel_score_recomputed_after_game": false,
+    "requires_proven_pregame_starting_lineup_to_measure_forecast_accuracy": true,
+    "scenario_count": 1,
+    "status": "PRE_GAME_CONDITIONAL_ONLY_NOT_GRADED_AS_FORECAST",
+    "version": "cfb-personnel-replacement-research-v1"
+  },
+  "original_pregame_information_cutoff_utc": "2026-10-21T04:16:40.377314+00:00",
+  "original_pregame_source_manifest_sha256": "99fcde834d29b005e386202aebbe10c0d5e91b4d0d83afcb69ea8b58b9444aec",
+  "original_user_requested_pregame_file": "39543123238.json",
+  "original_user_requested_pregame_sha256": "b2af73424c30b3737d992cb17471ef6ffa98af96f67a6b9fba48d96e3b51e794",
+  "postgame_does_not_rerun_the_original_model": true,
+  "schema": "cfb_fresh_requested_postgame_v1",
+  "status": "FINAL_NOT_AVAILABLE"
+}
