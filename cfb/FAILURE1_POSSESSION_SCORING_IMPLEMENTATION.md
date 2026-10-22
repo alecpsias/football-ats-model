@@ -1,6 +1,6 @@
 # Failure 1 — empirical rushing-to-possession scoring correction
 
-**Scope:** Independent CFB Build16 only. The NFL model and CFB baseline are untouched.
+**Scope:** Independent CFB Build16 only. The NFL model and CFB baseline are untouched.\n\n**Concurrent production change (verified October 22):** Another commit has enabled the *older* 2023-fitted seven-feature rushing residual in normal Build16 predictions. This study does NOT endorse or revert that activation. The **new** possession/clock candidate documented here remains opt-in only. A current active Build16 versus an identical ridge-shadow forecast is NOT a valid comparison of different algorithms; the uncorrected reference must be frozen separately for prospective ATS calibration.
 The correction is an opt-in within the **existing single Challenger** via
 `simulate_build16(...,possession_response=...)`; it is NOT active in the
 standard CFB pregame command, and no additional published challenger exists.
@@ -69,7 +69,7 @@ missing prospectively validated ATS evidence.
 
 **Do not advertise Failure 1 as fixed.** Improvement 1 still enforces
 the mandatory rushing mismatch audit and 5,000-run adverse-scenario gate.
-The next active Build16 main-line estimate remains unchanged. Further work
+The new possession-based scoring logic is NOT passed to current production Build16. Current Build16 may nevertheless differ from the previous reference because the independently committed older ridge correction is active. Further work
 should test verified first-down-chain probabilities against new actual
 pregame outcomes and their original observed line, without fitting new
 coefficient variants on any of these already-inspected holdouts.
