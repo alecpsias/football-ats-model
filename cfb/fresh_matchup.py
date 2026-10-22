@@ -459,9 +459,11 @@ def markdown(report):
         # original hashes remain archived; they are not active Build16 rivals.
         return output
     if report['status']!='FRESH_PREGAME_PROJECTION_LOCKED':
+        gate=(report.get('rushing_ats_risk_gate') or {}).get('ats_recommendation_status')
         return '# CFB fresh matchup — insufficient observed data\n\n'+(
             f"{report['away']} at {report['home']}; prior games: "
-            f"{report['completed_prior_games_away']} away, {report['completed_prior_games_home']} home.\n")
+            f"{report['completed_prior_games_away']} away, {report['completed_prior_games_home']} home.\n"
+            f"Mandatory Failure-1 rushing audit: {gate or 'UNAVAILABLE'}; no ATS recommendation.\n")
     m=report['market']
     quote=('No valid market quote before analysis' if m.get('home_spread') is None else
            f"{report['home']} {m['home_spread']:+g} ({m['provider']}); "
@@ -469,7 +471,48 @@ def markdown(report):
     h=report['current_observed_statistics']['home']
     a=report['current_observed_statistics']['away']
     def show(z):return 'unavailable' if z is None else f'{z:.3f}' if isinstance(z,(int,float)) else str(z)
+    audit=report.get('rushing_ats_risk_gate') or {}
     lines=[f"# NEW CFB pregame investigation: {report['away']} at {report['home']}",
+           '',f"Snapshot captured: {report['source_snapshot_at_utc']}",
+           '', '## MANDATORY FAILURE 1 — RUSHING MISMATCH SCREEN BEFORE ATS CONCLUSION',
+           f"**ATS risk gate:** {audit.get('ats_recommendation_status','MISSING_RUSH_AUDIT_BLOCK')}",
+           f"**Rushing mismatch audit:** {audit.get('status','MISSING')}; "
+           f"stress triggers: {', '.join(audit.get('trigger_reasons',[])) or 'none'}",
+           'This is an observed-opponent matchup and uncertainty screen, not a fitted '
+           'change to Build16 scoring coefficients or a calibrated ATS probability.',
+           '', '| Rush metric (prior games only) | Home offense vs away defense | Away offense vs home defense |',
+           '|---|---:|---:|'] 
+    for label,key in (
+        ('Early designed rush success','early_rush_success'),
+        ('Opposing defense rush success allowed','opponent_early_rush_success_allowed'),
+        ('Negative designed runs','offense_negative_run_rate'),
+        ('Opposing defense negative runs allowed','opponent_negative_run_rate_allowed'),
+        ('Stuffed (0 or fewer yards)','offense_nonpositive_run_rate'),
+        ('Opponent stuffed runs allowed','opponent_nonpositive_run_rate_allowed'),
+        ('While trailing by 9+','own_trailing_9plus_rush_success')):
+        def fmt(side):
+            x=(audit.get(side) or {}).get(key)
+            return ('unavailable' if not isinstance(x,dict) else
+                    f"{x['rate']:.1%} ({x['trials']} plays; {x['observed_games']} games)")
+        lines.append(f"| {label} | {fmt('home')} | {fmt('away')} |")
+    for side in ('home','away'):
+        x=audit.get(side) or {}
+        lines.append(f"- {report[side]}: severity-excess signal {x.get('joint_severity_excess')}; "
+            f"trailing-resilience evidence {x.get('script_resilience_status','unavailable')}; "
+            f"missing inputs {', '.join(x.get('missing_or_insufficient',[])) or 'none'}")
+    lines.append(f"Opponent-quality adjusted rushing EPA differential (home minus away): "
+                 f"{audit.get('sos_rush_epa_differential')}")
+    if audit.get('requires_full_rush_stress'):
+        lines += ['', '### Mandatory severe-mismatch 5,000-run adverse scripts']
+        if audit.get('stress_runs_per_scenario_verified')==5000:
+            for name,m in audit.get('stress_scenario_margins',{}).items():
+                lines.append(f"- {name}: home margin {m:+.2f}")
+            lines.append(f"Counterfactual margin range: "
+                f"{audit['stress_home_margin_min']:+.2f} to {audit['stress_home_margin_max']:+.2f}.")
+            lines.append('These are stress conditions, NOT forecasted scenario probabilities.')
+        else:
+            lines.append('Required 5,000-draw adverse-script evidence unavailable; ATS confidence withheld.')
+    lines += ['',f"**Risk conclusion:** {audit.get('risk_conclusion')}",
            '',f"Snapshot captured: {report['source_snapshot_at_utc']}",
            f"Historical games: {report['home']} {report['completed_prior_games_home']}, "
            f"{report['away']} {report['completed_prior_games_away']}",
