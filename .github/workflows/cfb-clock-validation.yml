@@ -24,11 +24,19 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install -r requirements-cfb.txt
+      - run: python -m unittest cfb.test_cfb_clock_validation -v
       - run: python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/clock_snapshot
       - run: python -m cfb.clock_schema_probe --snapshot cfb_artifacts/clock_snapshot --out cfb_artifacts/clock_source_schema.json
+      - name: Validate actual possessions and opponent rush-play selection
+        run: |
+          python -m cfb.clock_relationship_study \
+            --snapshot cfb_artifacts/clock_snapshot \
+            --out cfb_artifacts/clock_relationship_results.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: cfb-possession-clock-source-probe
-          path: cfb_artifacts/clock_source_schema.json
+          path: |
+            cfb_artifacts/clock_source_schema.json
+            cfb_artifacts/clock_relationship_results.json
           if-no-files-found: warn
