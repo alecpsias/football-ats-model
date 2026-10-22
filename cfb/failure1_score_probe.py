@@ -23,6 +23,20 @@ def probe(root):
     for c in [x for x in needed if x in f]:
         report['availability'][c]={'not_null':int(f[c].notna().sum()),
             'distinct':int(f[c].nunique(dropna=True))}
+    # Independent pre-play values must agree; this deliberately rejects
+    # contradictory source score state instead of silently using final score.
+    if {'pos_score_diff_start','start.pos_score_diff',
+        'start.pos_team_score','start.def_pos_team_score'}.issubset(f.columns):
+        p=pd.to_numeric(f['pos_score_diff_start'],errors='coerce')
+        start=pd.to_numeric(f['start.pos_score_diff'],errors='coerce')
+        pos=pd.to_numeric(f['start.pos_team_score'],errors='coerce')
+        de=pd.to_numeric(f['start.def_pos_team_score'],errors='coerce')
+        mismatch=(p.ne(start)|p.ne(pos-de))
+        report['preplay_score_consistency']={
+            'compared_rows':int(len(f)),
+            'missing_components':int((p.isna()|start.isna()|pos.isna()|de.isna()).sum()),
+            'mismatch_count':int(mismatch.sum()),
+            'consistent':bool(mismatch.sum()==0)}
     gid=f.game_id.value_counts().index[0]
     sub=f.loc[f.game_id.eq(gid)].sort_values('game_play_number').head(14)
     sc=[x for x in sub if x in keys or x in ('game_id','game_play_number','pos_team_id','home','away','rush','pass')]
