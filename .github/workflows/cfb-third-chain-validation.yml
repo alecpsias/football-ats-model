@@ -1,15 +1,6 @@
 name: CFB rush-to-third-down chain research validation
 
 on:
-  push:
-    branches: [cfb-third-down-chain-research-20261022]
-    paths:
-      - 'cfb/chain_source.py'
-      - 'cfb/chain_interaction_research.py'
-      - 'cfb/chain_study.py'
-      - 'cfb/test_cfb_chain_research.py'
-      - 'cfb/mechanism_build16.py'
-      - '.github/workflows/cfb-third-chain-validation.yml'
   workflow_dispatch:
 
 permissions:
