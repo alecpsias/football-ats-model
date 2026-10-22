@@ -1,0 +1,71 @@
+name: CFB Liberty Kennesaw 2026-10-22 frozen pregame
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-liberty-kennesaw-20261022.yml'
+permissions:
+  contents: read
+
+jobs:
+  freeze_matchup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free CFB model dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Collect real verified 2026 CFB snapshot
+        run: |
+          mkdir -p cfb_artifacts
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/liberty_kennesaw_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/liberty_kennesaw_snapshot
+      - name: Build16 pregame 5000 simulations only after historical team stats
+        run: |
+          python -m cfb.fresh_matchup --mode pregame \
+            --team-a "Liberty" --team-b "Kennesaw State" \
+            --game-id 401871056 \
+            --snapshot cfb_artifacts/liberty_kennesaw_snapshot \
+            --odds cfb/_market_disabled \
+            --availability-dir cfb/availability \
+            --runs 5000 \
+            --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
+            --out cfb_artifacts/liberty_kennesaw_pregame.json > cfb_artifacts/model_stdout.log
+          python - <<'PY'
+          import json
+          x=json.load(open('cfb_artifacts/liberty_kennesaw_pregame.json'))
+          b=x.get('build16_challenger',{})
+          print('PREKICKOFF_FROZEN_MODEL_RESULTS')
+          print(json.dumps({
+            'status':x['status'],'fixture':{'away':x['away'],'home':x['home'],'game_id':x['game_id'],'kickoff':x['kickoff_utc']},
+            'generated_at':x['prediction_generated_at_utc'],'snapshot_at':x['source_snapshot_at_utc'],
+            'prior_games_home':x.get('completed_prior_games_home'),
+            'prior_games_away':x.get('completed_prior_games_away'),
+            'baseline_simulation':x.get('simulation'),
+            'build16_status':b.get('status'),
+            'build16_simulation':b.get('simulation'),
+            'f1':b.get('failure1_scoring_status'),
+            'f2':b.get('failure2_scoring_attribution'),
+            'f3':b.get('failure3_sustainability'),
+            'rushing_audit':x.get('mandatory_rushing_audit'),
+            'availability_evidence':x.get('availability_evidence'),
+            'qb_risks':x.get('quarterback_availability_risks'),
+            'matchup_evidence':x.get('matchup_evidence'),
+            'missing_stats':x.get('missing_statistical_fields'),
+            'market':x.get('market')
+           },indent=2,default=str)[:48000])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-liberty-kennesaw-frozen-${{ github.run_id }}
+          path: |
+            cfb_artifacts/liberty_kennesaw_pregame.json
+            cfb_artifacts/liberty_kennesaw_pregame.md
+            cfb_artifacts/model_stdout.log
+          if-no-files-found: warn
