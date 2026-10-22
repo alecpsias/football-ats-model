@@ -1,15 +1,7 @@
 name: CFB Failure1 possession-based rushing scoring research
 on:
-  push:
-    branches: [cfb-possession-rush-mechanism-20261022]
-    paths:
-      - 'cfb/rush_possession_response.py'
-      - 'cfb/rush_possession_study.py'
-      - 'cfb/rush_possession_fit_2023.py'
-      - 'cfb/mechanism_build16.py'
-      - 'cfb/test_cfb_rush_possession_response.py'
-      - '.github/workflows/cfb-rush-possession-research.yml'
   workflow_dispatch:
+
 permissions:
   contents: read
 jobs:
