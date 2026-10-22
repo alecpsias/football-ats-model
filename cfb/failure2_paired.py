@@ -19,7 +19,7 @@ from cfb.research_backtest import observed_game
 from cfb.mechanism_build16 import simulate_build16, _failure2_verified_scoring_histories
 from cfb.failure1_learned_shadow import correction as frozen_failure1_correction
 
-def cohort(snapshot,max_games=12):
+def cohort(snapshot,max_games=120):
     root=Path(snapshot)
     manifest=verify(snapshot)
     cutoff=iso_utc(manifest['captured_at_utc'])
@@ -41,9 +41,9 @@ def cohort(snapshot,max_games=12):
             roster.loc[roster.position_abbreviation.eq('QB')].groupby('team_id')}
     historical=collections.defaultdict(list)
     pending=[]
-    # Up to 40 chronologically latest eligible target games. We choose a
-    # deterministic last-N window, never based on final margins or error.
-    targets=collections.deque(maxlen=max_games)
+    # Chronological all-eligible pool; select a deterministic even-spaced
+    # retrospective sample using fixture order ONLY, never observed margins.
+    targets=[]
     target_counts=collections.Counter()
     for kickoff, group in games.groupby('_kickoff',sort=True):
         ready=[item for item in pending if item[0]<=kickoff]
@@ -72,9 +72,14 @@ def cohort(snapshot,max_games=12):
                 target_counts[status]+=1
             additions.extend(((home,h),(away,a)))
         for t,rec in additions:pending.append((kickoff+pd.Timedelta(hours=24),t,rec))
-    return list(targets),dict(target_counts)
+    if max_games<1:raise ValueError('Require positive cohort size')
+    if len(targets)>max_games:
+        idx=np.linspace(0,len(targets)-1,max_games,dtype=int)
+        selected=[targets[int(i)] for i in idx]
+    else:selected=targets
+    return selected,dict(target_counts)
 
-def evaluate(snapshot, max_games=12, runs=5000):
+def evaluate(snapshot, max_games=120, runs=5000):
     if runs!=5000:raise ValueError('Must run exactly 5000 genuine simulations per variant')
     targets,count=cohort(snapshot,max_games)
     results=[]
@@ -119,7 +124,16 @@ def evaluate(snapshot, max_games=12, runs=5000):
           'ACTIVE_OFFENSE_ONLY_PPD_SEPARATE_NONOFFENSIVE_SCORING']
     def mae(name,rows):
         return round(float(np.mean([x[name] for x in rows])),5) if rows else None
-    return {'schema':'cfb_failure2_actual_source_paired_build16_v1',
+    def bootstrap_gain(rows,iterations=3000):
+        if len(rows)<2:return None
+        gains=np.array([x['reference_margin_absolute_error']-
+                        x['corrected_margin_absolute_error'] for x in rows],dtype=float)
+        rng=np.random.default_rng(20261022)
+        draws=rng.integers(0,len(gains),size=(iterations,len(gains)))
+        return [round(float(x),5) for x in np.quantile(gains[draws].mean(axis=1),[.025,.975])]
+    signed=[x['mean_margin_change'] for x in paired]
+    absolute_shift=round(float(np.mean(np.abs(signed))),5) if signed else None
+    return {'schema':'cfb_failure2_actual_source_paired_build16_v2',
       'snapshot':str(snapshot),
       'historical_pregame_cohort':count,
       'selected_games':len(targets),'paired_5000_game_comparisons':len(paired),
@@ -129,7 +143,12 @@ def evaluate(snapshot, max_games=12, runs=5000):
       'corrected_mae':mae('corrected_margin_absolute_error',paired),
       'active_reference_mae':mae('reference_margin_absolute_error',active),
       'active_corrected_mae':mae('corrected_margin_absolute_error',active),
-      'mean_absolute_margin_change':mae('mean_margin_change',paired),
+      'mean_absolute_margin_change':absolute_shift,
+      'paired_mae_gain_original_minus_corrected':round(
+          mae('reference_margin_absolute_error',paired)-mae('corrected_margin_absolute_error',paired),5) if paired else None,
+      'paired_mae_gain_bootstrap95':bootstrap_gain(paired),
+      'active_paired_mae_gain_bootstrap95':bootstrap_gain(active),
+      'n_changed_forecasts':sum(abs(x['mean_margin_change'])>0.001 for x in paired),
       'conclusion':('REAL_SAME_SEED_5000_SCORING_EFFECT_MEASURED' if active
                      else 'NO_ACTIVATED_REAL_SCORING_CORRECTION_IN_TEST_COHORT'),
       'caveats':['Retrospective 2026 source capture, not original pre-kickoff capture',
@@ -142,7 +161,7 @@ def main():
     p=argparse.ArgumentParser()
     p.add_argument('--snapshot',required=True)
     p.add_argument('--out',required=True)
-    p.add_argument('--max-games',type=int,default=12)
+    p.add_argument('--max-games',type=int,default=120)
     p.add_argument('--runs',type=int,default=5000)
     args=p.parse_args()
     report=evaluate(args.snapshot,args.max_games,args.runs)
