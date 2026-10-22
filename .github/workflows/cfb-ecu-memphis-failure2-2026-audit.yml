@@ -1,0 +1,40 @@
+name: CFB Failure 2 ECU Memphis actual 2026 scoring audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-ecu-memphis-failure2-2026-audit.yml'
+      - 'cfb/failure2_teams_2026_audit.py'
+
+permissions:
+  contents: read
+
+jobs:
+  score_attribution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Collect current 2026 source
+        run: |
+          mkdir -p cfb_artifacts
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/ecu_memphis_f2_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/ecu_memphis_f2_snapshot
+      - name: Reconcile every ECU and Memphis game and identify exactly why Build16 fails closed
+        run: |
+          python -m cfb.failure2_teams_2026_audit \
+            --game-id 401862807 \
+            --snapshot cfb_artifacts/ecu_memphis_f2_snapshot \
+            --out cfb_artifacts/ecu_memphis_failure2_scoring_audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ecu-memphis-failure2-actual-scoring-${{ github.run_id }}
+          path: cfb_artifacts/ecu_memphis_failure2_scoring_audit.json
+          if-no-files-found: warn
