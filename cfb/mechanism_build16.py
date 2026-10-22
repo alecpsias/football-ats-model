@@ -16,6 +16,7 @@ from cfb.disruption import matchup_disruption
 from cfb.situational_scoring import matchup_effects
 from cfb.sustainability import correction as sustainability_correction
 from cfb.drive_sustainability_process import parameters as possession_process_parameters
+from cfb.empirical_drive_clock import matchup_clocks
 
 VERSION='cfb-build16-unified-situational-v1'
 BUCKETS=('short_1_2','medium_3_6','long_7_plus')
@@ -274,7 +275,7 @@ def _failure2_verified_scoring_histories(home_id, away_id, histories):
 
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical'):
     if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
@@ -397,8 +398,25 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
     # existing offensive mean-efficiency and touchdown inputs, splitting
     # their outcomes into disjoint possession scoring routes instead.
     sustainability_process=possession_process_parameters(sustain_evidence)
-    sustain_evidence['possession_process_status']=('ACTIVE_DISJOINT_SCORING_AND_CLOCK'
-        if sustainability_process is not None else 'FALLBACK_LEGACY_BUILD16')
+    if failure3_clock_mode not in ('empirical','assumed'):
+        raise ValueError('Invalid Failure3 research clock mode')
+    # Default refuses to simulate unverified new clock assumptions. The
+    # prior assumed-duration candidate can be selected only for paired
+    # ablation, never silently in normal Build16 predictions.
+    clock_evidence=(matchup_clocks(home_id,away_id,histories)
+       if sustainability_process is not None and failure3_clock_mode=='empirical'
+       else {'status':'ASSUMED_DURATION_ABLATION_ONLY' if sustainability_process is not None
+             else 'NO_SUSTAINABILITY_MATCH'})
+    if (failure3_clock_mode=='empirical' and sustainability_process is not None
+        and clock_evidence['status']!='ACTIVE_VERIFIED_SOURCE_DRIVE_CLOCKS'):
+        sustainability_process=None
+    sustain_evidence['clock_audit']={k:v for k,v in clock_evidence.items()
+                                     if k not in ('home','away')}
+    sustain_evidence['possession_process_status']=(
+        'ACTIVE_EMPIRICAL_SOURCE_DRIVE_CLOCK'
+        if sustainability_process is not None and failure3_clock_mode=='empirical'
+        else 'ACTIVE_ASSUMED_DURATION_RESEARCH_ONLY'
+        if sustainability_process is not None else 'FALLBACK_LEGACY_BUILD16_NO_VERIFIED_CLOCKS')
     sustain_evidence['legacy_ppd_subtraction_applied']=False
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
@@ -414,7 +432,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                                   'plays_per_drive':away['components'].get('plays_per_drive_observed')},
                           'turnover_field':profile['turnover_field'],
                           'nonoffensive_scoring':nonoff_samples,
-                          'failure3_score_process':sustainability_process})
+                          'failure3_score_process':sustainability_process,
+                          'failure3_clock_pools':clock_evidence if sustainability_process is not None and failure3_clock_mode=='empirical' else None})
     stress={}
     if stress_runs:
         shocks={'fewer_possessions':{'tempo_shift':-1.5},
