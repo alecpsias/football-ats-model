@@ -9,6 +9,7 @@ on:
       - 'cfb/sustainability.py'
       - 'cfb/drive_sustainability_process.py'
       - 'cfb/empirical_drive_clock.py'
+      - 'cfb/failure3_clock_audit.py'
       - 'cfb/test_cfb_empirical_drive_clock.py'
       - 'cfb/game_script.py'
       - 'cfb/test_cfb_failure3_possession.py'
@@ -40,6 +41,10 @@ jobs:
           mkdir -p cfb_artifacts
           python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/snapshot
           python -m cfb.pipeline verify --snapshot cfb_artifacts/snapshot
+      - name: Audit 2026 real game-clock source coverage
+        run: |
+          python -m cfb.failure3_clock_audit --snapshot cfb_artifacts/snapshot \
+            --out cfb_artifacts/failure3_source_clock_coverage.json
       - name: Paired Build16 empirical-clock Failure 3 (160 games x 5000 each)
         run: |
           python -m cfb.failure3_paired --snapshot cfb_artifacts/snapshot \
@@ -49,5 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: failure3-paired-160-${{ github.run_id }}
-          path: cfb_artifacts/failure3_paired_160_5000.json
+          path: |
+            cfb_artifacts/failure3_paired_160_5000.json
+            cfb_artifacts/failure3_source_clock_coverage.json
           if-no-files-found: warn
