@@ -107,6 +107,7 @@ class OddsInlineRegressionTests(unittest.TestCase):
     def test_unknown_similar_provider_name_not_accepted(self):
         obj=_inline()
         obj['provider']={**obj['provider'],'name':'Draft Kingzz'}
+        obj.pop('$ref',None)  # no external provider fallback in alias test
         quote,_,_=choose_espn_quote(json.dumps({'items':[obj]}).encode(),expected_gid=G)
         self.assertIsNone(quote)
 
