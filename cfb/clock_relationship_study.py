@@ -78,6 +78,7 @@ def study(snapshot,out,min_games=3,max_games=None):
            off['sjsu_id']:off['sjsu_possession_seconds']})
         observed_official.update({'source_drive_count':ref['source_drive_count'],
           'valid_drive_count':ref['valid_drive_count'],
+          'provider_elapsed_only_drives':ref['source_only_elapsed_drive_count'],
           'excluded_drives':ref['excluded'],
           'excluded_drive_examples':ref['excluded_drive_examples'],
           'excluded_seconds_from_clock':3600-ref['observed_seconds_total'],
@@ -201,7 +202,7 @@ def study(snapshot,out,min_games=3,max_games=None):
     report={'schema':'cfb_clock_rush_relationship_v1',
         'source_capture':str(stamp),'games_from_schedule':len(games),
         'statuses':dict(statuses),
-        'source_clock_completeness_gate':'14 drives, at least 6 per team, 3150-3650 sec',
+        'source_clock_completeness_gate':'14 drives, at least 6 per team, 3150-3650 sec; maximum two flagged provider-elapsed-only drives',
         'independent_official_validation':observed_official,
         'observational_regression':regression,
         'historical_prediction_pairs':len(rows),
