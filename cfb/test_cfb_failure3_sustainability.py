@@ -46,7 +46,15 @@ class Failure3Tests(unittest.TestCase):
     def test_bounded_opponent_matchup_and_conservative_missing(self):
         h=decorated()
         for rows in h.values():
-            for row in rows:row['sustainability']=rec()
+            for row in rows:
+                row['sustainability']=rec()
+                row['drive_clock']={
+                    'status':'SOURCE_CLOCK_VERIFIED',
+                    'clock_verification':'ESPN_ELAPSED_AND_ENDPOINTS',
+                    'off':{'explosive_td':[45], 'chain_score':[172,194],
+                           'turnover':[65], 'stalled':[111,137]},
+                    'def':{'explosive_td':[55], 'chain_score':[165,197],
+                           'turnover':[68], 'stalled':[128,141]}}
         frozen=copy.deepcopy(h)
         result=correction(1,2,h)
         self.assertEqual(result['status'],'ACTIVE_BUILD16_UNCALIBRATED_FAILURE3')
