@@ -1,0 +1,9 @@
+{
+  "status": "INSUFFICIENT_GENUINE_FORWARD_GAMES",
+  "completed_forward_games": 0,
+  "minimum_forward_games": 120,
+  "deploy_automatically": false,
+  "selection": "requires >=0.5-point validation margin MAE gain; ATS still separately unvalidated",
+  "build16_paired_games": 0,
+  "build16_status": "AWAITING_GENUINE_FORWARD_COMPARISON"
+}
