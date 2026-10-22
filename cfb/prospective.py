@@ -120,6 +120,13 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
                         failure1_fit_margin_delta=rushing_correction['margin_delta_points'],
                         stress_runs=(5000 if runs==5000 and
                                      rush_screen['requires_full_rush_stress'] else 0))
+            # The concurrently activated older 2023 ridge makes the
+            # previously frozen "learned shadow" numerically identical
+            # to active Build16. Preserve an actual *unadjusted* same-seed
+            # Build16 reference, not an invented second challenger.
+            uncorrected_reference=(simulate_build16(hid,aid,histories,neutral,
+                runs=runs,seed=int(g.game_id)%(2**32))
+                if rushing_correction['margin_delta_points'] is not None else None)
             rush_gate=rushing_gate(rush_screen,challenger,None)
             # Replace the unvalidated fixed negative-run shadow with the
             # 2023-only-fitted rushing mismatch mechanism. The one published
@@ -152,6 +159,7 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
                          'failure1_learned_rush_shadow':learned_shadow,
                          'failure1_shadow_distinct_active_challenger':False,
                          'build16_challenger':challenger,
+                         'build16_uncorrected_reference':uncorrected_reference,
                          'build16_active_failure1_rushing_correction':rushing_correction,
                          'build16_not_primary':True,
                          'quarterback_participation':qbs,
