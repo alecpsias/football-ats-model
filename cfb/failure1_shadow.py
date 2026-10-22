@@ -33,6 +33,10 @@ def shadow(home_id,away_id,histories,neutral,*,runs=5000,seed,source_manifest_sh
           'separate_published_challenger':False,'is_pre_game_research_only':True,
           'market_quote':None,'bet_recommendation':None,
           'status':'INSUFFICIENT_PREKICKOFF_RUSH_EVIDENCE'}
+    # A missing pregame record is evidence insufficiency, not an exception
+    # that should interrupt freezing all other eligible fixtures.
+    if len(histories.get(home_id,[]))<3 or len(histories.get(away_id,[]))<3:
+        return {**base,'failure_reason':'INSUFFICIENT_PRIOR_GAME_HISTORY'}
     r=simulate_build16(home_id,away_id,histories,neutral,
           runs=runs,seed=seed,mismatch_research='negative')
     if r.get('simulation') is None:
