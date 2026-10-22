@@ -1,0 +1,93 @@
+name: CFB Failure 1 2023-trained learned correction cross-season validation
+
+on:
+  push:
+    branches: [cfb-failure1-quantitative-validation-20261022]
+    paths:
+      - 'cfb/failure1_fitted_decision.py'
+      - '.github/workflows/cfb-failure1-fitted-cross-season.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  scoring-holdout:
+    strategy:
+      fail-fast: false
+      matrix:
+        season: [2025, 2026]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Unit regressions no change to standard CFB model
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - uses: actions/download-artifact@v4
+        with:
+          name: cfb-failure1-2023-fit-2024-fitted-holdout
+          repository: alecpsias/football-ats-model
+          run-id: 39830339835
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: cfb_artifacts/prior_model
+      - name: Collect independent future-season historical source
+        run: python -m cfb.pipeline collect --season ${{ matrix.season }} --out cfb_artifacts/f1_${{ matrix.season }}_source
+      - name: Score one frozen 2023-fitted rushing correction, 5000 per game
+        run: |
+          python -m cfb.failure1_quantitative_validation \
+             --snapshot cfb_artifacts/f1_${{ matrix.season }}_source \
+             --out cfb_artifacts/f1_${{ matrix.season }}_holdout.json \
+             --runs 5000 --max-games 180 \
+             --fitted-model cfb_artifacts/prior_model/f1_ridge_frozen_2023.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-f1-learned-rush-fitted-${{ matrix.season }}
+          path: cfb_artifacts/f1_${{ matrix.season }}_holdout.json
+          if-no-files-found: warn
+
+  judge:
+    needs: [scoring-holdout]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: cfb-failure1-2023-fit-2024-fitted-holdout
+          repository: alecpsias/football-ats-model
+          run-id: 39830339835
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: cfb_artifacts/results
+      - uses: actions/download-artifact@v4
+        with:
+          name: cfb-f1-learned-rush-fitted-2025
+          path: cfb_artifacts/results
+      - uses: actions/download-artifact@v4
+        with:
+          name: cfb-f1-learned-rush-fitted-2026
+          path: cfb_artifacts/results
+      - name: No ATS promotion without genuine forward validation
+        run: |
+          python -m cfb.failure1_fitted_decision \
+            --results cfb_artifacts/results/f1_ridge_2024_holdout.json \
+                     cfb_artifacts/results/f1_2025_holdout.json \
+                     cfb_artifacts/results/f1_2026_holdout.json \
+            --out cfb_artifacts/results/f1_cross_year_decision.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-f1-learned-2023-fit-cross-year-conclusion
+          path: cfb_artifacts/results/f1_cross_year_decision.json
+          if-no-files-found: warn
