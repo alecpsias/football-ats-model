@@ -76,7 +76,11 @@ def study(snapshot,out,min_games=3,max_games=None):
         observed_official=clock_reference_difference(ref,
           {off['usc_id']:off['usc_possession_seconds'],
            off['sjsu_id']:off['sjsu_possession_seconds']})
-        observed_official.update({'game_id':str(off['game_id']),
+        observed_official.update({'source_drive_count':ref['source_drive_count'],
+          'valid_drive_count':ref['valid_drive_count'],
+          'excluded_drives':ref['excluded'],
+          'excluded_seconds_from_clock':3600-ref['observed_seconds_total'],
+          'game_id':str(off['game_id']),
           'source':'USC Athletics 2026 box score Aug 29 2026',
           'model_time_home_seconds':ref['teams'][str(off['usc_id'])]['observed_time_seconds'],
           'model_time_away_seconds':ref['teams'][str(off['sjsu_id'])]['observed_time_seconds'],
