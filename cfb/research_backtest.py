@@ -162,7 +162,21 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays
         if df[['int','pos_fumble_lost']].isna().any().any():
             return None
         return int((df['int'].eq(True)|df['pos_fumble_lost'].eq(True)).sum())
-    opp_turnovers=turnovers_observed(opp)
+    # Failure2 turnover-return TDs must use the ORIGINAL play event stream.
+    # Scrimmage normalization can omit a final scoring return or an unusual
+    # play, incorrectly setting the return opportunity denominator to zero.
+    def source_turnovers(team_id):
+        if special_plays is None or special_plays.empty:
+            return None
+        cols={'pos_team_id','int','pos_fumble_lost','game_play_number'}
+        if not cols.issubset(special_plays.columns):return None
+        z=special_plays.loc[special_plays.pos_team_id.eq(team_id)]
+        if z.empty or z[['int','pos_fumble_lost','game_play_number']].isna().any().any():
+            return None
+        if z.game_play_number.duplicated().any():return None
+        return int((z['int'].eq(True)|z.pos_fumble_lost.eq(True)).sum())
+    opp_turnovers=source_turnovers(opponent)
+    own_turnovers_raw=source_turnovers(team)
     return {'drive_clock':observed_drive_clock(special_plays,plays,team,opponent,home_id),
             'sustainability':observed_sustainability(plays,team,opponent),
             'scoring_attribution':attribution,
@@ -172,6 +186,7 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays
             'special_teams_points':attribution['special_teams_points'][attack_side] if verified else None,
             'special_teams_td_count':attribution['special_teams_tds'][attack_side] if verified else None,
             'opponent_turnovers_observed':opp_turnovers,
+            'offense_turnovers_observed_raw':own_turnovers_raw,
             'offensive_points':attribution['offensive_points'][attack_side] if verified else None,
             'offensive_points_conceded':attribution['offensive_points'][defense_side] if verified else None,
             'nonoffensive_points':attribution['nonoffensive_points'][attack_side] if verified else None,
