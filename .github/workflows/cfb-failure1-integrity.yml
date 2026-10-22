@@ -55,5 +55,5 @@ jobs:
           path: |
             cfb_artifacts/preplay_score_validation.json
             cfb_artifacts/failure1_retrospective_replay.json
-            cfb_artifacts/failure1_frozen/index.json
+            cfb_artifacts/failure1_frozen/
           if-no-files-found: warn
