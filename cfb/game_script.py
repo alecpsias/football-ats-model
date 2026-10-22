@@ -19,6 +19,7 @@ import numpy as np
 from cfb.engine import CFB_RULES, _resolve_overtime, validate_projection
 from cfb.return_scoring import scoring_rates, touchdown_points
 from cfb.drive_sustainability_process import chain_draws, draw_possession, duration_multiplier, MAX_EXTRA_CYCLES
+from cfb.empirical_drive_clock import sample_seconds
 
 VERSION = 'cfb-game-script-research-v1'
 # Hypotheses, explicitly not empirical fitted coefficients.
@@ -213,6 +214,27 @@ def simulate_script(home_projection, away_projection, home_history, away_history
     sustain_rng=np.random.default_rng(seed ^ 0xF333ACE)
     sustain_factor={side:chain_draws(sustain_config[side],sustain_rng,n)
         for side in ('home','away')} if sustain_config is not None else None
+    clock_pools=mechanisms.get('failure3_clock_pools') if mechanisms is not None else None
+    if clock_pools is not None and (
+            sustain_config is None or not isinstance(clock_pools,dict)
+            or clock_pools.get('status')!='ACTIVE_VERIFIED_SOURCE_DRIVE_CLOCKS'):
+        raise ValueError('Unverified Failure3 source clock pools')
+    duration_rng=np.random.default_rng(seed ^ 0xC10C3003)
+    def verified_duration(side,points,turnover,explosive,mask):
+        """One real source-elapsed duration for each actually scheduled drive.
+
+        These four labels are exclusive: explosive TD, other offensive
+        scoring, turnover, and stall. Source values are NOT multipliers.
+        """
+        dur=np.zeros(n,dtype=float)
+        category_masks=(
+            ('explosive_td',mask&explosive),
+            ('turnover',mask&turnover),
+            ('chain_score',mask&~explosive&~turnover&(points>0)),
+            ('stalled',mask&~explosive&~turnover&(points==0)))
+        for label,z in category_masks:
+            dur+=sample_seconds(duration_rng,clock_pools[side],label,z)
+        return dur
     elapsed_sec=np.zeros(n,dtype=float)
     base_sec=3600./(2.*draws)
     possessions_h=np.zeros(n,dtype=np.int16)
@@ -312,8 +334,9 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                             h,rng,prop,latent_h+global_env+
                             trailing_rush_resilience_ppd('home',hs-ass),
                             short_h,mask,sustain_config['home'],sustain_factor['home'])
-                        elapsed_sec+=np.where(mask,base_sec*
-                            duration_multiplier(pts,to,exp_td),0.)
+                        elapsed_sec+=(verified_duration('home',pts,to,exp_td,mask)
+                            if clock_pools is not None else np.where(mask,base_sec*
+                            duration_multiplier(pts,to,exp_td),0.))
                         explosive_h+=exp_td.astype(np.int16)
                         chain_scores_h+=chain_score.astype(np.int16)
                         possessions_h+=mask.astype(np.int16)
@@ -342,8 +365,9 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                             a,rng,prop,latent_a+global_env+
                             trailing_rush_resilience_ppd('away',ass-hs),
                             short_a,mask,sustain_config['away'],sustain_factor['away'])
-                        elapsed_sec+=np.where(mask,base_sec*
-                            duration_multiplier(pts,to,exp_td),0.)
+                        elapsed_sec+=(verified_duration('away',pts,to,exp_td,mask)
+                            if clock_pools is not None else np.where(mask,base_sec*
+                            duration_multiplier(pts,to,exp_td),0.))
                         explosive_a+=exp_td.astype(np.int16)
                         chain_scores_a+=chain_score.astype(np.int16)
                         possessions_a+=mask.astype(np.int16)
@@ -419,7 +443,11 @@ def simulate_script(home_projection, away_projection, home_history, away_history
        'failure3_chain_scoring_drives_away':round(float(chain_scores_a.mean()),5),
        'failure3_possessions_home':round(float(possessions_h.mean()),4) if sustain_config is not None else None,
        'failure3_possessions_away':round(float(possessions_a.mean()),4) if sustain_config is not None else None,
-       'failure3_clock_model':'BOUNDED_UNFITTED_EVENT_DURATION_PROXIES' if sustain_config is not None else 'OFF',
+       'failure3_clock_model':('SOURCE_ELAPSED_ENDPOINT_VERIFIED' if clock_pools is not None
+                                 else 'BOUNDED_UNFITTED_EVENT_DURATION_PROXIES' if sustain_config is not None
+                                 else 'OFF'),
+       'failure3_source_clock_verified':clock_pools is not None,
+       'failure3_official_box_top_verified':False,
        'failure3_mean_elapsed_seconds':round(float(elapsed_sec.mean()),2) if sustain_config is not None else None,
        'failure3_fraction_with_extra_possessions':round(float(np.mean((possessions_h>draws)|(possessions_a>draws))),5) if sustain_config is not None else None,
        'simulated_nonoffensive_points_home':round(float(nonoff_home.mean()),3),
