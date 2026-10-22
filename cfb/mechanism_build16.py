@@ -218,7 +218,7 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
                     'disruption_scoring_policy':'No incremental scoring coefficient until independent evidence'}}
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None):
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
         raise ValueError('Stress runs must be 0 or 100..10000')
     home=project_integrated(home_id,away_id,histories,neutral,'home')
@@ -238,6 +238,39 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         proj['_ppd']=float(np.clip(proj['_ppd']+profile[side]['third']['residual_ppd']+
                                   so['delta_ppd']+finish_ppd,.35,5.5))
         proj['_td']=float(np.clip(proj['_td']+so['delta_td_share'],.35,.9))
+    # Optional, explicit ABlation of one challenger. Never active on production
+    # paths without caller selecting a research mode. No published second model.
+    rush_evidence=None
+    if rush_research is not None:
+        from cfb.rushing_interaction_research import experiment
+        rush_evidence=experiment(home_id,away_id,histories,
+                                 home['components'],away['components'],rush_research)
+        if rush_evidence['status']!='UNFITTED_SCENARIO_READY':
+            return {'status':'UNAVAILABLE_RUSH_RESEARCH_EVIDENCE',
+                    'version':VERSION,'simulation':None,
+                    'rush_research':rush_evidence,'not_primary':True,
+                    'ATS_calibrated':False}
+        if rush_evidence['pass_mix_active']:
+            for side,proj in (('home',h),('away',a)):
+                z=rush_evidence[side]
+                proj['_ppd']=float(np.clip(
+                    proj['_ppd']+rush_evidence['ppd_'+side+'_delta'],.35,5.5))
+                # Shift pregame pass tendency while preserving historical
+                # within-game trailing/leading response; interception changes
+                # are only the relative *exposure* already in the script.
+                state=profile[side]['pass_states']
+                prev=profile[side]['neutral_pass_rate']
+                new=1.0-z['projected_rush_share']
+                profile[side]['neutral_pass_rate']=float(np.clip(new,.05,.95))
+                if isinstance(state.get('by_state'),dict):
+                    state['by_state']={k:float(np.clip(v+new-prev,.12,.92))
+                                       for k,v in state['by_state'].items()}
+        if rush_evidence['tempo_active']:
+            # Shared change to possession count, not an additional per-side
+            # possession (both sides' game clocks are coupled).
+            d=rush_evidence['shared_tempo_delta']
+            for proj in (h,a):
+                proj['expected_drives']=float(np.clip(proj['expected_drives']+d,6,19))
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
     out=simulate_script(h,a,histories[home_id],histories[away_id],runs=runs,seed=seed,
@@ -274,10 +307,14 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                            'mean_home_score':r['mean_score_home'],
                            'mean_away_score':r['mean_score_away'],
                            'scenario_inputs':change}
-    return {'status':'AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY','version':VERSION,
+    answer={'status':'AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY','version':VERSION,
        'adverse_sensitivity':{'counterfactuals':stress,'not_fitted':True},
        'simulation':out,'mean_margin_home':out['mean_margin_home'],
        'mean_score_home':out['mean_score_home'],'mean_score_away':out['mean_score_away'],
        'margin_p10_p50_p90':out['margin_p10_p50_p90'],
        'home':home,'away':away,'mechanism_evidence':profile,
        'not_primary':True,'fitted':False,'ATS_calibrated':False}
+    if rush_evidence is not None:
+        answer['rush_research']=rush_evidence
+        answer['not_deployed']=True
+    return answer
