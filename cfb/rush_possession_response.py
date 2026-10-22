@@ -20,9 +20,9 @@ MAX_SHARED_TEMPO=.65
 def _rate(records,prefix,num,den,minimum=20,minimum_games=3):
     pairs=[]
     for x in records:
-        if num+prefix not in x or den+prefix not in x:
+        if prefix+num not in x or prefix+den not in x:
             continue
-        a,b=x[num+prefix],x[den+prefix]
+        a,b=x[prefix+num],x[prefix+den]
         if type(a) not in (int,float) or type(b) not in (int,float) or not math.isfinite(a) or not math.isfinite(b) or a<0 or b<0 or a>b:return None
         if b>0:pairs.append((float(a),float(b)))
     if len(pairs)<minimum_games:return None
