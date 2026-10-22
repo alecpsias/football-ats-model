@@ -1,0 +1,101 @@
+name: CFB Failure 2 official scoring fix verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-failure2-fix-verify.yml'
+      - 'cfb/scoring_attribution.py'
+      - 'cfb/official_scoring_checks.py'
+      - 'cfb/mechanism_build16.py'
+      - 'cfb/research_backtest.py'
+      - 'cfb/test_cfb_failure2_scoring.py'
+      - 'cfb/failure2_teams_2026_audit.py'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free CFB dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Full CFB suite including new official scoring regression tests
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Capture and verify source snapshot
+        run: |
+          mkdir -p cfb_artifacts
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/snapshot
+      - name: Source-specific ECU Memphis scoring repairs
+        run: |
+          python -m cfb.failure2_teams_2026_audit --game-id 401862807 \
+            --snapshot cfb_artifacts/snapshot \
+            --out cfb_artifacts/failure2_scoring_repaired_2026.json
+      - name: Same seeded 5000 simulations with and without repaired Failure2
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import pandas as pd,json
+          from cfb.pipeline import verify,iso_utc
+          from cfb.fresh_matchup import histories_asof
+          from cfb.mechanism_build16 import simulate_build16
+          from cfb.failure1_learned_shadow import correction
+          root=Path('cfb_artifacts/snapshot')
+          manifest=verify(root)
+          cutoff=iso_utc(manifest['captured_at_utc'])
+          schedule=pd.read_parquet(root/'schedule.parquet')
+          p=schedule.loc[schedule.game_id.astype(str).eq('401862807')]
+          if len(p)!=1:raise ValueError('ECU Memphis fixture not found')
+          g=p.iloc[0]
+          if cutoff>=pd.Timestamp(g.start_date).tz_convert('UTC'):
+              raise RuntimeError('Not pregame: cannot publish a new as-of forecast')
+          future,plays,history,eligible=histories_asof(
+            schedule,pd.read_parquet(root/'pbp.parquet'),
+            pd.read_parquet(root/'roster.parquet'),cutoff)
+          h,a=int(g.home_id),int(g.away_id)
+          delta=correction(h,a,history)['margin_delta_points']
+          base=dict(home_id=h,away_id=a,histories=history,
+               neutral=bool(g.neutral_site),runs=5000,seed=int(g.game_id)%(2**32),
+               failure1_fit_margin_delta=delta,spread_home=-10.5)
+          untouched=simulate_build16(failure2_attribution=False,**base)
+          updated=simulate_build16(failure2_attribution=True,**base)
+          def info(z):
+              s=z.get('simulation') or {}
+              return {'status':z['status'],'scoring':z.get('failure2_scoring_attribution'),
+                      'home_score':s.get('mean_score_home'),
+                      'away_score':s.get('mean_score_away'),
+                      'margin_home':s.get('mean_margin_home'),
+                      'home_cover':s.get('home_cover_probability_raw'),
+                      'away_cover':s.get('away_cover_probability_raw'),
+                      'simulations':s.get('simulations'),
+                      'f3_status':(z.get('failure3_sustainability') or {}).get('possession_process_status')}
+          result={'schema':'ecu_memphis_failure2_actual_source_paired_2026_v1',
+                'snapshot_at':str(cutoff),'kickoff':str(g.start_date),
+                'line_home':-10.5,'baseline_build16_f2_disabled':info(untouched),
+                'repaired_build16_f2_enabled':info(updated),
+                'calibrated_cover_probability':False,'each_version_runs':5000}
+          result['activated']=updated['failure2_scoring_attribution']['status'] in (
+                   'ACTIVE_LINKED_DEFENSE_AND_SPECIAL_TEAMS_SCORING',
+                   'ACTIVE_PARTIAL_VERIFIED_SCORING_ONLY')
+          if not result['activated']:raise AssertionError('Repaired verified 2026 scoring did not activate')
+          out=Path('cfb_artifacts/failure2_paired_ecu_memphis_5000.json')
+          out.write_text(json.dumps(result,indent=2))
+          print('VERIFIED_REPAIRED_ECU_MEMPHIS_5000')
+          print(json.dumps(result,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: failure2-verified-official-2026-${{ github.run_id }}
+          path: |
+            cfb_artifacts/failure2_scoring_repaired_2026.json
+            cfb_artifacts/failure2_paired_ecu_memphis_5000.json
+          if-no-files-found: warn
