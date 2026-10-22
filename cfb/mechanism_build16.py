@@ -14,6 +14,7 @@ from cfb.integrated_scoring import project_integrated
 from cfb.game_script import simulate_script
 from cfb.disruption import matchup_disruption
 from cfb.situational_scoring import matchup_effects
+from cfb.sustainability import correction as sustainability_correction
 
 VERSION='cfb-build16-unified-situational-v1'
 BUCKETS=('short_1_2','medium_3_6','long_7_plus')
@@ -272,7 +273,7 @@ def _failure2_verified_scoring_histories(home_id, away_id, histories):
 
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True):
     if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
@@ -383,6 +384,17 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         if not 6<=drives<=19:raise ValueError('Invalid expected drives')
         h['_ppd']=float(np.clip(h['_ppd']+fitted_delta/(2*drives),.35,5.5))
         a['_ppd']=float(np.clip(a['_ppd']-fitted_delta/(2*drives),.35,5.5))
+    # Failure 3: opponent-specific stable-drive versus explosive-only TD
+    # fragility. Offense PPD already includes EPA and scoring drives, so only
+    # a bounded incremental residual is applied. No alteration to baseline.
+    if type(failure3_sustainability) is not bool:
+        raise ValueError('Failure 3 scoring toggle must be boolean')
+    sustain_evidence=(sustainability_correction(home_id,away_id,histories)
+        if failure3_sustainability else {'status':'DISABLED_FOR_PAIRED_FAILURE3_REFERENCE',
+        'ppd_home':0.,'ppd_away':0.,'ATS_calibrated':False})
+    if sustain_evidence['status']=='ACTIVE_BUILD16_UNCALIBRATED_FAILURE3':
+        h['_ppd']=float(np.clip(h['_ppd']+sustain_evidence['ppd_home'],.35,5.5))
+        a['_ppd']=float(np.clip(a['_ppd']+sustain_evidence['ppd_away'],.35,5.5))
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
     out=simulate_script(h,a,histories[home_id],histories[away_id],runs=runs,seed=seed,
@@ -429,7 +441,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
        'margin_p10_p50_p90':out['margin_p10_p50_p90'],
        'home':home,'away':away,'mechanism_evidence':profile,
        'not_primary':True,'fitted':False,'ATS_calibrated':False,
-       'failure2_scoring_attribution':scoring_audit}
+       'failure2_scoring_attribution':scoring_audit,
+       'failure3_sustainability':sustain_evidence}
     if rush_evidence is not None:
         answer['rush_research']=rush_evidence
         answer['not_deployed']=True
