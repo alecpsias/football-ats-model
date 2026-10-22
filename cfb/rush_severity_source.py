@@ -20,6 +20,20 @@ def extract(plays, team_id, opponent_id):
         return {'status':'UNAVAILABLE_REQUIRED_PBP_FIELDS'}
     x=plays.loc[plays.pos_team_id.isin((team_id,opponent_id))].copy()
     if x.empty:return {'status':'UNAVAILABLE_NO_PLAYS'}
+    start_fields={'start.pos_score_diff','start.pos_team_score','start.def_pos_team_score'}
+    crosschecked=start_fields.issubset(x.columns)
+    if crosschecked:
+        from pandas import to_numeric
+        before=to_numeric(x['pos_score_diff_start'],errors='coerce')
+        source=to_numeric(x['start.pos_score_diff'],errors='coerce')
+        pos=to_numeric(x['start.pos_team_score'],errors='coerce')
+        defense=to_numeric(x['start.def_pos_team_score'],errors='coerce')
+        # Source score state is independent of FINAL score. Unknown and
+        # disagreeing pre-play source values are not guessed or overwritten.
+        if (before.isna()|source.isna()|pos.isna()|defense.isna()|
+                before.ne(source)|before.ne(pos-defense)).any():
+            return {'status':'SOURCE_PREPLAY_SCORE_MISMATCH_OR_MISSING'}
+
     x=x.loc[x.rush.eq(True)&x['pass'].eq(False)&x.down.isin((1,2))]
     for col in ('distance','yards_gained','pos_score_diff_start'):
         x[col]=pd.to_numeric(x[col],errors='coerce')
@@ -51,6 +65,7 @@ def extract(plays, team_id, opponent_id):
     return {'status':'OBSERVED_VALID','version':VERSION,
             'features':data,
             'score_state_from':'pos_score_diff_start',
+            'preplay_score_validated_against_start_fields':crosschecked,
             'negative_run':'yards_gained<0',
             'stuffed_run':'yards_gained<=0',
             'early_rush_success_definition':'1st >=50%, 2nd >=70% yards to gain',
