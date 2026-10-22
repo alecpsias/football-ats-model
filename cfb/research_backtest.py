@@ -219,8 +219,13 @@ def project(team, opponent, neutral, side, use_epa):
     """CFB-only experimental matched possession model; uncalibrated priors."""
     prior = CFB_RULES['league_ppd']
     shrink_drives = 25.0
-    off = (total(team,'points') + prior*shrink_drives) / (total(team,'drives')+shrink_drives)
-    defense = (total(opponent,'conceded') + prior*shrink_drives) / (total(opponent,'faced')+shrink_drives)
+    # Failure2 may mask only game records whose scoring TYPE is unverified.
+    # Their EPA, turnovers, tempo and all other measurements still contribute.
+    # Untouched baseline rows contain no mask and retain their historic logic.
+    scoring_team=[r for r in team if r.get('scoring_ppd_eligible',True)]
+    scoring_opponent=[r for r in opponent if r.get('scoring_ppd_eligible',True)]
+    off = (total(scoring_team,'points') + prior*shrink_drives) / (total(scoring_team,'drives')+shrink_drives)
+    defense = (total(scoring_opponent,'conceded') + prior*shrink_drives) / (total(scoring_opponent,'faced')+shrink_drives)
     ppd = prior + .5*((off-prior) + (defense-prior))
     if use_epa:
         po = mean_epa(team,'off_pass'); pd_ = mean_epa(opponent,'def_pass')
