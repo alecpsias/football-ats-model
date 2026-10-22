@@ -37,12 +37,17 @@ def evaluate(snapshot,*,max_games=160,runs=5000):
         evidence=after['failure3_sustainability']
         row={'game_id':game['game_id'],'home':game['home'],'away':game['away'],
              'kickoff':game['kickoff'],'actual_margin':observed,
+             'actual_total':game['actual_total'],
              'seed':seed,'simulations_each':5000,
              'failure1_delta_held_constant':rush,
              'failure2_status_held_constant':after['failure2_scoring_attribution']['status'],
              'failure3_status':evidence['status'],
              'margin_before':a['mean_margin_home'],'margin_after':b['mean_margin_home'],
              'total_before':a['mean_total'],'total_after':b['mean_total'],
+             'total_absolute_error_before':round(abs(a['mean_total']-game['actual_total']),5),
+             'total_absolute_error_after':round(abs(b['mean_total']-game['actual_total']),5),
+             'margin_p10_p90_covered_before':a['margin_p10_p50_p90'][0]<=observed<=a['margin_p10_p50_p90'][2],
+             'margin_p10_p90_covered_after':b['margin_p10_p50_p90'][0]<=observed<=b['margin_p10_p50_p90'][2],
              'margin_interval_before':a['margin_p10_p50_p90'],
              'margin_interval_after':b['margin_p10_p50_p90'],
              'ppd_global_subtraction_applied':evidence.get('legacy_ppd_subtraction_applied'),
@@ -79,8 +84,16 @@ def evaluate(snapshot,*,max_games=160,runs=5000):
           'mean_mae_gain':round(float(gains.mean()),5),
           'gain_bootstrap95':[round(float(x),5) for x in np.quantile(boot,[.025,.975])],
           'mean_absolute_margin_change':round(float(np.mean(
-             [abs(r['margin_shift']) for r in rows])),5)}
-    return {'schema':'cfb_failure3_empirical_verified_possession_clock_paired_v3',
+             [abs(r['margin_shift']) for r in rows])),5),
+          'total_mae_before':round(float(np.mean(
+             [r['total_absolute_error_before'] for r in rows])),5),
+          'total_mae_after':round(float(np.mean(
+             [r['total_absolute_error_after'] for r in rows])),5),
+          'margin_p10_p90_coverage_before':round(float(np.mean(
+             [r['margin_p10_p90_covered_before'] for r in rows])),5),
+          'margin_p10_p90_coverage_after':round(float(np.mean(
+             [r['margin_p10_p90_covered_after'] for r in rows])),5)}
+    return {'schema':'cfb_failure3_empirical_verified_possession_clock_paired_v4',
       'snapshot':str(snapshot),'precutoff_eligible_screen':screen,
       'motivation_fixture_excluded':MOTIVATION_GAME,
       'paired_protocol':'Same game, seed, 5000 simulations; Failure1+Failure2 constant',
