@@ -239,7 +239,8 @@ def _failure2_verified_scoring_histories(home_id,away_id,histories):
         'defensive_return_points','defensive_return_td_count',
         'defensive_return_td_allowed','special_teams_points',
         'special_teams_td_count','nonoffensive_points',
-        'opponent_turnovers_observed','interceptions','fumbles_lost')
+        'opponent_turnovers_observed','offense_turnovers_observed_raw',
+        'interceptions','fumbles_lost')
     def good(r):
         return ((r.get('scoring_attribution') or {}).get('status')
                 =='VERIFIED_RAW_SCORE_RECONCILIATION'
@@ -268,7 +269,7 @@ def _failure2_verified_scoring_histories(home_id,away_id,histories):
                  'defensive_return_points':float(r['defensive_return_points']),
                  'special_teams_tds':int(r['special_teams_td_count']),
                  'special_teams_points':float(r['special_teams_points']),
-                 'offense_turnovers':int(r['interceptions']+r['fumbles_lost']),
+                 'offense_turnovers':int(r['offense_turnovers_observed_raw']),
                  'defense_opportunities':int(r['opponent_turnovers_observed'])}
                 for r in rows]
     observed={'mode':'turnover_linked_defensive_returns_and_separate_special_teams',
