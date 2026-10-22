@@ -3,6 +3,7 @@ import argparse
 import pandas as pd
 from pathlib import Path
 from cfb.pipeline import verify
+from cfb.scoring_attribution import SCORE_PAIRS
 
 def run(snapshot):
     root=Path(snapshot);verify(root)
@@ -10,7 +11,9 @@ def run(snapshot):
     for game in (401860881,401862800):
         p=pbp.loc[pbp.game_id.eq(game)].sort_values('game_play_number').reset_index(drop=True)
         print('EVENT_PROBE_GAME',game,'rows',len(p))
-        score=p[['home_score','away_score']].apply(pd.to_numeric,errors='coerce')
+        pair=next((x for x in SCORE_PAIRS if set(x).issubset(p.columns)),None)
+        if pair is None:raise ValueError('No source score pair')
+        score=p[list(pair)].apply(pd.to_numeric,errors='coerce')
         delta=score.diff().fillna(score)
         interesting=delta.ne(0).any(axis=1)
         if 'td_play' in p.columns:interesting|=p.td_play.fillna(False).eq(True)
