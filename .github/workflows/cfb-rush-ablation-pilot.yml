@@ -1,0 +1,39 @@
+name: CFB rushing ablation retrospective pilot
+
+on:
+  push:
+    branches: [cfb-rushing-interaction-research-20261022]
+    paths:
+      - 'cfb/rushing_study.py'
+      - 'cfb/rushing_interaction_research.py'
+      - 'cfb/mechanism_build16.py'
+      - '.github/workflows/cfb-rush-ablation-pilot.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Capture genuine released free 2026 PBP and schedule
+        run: python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/rush_pilot_snapshot
+      - name: Run chronologically selected pilot, same seeds, 5000 each
+        run: |
+          python -m cfb.rushing_study \
+            --snapshot cfb_artifacts/rush_pilot_snapshot \
+            --out cfb_artifacts/rush_pilot_study.json \
+            --runs 5000 --max-games 12
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-rush-ablation-pilot
+          path: cfb_artifacts/rush_pilot_study.json
+          if-no-files-found: warn
