@@ -219,38 +219,57 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
 
 
 def _failure2_verified_scoring_histories(home_id, away_id, histories):
-    """Clean challenger-only scoring history; keep original baseline immutable.
+    """Correct scoring *before* estimating PPD, with linked turnover return risk.
 
-    Require complete verified scoring attribution for BOTH teams' eligible
-    games before replacing offensive points. Without it, keep previous
-    Build16 scoring (explicitly report missing evidence).
+    Requires fully source-reconciled game histories for both teams; abstains
+    rather than substituting unknown return scoring with fabricated values.
+    Baseline histories are never modified, nor are prior-game counts relabeled.
     """
     import copy
     source_h=histories.get(home_id,())
     source_a=histories.get(away_id,())
-    sides=(source_h,source_a)
-    if any(len(rows)<3 for rows in sides):
-        return histories, None, {'status':'INSUFFICIENT_VERIFIED_SCORING_GAMES'}
-    all_rows=[row for rows in sides for row in rows]
-    if any(row.get('scoring_attribution',{}).get('status')!='VERIFIED_RAW_SCORE_RECONCILIATION'
-           or row.get('offensive_points') is None
-           or row.get('offensive_points_conceded') is None
-           or row.get('nonoffensive_points') is None
-           for row in all_rows):
+    if min(len(source_h),len(source_a))<3:
+        return histories,None,{'status':'INSUFFICIENT_VERIFIED_SCORING_GAMES'}
+    required=('offensive_points','offensive_points_conceded',
+        'defensive_return_points','defensive_return_td_count',
+        'defensive_return_td_allowed','special_teams_points',
+        'special_teams_td_count','nonoffensive_points',
+        'opponent_turnovers_observed','interceptions','fumbles_lost')
+    all_rows=[r for rows in (source_h,source_a) for r in rows]
+    if any((r.get('scoring_attribution') or {}).get('status')!='VERIFIED_RAW_SCORE_RECONCILIATION'
+           or any(r.get(k) is None for k in required)
+           for r in all_rows):
         return histories,None,{'status':'UNVERIFIED_SCORING_ATTRIBUTION_LEGACY_BUILD16'}
     modified={k:[copy.deepcopy(x) for x in rows] for k,rows in histories.items()}
-    for side in (home_id,away_id):
-        for r in modified[side]:
+    for team in (home_id,away_id):
+        for r in modified[team]:
             r['points']=float(r['offensive_points'])
             r['conceded']=float(r['offensive_points_conceded'])
-    # Bootstrap ONLY observed earlier-game non-offensive scoring outcomes.
-    observed={'home':[float(r['nonoffensive_points']) for r in source_h],
-              'away':[float(r['nonoffensive_points']) for r in source_a]}
-    return modified,observed,{'status':'ACTIVE_OFFENSE_ONLY_PPD_SEPARATE_NONOFFENSIVE_SCORING',
+    def record(rows):
+        return [{'defensive_return_tds':int(r['defensive_return_td_count']),
+                 'defensive_return_tds_allowed':int(r['defensive_return_td_allowed']),
+                 'defensive_return_points':float(r['defensive_return_points']),
+                 'special_teams_tds':int(r['special_teams_td_count']),
+                 'special_teams_points':float(r['special_teams_points']),
+                 'offense_turnovers':int(r['interceptions']+r['fumbles_lost']),
+                 'defense_opportunities':int(r['opponent_turnovers_observed'])}
+                for r in rows]
+    observed={'mode':'turnover_linked_defensive_returns_and_separate_special_teams',
+              'home':record(source_h),'away':record(source_a)}
+    for side in ('home','away'):
+        for r in observed[side]:
+            if (r['defensive_return_tds']>r['defense_opportunities']
+                or r['defensive_return_tds_allowed']>r['offense_turnovers']
+                or not 0<=r['special_teams_points']<=28
+                or not 0<=r['defensive_return_points']<=28
+                or r['defensive_return_points'] and not r['defensive_return_tds']):
+                return histories,None,{'status':'INCONSISTENT_VERIFIED_RETURN_SCORING'}
+    return modified,observed,{'status':'ACTIVE_LINKED_DEFENSE_AND_SPECIAL_TEAMS_SCORING',
         'verified_home_games':len(source_h),'verified_away_games':len(source_a),
-        'average_nonoffensive_points_home_history':round(sum(observed['home'])/len(source_h),5),
-        'average_nonoffensive_points_away_history':round(sum(observed['away'])/len(source_a),5),
-        'baseline_unchanged':True,'ATS_calibrated':False}
+        'baseline_unchanged':True,'ATS_calibrated':False,
+        'nonoffensive_components':['turnover_return_td','special_teams_td'],
+        'source':'Earlier official-score-reconciled raw play events only'}
+
 
 
 def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True):
@@ -377,7 +396,7 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                                   'fumble_rate':away['components'].get('matched_lost_fumble_rate'),
                                   'plays_per_drive':away['components'].get('plays_per_drive_observed')},
                           'turnover_field':profile['turnover_field'],
-                          'nonoffensive_score_samples':nonoff_samples})
+                          'nonoffensive_scoring':nonoff_samples})
     stress={}
     if stress_runs:
         shocks={'fewer_possessions':{'tempo_shift':-1.5},
@@ -393,7 +412,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
             'away':{**profile['away'],'int_rate':away['components'].get('matched_interception_rate'),
                     'fumble_rate':away['components'].get('matched_lost_fumble_rate'),
                     'plays_per_drive':away['components'].get('plays_per_drive_observed')},
-            'turnover_field':profile['turnover_field']}
+            'turnover_field':profile['turnover_field'],
+            'nonoffensive_scoring':nonoff_samples}
         for label,change in shocks.items():
             r=simulate_script(h,a,histories[home_id],histories[away_id],
                     runs=stress_runs,seed=seed,mechanisms=mech,**change)
