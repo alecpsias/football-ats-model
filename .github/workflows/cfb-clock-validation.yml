@@ -1,14 +1,6 @@
 name: CFB actual possession clock and play-mix research
 
 on:
-  push:
-    branches: [cfb-possession-clock-validation-20261022]
-    paths:
-      - 'cfb/clock_schema_probe.py'
-      - 'cfb/clock_possession_validation.py'
-      - 'cfb/clock_relationship_study.py'
-      - 'cfb/test_cfb_clock_validation.py'
-      - '.github/workflows/cfb-clock-validation.yml'
   workflow_dispatch:
 
 permissions:
