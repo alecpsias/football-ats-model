@@ -9,12 +9,14 @@ def evaluate(snapshot):
     root=Path(snapshot)
     pbp=pd.read_parquet(root/'pbp.parquet')
     schedule=pd.read_parquet(root/'schedule.parquet')
+    grouped={gid:g for gid,g in pbp.groupby('game_id',sort=False)}
     results=collections.Counter()
     examples=[]
     eligible=schedule.loc[schedule.completed.eq(True) &
         schedule.home_points.notna() & schedule.away_points.notna()]
     for _,g in eligible.iterrows():
-        raw=pbp.loc[pbp.game_id.eq(g.game_id)]
+        raw=grouped.get(g.game_id)
+        if raw is None:continue
         if raw.empty:continue
         x=attribute(raw,g.home_id,g.away_id,g.home_points,g.away_points)
         reason=x.get('reason') or x['status']
