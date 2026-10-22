@@ -15,6 +15,7 @@ from cfb.game_script import simulate_script
 from cfb.disruption import matchup_disruption
 from cfb.situational_scoring import matchup_effects
 from cfb.sustainability import correction as sustainability_correction
+from cfb.drive_sustainability_process import parameters as possession_process_parameters
 
 VERSION='cfb-build16-unified-situational-v1'
 BUCKETS=('short_1_2','medium_3_6','long_7_plus')
@@ -392,9 +393,13 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
     sustain_evidence=(sustainability_correction(home_id,away_id,histories)
         if failure3_sustainability else {'status':'DISABLED_FOR_PAIRED_FAILURE3_REFERENCE',
         'ppd_home':0.,'ppd_away':0.,'ATS_calibrated':False})
-    if sustain_evidence['status']=='ACTIVE_BUILD16_UNCALIBRATED_FAILURE3':
-        h['_ppd']=float(np.clip(h['_ppd']+sustain_evidence['ppd_home'],.35,5.5))
-        a['_ppd']=float(np.clip(a['_ppd']+sustain_evidence['ppd_away'],.35,5.5))
+    # Replace the previous negligible global PPD subtraction. Retain all
+    # existing offensive mean-efficiency and touchdown inputs, splitting
+    # their outcomes into disjoint possession scoring routes instead.
+    sustainability_process=possession_process_parameters(sustain_evidence)
+    sustain_evidence['possession_process_status']=('ACTIVE_DISJOINT_SCORING_AND_CLOCK'
+        if sustainability_process is not None else 'FALLBACK_LEGACY_BUILD16')
+    sustain_evidence['legacy_ppd_subtraction_applied']=False
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
     out=simulate_script(h,a,histories[home_id],histories[away_id],runs=runs,seed=seed,
@@ -408,7 +413,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                                   'fumble_rate':away['components'].get('matched_lost_fumble_rate'),
                                   'plays_per_drive':away['components'].get('plays_per_drive_observed')},
                           'turnover_field':profile['turnover_field'],
-                          'nonoffensive_scoring':nonoff_samples})
+                          'nonoffensive_scoring':nonoff_samples,
+                          'failure3_score_process':sustainability_process})
     stress={}
     if stress_runs:
         shocks={'fewer_possessions':{'tempo_shift':-1.5},
@@ -425,7 +431,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                     'fumble_rate':away['components'].get('matched_lost_fumble_rate'),
                     'plays_per_drive':away['components'].get('plays_per_drive_observed')},
             'turnover_field':profile['turnover_field'],
-            'nonoffensive_scoring':nonoff_samples}
+            'nonoffensive_scoring':nonoff_samples,
+            'failure3_score_process':sustainability_process}
         for label,change in shocks.items():
             r=simulate_script(h,a,histories[home_id],histories[away_id],
                     runs=stress_runs,seed=seed,mechanisms=mech,**change)
