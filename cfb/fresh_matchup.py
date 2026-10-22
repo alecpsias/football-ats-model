@@ -79,7 +79,7 @@ def histories_asof(schedule, pbp, roster, cutoff):
         if part is None or pd.isna(g.home_points) or pd.isna(g.away_points):continue
         hid,aid=int(g.home_id),int(g.away_id)
         h=observed_game(part,hid,aid,g.home_points,g.away_points,qb_ids.get(hid,set()),
-                        special_plays=raw_by_game.get(g.game_id))
+                        special_plays=raw_by_game.get(g.game_id),home_id=hid)
         a=observed_game(part,aid,hid,g.away_points,g.home_points,qb_ids.get(aid,set()),
                         special_plays=raw_by_game.get(g.game_id))
         if h is None or a is None:continue
