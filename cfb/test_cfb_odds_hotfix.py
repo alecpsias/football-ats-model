@@ -88,6 +88,9 @@ class OddsInlineRegressionTests(unittest.TestCase):
             'current':{'pointSpread':{'alternateDisplayValue':'-13.5'}}}
         obj['awayTeamOdds']={**obj['awayTeamOdds'],
             'current':{'pointSpread':{'alternateDisplayValue':'+14'}}}
+        # Never let a failed inline test follow ESPN's optional $ref and
+        # accidentally read a DIFFERENT live provider line.
+        obj.pop('$ref',None)
         q,_,_=choose_espn_quote(json.dumps({'items':[obj]}).encode(),expected_gid=G)
         self.assertIsNone(q)
 
@@ -97,6 +100,7 @@ class OddsInlineRegressionTests(unittest.TestCase):
                 obj=_inline()
                 obj['provider']={**obj['provider'],'name':'Draft Kings'}
                 obj['homeTeamOdds']={**obj['homeTeamOdds'],'spreadOdds':wrong}
+                obj.pop('$ref',None)
                 q,_,_=choose_espn_quote(json.dumps({'items':[obj]}).encode(),expected_gid=G)
                 self.assertIsNone(q)
 
