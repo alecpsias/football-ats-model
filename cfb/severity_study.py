@@ -27,13 +27,14 @@ def mini(value):
             'margin_p10_p50_p90':z['margin_p10_p50_p90'],
             'simulation_count':z['simulations'],'seed':z['seed']}
 
-def paired_score(rows):
-    ret={'paired_games':len(rows)}
+def paired_score(rows,modes=('reference','severity','negative')):
+    rows=[r for r in rows if all(m in r['simulated'] for m in modes)]
+    ret={'paired_games':len(rows),'tested_modes':list(modes)}
     if not rows:return ret
     actual=np.array([r['actual_home_margin'] for r in rows],float)
     total=np.array([r['actual_total'] for r in rows],float)
     win=(actual>0).astype(float)
-    for mode in MODES:
+    for mode in modes:
         x=np.array([r['simulated'][mode]['margin'] for r in rows])
         t=np.array([r['simulated'][mode]['total'] for r in rows])
         p=np.array([r['simulated'][mode]['win_probability_raw'] for r in rows])
@@ -48,7 +49,8 @@ def paired_score(rows):
             'winner_direction_accuracy':round(float(np.mean(np.sign(actual)==np.sign(x))),5)}
     reference=np.array([abs(r['simulated']['reference']['margin']-r['actual_home_margin'])
                          for r in rows])
-    for mode in MODES[1:]:
+    for mode in modes:
+        if mode=='reference':continue
         alt=np.array([abs(r['simulated'][mode]['margin']-r['actual_home_margin'])
                       for r in rows])
         diff=reference-alt
@@ -103,13 +105,19 @@ def study(snapshot,out,*,runs=5000,max_games=180,min_prior_games=3):
                         result=simulate_build16(hid,aid,history,bool(g.neutral_site),
                                runs=runs,seed=seed,mismatch_research=mode)
                         if result.get('simulation') is None:
-                            excluded[mode+'_missing_history']+=1;break
+                            excluded[mode+'_missing_history']+=1
+                            detail=result.get('mismatch_research') or {}
+                            for side in ('home','away'):
+                                reason=(detail.get(side) or {}).get('status')
+                                if reason and reason!='AVAILABLE_UNFITTED':
+                                    excluded['script_data_'+str(reason)] += 1
+                            continue
                         simulations[mode]=mini(result)
                         simulations[mode]['evidence']=result['mismatch_research']
-                    if len(simulations)==len(MODES):
+                    if all(m in simulations for m in ('reference','severity','negative')):
                         chosen.append({'game_id':str(g.game_id),'kickoff':kickoff.isoformat(),
-                            'severity_max_pregame':simulations['combined']['evidence']['max_joint_severity'],
-                            'severity_asymmetry_pregame':simulations['combined']['evidence']['difference_joint_severity'],
+                            'severity_max_pregame':simulations['severity']['evidence']['max_joint_severity'],
+                            'severity_asymmetry_pregame':simulations['severity']['evidence']['difference_joint_severity'],
                             'home':str(g.home_team),'away':str(g.away_team),
                             'prior_home_games':len(history[hid]),
                             'prior_away_games':len(history[aid]),
@@ -156,7 +164,9 @@ def study(snapshot,out,*,runs=5000,max_games=180,min_prior_games=3):
       'cohorts':{'all':paired_score(chosen),
                  'strict_08_severity':paired_score(strong),
                  'top_quartile_exante_signal':paired_score(top_quartile),
-                 'other_three_quartiles':paired_score(others)},
+                 'other_three_quartiles':paired_score(others),
+                 'with_resilience_verified':paired_score(chosen,('reference','resilience','combined')),
+                 'severe_with_resilience_verified':paired_score(strong,('reference','resilience','combined'))},
       'records':chosen,'deploy':False,'ATS_calibrated':False,
       'coefficients_fitted':False,
       'limitations':['Retrospective dataset release, historical row publication times not independently authenticated',
