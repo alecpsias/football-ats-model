@@ -8,17 +8,17 @@ games versus all others, never fit from NM State/Sam Houston outcome.
 from __future__ import annotations
 import math
 
-VERSION="cfb-failure1-severity-negative-script-v1"
+VERSION="cfb-failure1-severity-negative-script-v2-feature-distribution-thresholds"
 MODES=("severity","negative","resilience","combined")
 PRIOR_PLAYS=160.
 MAX_PPD=.45
 MAX_SCRIPT_PPD=.25
 
-def _rate(rows,k,n,minimum):
+def _rate(rows,k,n,minimum,minimum_games=3):
     try:
         x=[(r['mismatch_'+k],r['mismatch_'+n]) for r in rows
            if 'mismatch_'+k in r and 'mismatch_'+n in r]
-        if len(x)<3 or any(type(a) not in (int,float) or type(b) not in (int,float)
+        if len(x)<minimum_games or any(type(a) not in (int,float) or type(b) not in (int,float)
                            or not math.isfinite(a) or not math.isfinite(b)
                            or a<0 or b<=0 or a>b for a,b in x):return None
         num=sum(v for v,_ in x);den=sum(v for _,v in x)
@@ -39,13 +39,16 @@ def _side(off,defense,mode):
         return {'status':'UNAVAILABLE_OFFENSE_OR_DEFENSE_DESIGNED_RUSH'}
     own_r,allow_r,neg,allow_neg,stuff,allow_stuff=required
     reliability=min(own_r[1],allow_r[1])/(min(own_r[1],allow_r[1])+PRIOR_PLAYS)
-    # "Severe" only if BOTH the team's offensive observed early rushing
-    # success AND opponent's allowed rushing success exceed .50. Reward the
-    # joint excess nonlinearly. Do not reward raw EPA already in Build16.
-    joint=max(0.,min(own_r[0],allow_r[0])-.50)
+    # Feature-distribution-only, exploratory V2 cutpoints: offensive 42%
+    # early-rush success and defense allowed 38%, grounded in observed
+    # marginal SOURCE feature medians. The previous 50%/50% threshold
+    # activated in only 2/360 team-sides; not a viable severe-cohort test.
+    # These thresholds were adjusted AFTER seeing feature data: no claim of
+    # independently held-out prediction validation is allowed.
+    joint=max(0.,min(own_r[0]-.42,allow_r[0]-.38))
     matchup_delta=.5*(allow_r[0]-own_r[0])
-    nonlinear=(joint/.12)**1.6 if joint else 0.
-    severity_ppd=_clip((.18*nonlinear+.36*matchup_delta)*reliability,
+    nonlinear=(joint/.075)**1.6 if joint else 0.
+    severity_ppd=_clip((.27*nonlinear+.36*matchup_delta)*reliability,
                        -.24,.35)
     # Negative / stuffed run avoidance: a favorable matchup should reduce
     # expected failed early rushes, improving ability to sustain drives.
@@ -59,9 +62,9 @@ def _side(off,defense,mode):
     if mode in ('resilience','combined'):
         # Require ACTUAL pre-play trailing states on offense and opponents'
         # defensive allowed plays. Never interpolate missing trailing games.
-        own_tr=_rate(off,'off_trailing_rush_good','off_trailing_rush_n',12)
-        allow_tr=_rate(defense,'def_trailing_rush_good','def_trailing_rush_n',12)
-        own_neutral=_rate(off,'off_within_8_rush_good','off_within_8_rush_n',12)
+        own_tr=_rate(off,'off_trailing_rush_good','off_trailing_rush_n',12,minimum_games=2)
+        allow_tr=_rate(defense,'def_trailing_rush_good','def_trailing_rush_n',12,minimum_games=2)
+        own_neutral=_rate(off,'off_within_8_rush_good','off_within_8_rush_n',12,minimum_games=2)
         if any(z is None for z in (own_tr,allow_tr,own_neutral)):
             return {'status':'UNAVAILABLE_VERIFIED_TRAILING_AND_NEUTRAL_STATES'}
         evidence=min(own_tr[1],allow_tr[1],own_neutral[1])
@@ -96,7 +99,7 @@ def _side(off,defense,mode):
        'baseline_ppd_delta':round(base,6),
        'trailing_only_ppd_delta':round(resilience_ppd,6),
        'script_evidence':script,
-       'nonlinear_joint_threshold':.50}
+       'nonlinear_joint_threshold':{'own_success':.42,'opponent_allowed_success':.38}}
 
 def experiment(home_id,away_id,histories,mode):
     if mode not in MODES:raise ValueError('Unrecognized matchup severity mode')
