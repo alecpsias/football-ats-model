@@ -54,6 +54,20 @@ def fetch(url, timeout=12):
     return body
 
 
+def _espn_american(value):
+    """Accept ESPN's exact integral JSON floats (e.g. -110.0).
+
+    Do not loosen the shared American-odds validator: reject fractional,
+    Boolean, NaN, infinite, suspicious/out-of-range values. Strings must
+    already satisfy the standard signed-integer parser.
+    """
+    if type(value) is float:
+        if not math.isfinite(value) or not value.is_integer():
+            raise ValueError('ESPN float spread price must be an exact integer')
+        return _american(int(value))
+    return _american(value)
+
+
 def _odds_item(item):
     """Require signed home-side spread AND BOTH actual spread prices."""
     if not isinstance(item,dict):return None
@@ -65,7 +79,7 @@ def _odds_item(item):
     try:
         spread=float(item['spread'])
         home=item['homeTeamOdds'];away=item['awayTeamOdds']
-        home_odds=_american(home['spreadOdds']);away_odds=_american(away['spreadOdds'])
+        home_odds=_espn_american(home['spreadOdds']);away_odds=_espn_american(away['spreadOdds'])
         if not math.isfinite(spread) or abs(spread)>75 or abs(spread*2-round(spread*2))>1e-8:
             return None
         h_fav=home.get('favorite');a_fav=away.get('favorite')
