@@ -1,0 +1,103 @@
+{
+  "schema": "cfb_failure1_severity_rush_v2_validation_receipt",
+  "date": "2026-10-22",
+  "version": "cfb-failure1-severity-negative-script-v2-feature-distribution-thresholds",
+  "repository": "alecpsias/football-ats-model",
+  "source": "public 2026 SportsDataverse/ESPN CFB PBP, captured retrospectively",
+  "run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39812589498",
+  "run_id": 39812589498,
+  "run_artifact": "https://github.com/alecpsias/football-ats-model/actions/runs/39812589498/artifacts/12441050190",
+  "full_suite_unit_tests": 273,
+  "source_before_oct21_2026": true,
+  "NMSU_SHSU_in_training_or_test": false,
+  "model_policy": "single published CFB Build16 Challenger; baseline and default challenger unchanged",
+  "modes": [
+    "reference",
+    "severity",
+    "negative",
+    "resilience",
+    "combined"
+  ],
+  "simulation_runs_per_game_per_executed_mode": 5000,
+  "games_with_reference_severity_negative": 180,
+  "resilience_games_with_verified_score_state": 0,
+  "score_state_missing_exclusion_count": 180,
+  "unfitted_feature_thresholds_v2": {
+    "off_early_rush_success": 0.42,
+    "opponent_allowed_early_rush_success": 0.38,
+    "strict_severe_joint_excess": 0.04,
+    "selected_after_inspecting_source_feature_distributions": true
+  },
+  "paired": {
+    "all": {
+      "games": 180,
+      "baseline_margin_mae": 14.92766,
+      "severity_margin_mae": 14.90531,
+      "severity_mae_improvement": 0.02234,
+      "severity_bootstrap95": [
+        -0.02881,
+        0.07608
+      ],
+      "negative_margin_mae": 14.82965,
+      "negative_mae_improvement": 0.09801,
+      "negative_bootstrap95": [
+        0.01251,
+        0.18416
+      ],
+      "baseline_brier": 0.22458,
+      "severity_brier": 0.224334,
+      "negative_brier": 0.223465
+    },
+    "large_severe": {
+      "games": 23,
+      "baseline_margin_mae": 15.02413,
+      "severity_margin_mae": 14.87791,
+      "severity_mae_improvement": 0.14622,
+      "severity_bootstrap95": [
+        -0.2031,
+        0.49216
+      ],
+      "baseline_direction_accuracy": 0.78261,
+      "severity_direction_accuracy": 0.69565
+    },
+    "highest_quartile": {
+      "games": 45,
+      "baseline_margin_mae": 16.83587,
+      "severity_margin_mae": 16.71798,
+      "mae_improvement": 0.11789,
+      "bootstrap95": [
+        -0.06514,
+        0.30219
+      ],
+      "baseline_direction_accuracy": 0.73333,
+      "severity_direction_accuracy": 0.68889
+    },
+    "other_three_quartiles": {
+      "games": 135,
+      "baseline_margin_mae": 14.29159,
+      "severity_margin_mae": 14.30109,
+      "mae_improvement": -0.0095
+    }
+  },
+  "source_feature_findings": {
+    "early_off_rush_success_p50": 0.4286,
+    "early_def_allowed_p50": 0.3849,
+    "old_threshold_50_each_activated_team_sides": 2,
+    "team_sides": 360
+  },
+  "decision": {
+    "promote": false,
+    "baseline_changed": false,
+    "default_build16_changed": false,
+    "ATS_validated": false,
+    "why": "Exploratory same 2026 games, V2 severity feature thresholds post inspection, broad gain not convincing, severe cohort 23 highly uncertain and winner direction worse, score-state run-game samples unverified, multiple tests, no timestamped market lines."
+  },
+  "limitations": [
+    "Only 180 historical 2026 games and post-period snapshot, publication timestamps not proven",
+    "No real verified spread lines and no ATS calibration",
+    "No successful resilience simulated games: 0 qualifying score-state histories",
+    "Negative run prevention showed 0.098 MAE apparent gain, but multiple testing and no independent forward confirmation",
+    "Game-script resilience code exists research-only and refuses missing preplay score-state evidence",
+    "Severe thresholds revised after viewing retrospective feature medians"
+  ]
+}
