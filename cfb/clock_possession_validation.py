@@ -65,7 +65,7 @@ def audit_game(raw,game_id,home_id,away_id):
     compare with externally obtained game box score.
     """
     result={'game_id':str(game_id),'status':'UNAVAILABLE',
-            'excluded':{},'drives':[],'teams':{},'observed_seconds_total':None}
+            'excluded':{},'excluded_drive_examples':[],'drives':[],'teams':{},'observed_seconds_total':None}
     if raw is None or raw.empty or 'game_id' not in raw:
         result['status']='NO_SOURCE';return result
     g=raw.loc[raw.game_id.eq(game_id)].copy()
@@ -78,6 +78,18 @@ def audit_game(raw,game_id,home_id,away_id):
         return result
     g=g.loc[g[did].notna()].sort_values('game_play_number')
     reasons=Counter()
+    def reject(reason,drive_id,part):
+        reasons[reason]+=1
+        if len(result['excluded_drive_examples'])<30:
+            x={'drive_id':str(drive_id),'reason':reason,
+               'elapsed_raw':str(_one(part,SOURCE_TIME)),
+               'start_period':str(_one(part,START_PERIOD)),
+               'end_period':str(_one(part,END_PERIOD)),
+               'start_clock':str(_one(part,START_CLOCK)),
+               'end_clock':str(_one(part,END_CLOCK)),
+               'pass_count':int(part['pass'].eq(True).sum()),
+               'rush_count':int(part['rush'].eq(True).sum())}
+            result['excluded_drive_examples'].append(x)
     groups=g.groupby(did,sort=False)
     for drive_id,part in groups:
         # ESPN drive metadata can be repeated on all plays in the drive;
@@ -85,30 +97,30 @@ def audit_game(raw,game_id,home_id,away_id):
         # kicking/receiving team in a kickoff.
         p=_as_bool(part,'pass');r=_as_bool(part,'rush')
         if p is None or r is None:
-            reasons['unknown_play_classification']+=1;continue
+            reject('unknown_play_classification',drive_id,part);continue
         scrim=part.loc[p^r]
         if scrim.empty:
-            reasons['no_scrimmage_plays']+=1;continue
+            reject('no_scrimmage_plays',drive_id,part);continue
         ids=scrim.pos_team_id.dropna().drop_duplicates().tolist()
         if len(ids)!=1 or ids[0] not in (home_id,away_id):
-            reasons['ambiguous_offense_team']+=1;continue
+            reject('ambiguous_offense_team',drive_id,part);continue
         team=int(ids[0])
         reg_start=_reg_abs_clock(_one(part,START_PERIOD),_one(part,START_CLOCK))
         reg_end=_reg_abs_clock(_one(part,END_PERIOD),_one(part,END_CLOCK))
         if reg_start is None or reg_end is None:
-            reasons['missing_regulation_clock']+=1;continue
+            reject('missing_regulation_clock',drive_id,part);continue
         difference=reg_start-reg_end
         if not 0<=difference<=900:
-            reasons['invalid_regulation_clock_delta']+=1;continue
+            reject('invalid_regulation_clock_delta',drive_id,part);continue
         elapsed=_seconds(_one(part,SOURCE_TIME))
         if elapsed is None or not 0<=elapsed<=900:
-            reasons['missing_or_invalid_source_elapsed']+=1;continue
+            reject('missing_or_invalid_source_elapsed',drive_id,part);continue
         if abs(difference-elapsed)>10:
-            reasons['source_clock_disagreement']+=1;continue
+            reject('source_clock_disagreement',drive_id,part);continue
         numrun=int(r.loc[scrim.index].sum())
         numpass=int(p.loc[scrim.index].sum())
         if numrun+numpass<1:
-            reasons['no_valid_run_pass_plays']+=1;continue
+            reject('no_valid_run_pass_plays',drive_id,part);continue
         result['drives'].append({'drive_id':str(drive_id),'team_id':team,
                'duration_seconds':elapsed,'clock_delta_seconds':difference,
                'rush_plays':numrun,'pass_plays':numpass,
