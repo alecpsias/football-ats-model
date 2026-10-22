@@ -300,6 +300,11 @@ def simulate_script(home_projection, away_projection, home_history, away_history
             mask=active & (first_home==hfirst)
             if not np.any(mask):continue
             for side in (('home','away') if hfirst else ('away','home')):
+                # A completed first possession may consume the final clock.
+                # Do not award a phantom second possession in that cycle.
+                if sustain_config is not None:
+                    mask=mask & (elapsed_sec<3600.)
+                    if not np.any(mask):continue
                 if side=='home':
                     prop=state_propensity('home',to_h,hs-ass)
                     if sustain_config is not None:
@@ -415,6 +420,8 @@ def simulate_script(home_projection, away_projection, home_history, away_history
        'failure3_possessions_home':round(float(possessions_h.mean()),4) if sustain_config is not None else None,
        'failure3_possessions_away':round(float(possessions_a.mean()),4) if sustain_config is not None else None,
        'failure3_clock_model':'BOUNDED_UNFITTED_EVENT_DURATION_PROXIES' if sustain_config is not None else 'OFF',
+       'failure3_mean_elapsed_seconds':round(float(elapsed_sec.mean()),2) if sustain_config is not None else None,
+       'failure3_fraction_with_extra_possessions':round(float(np.mean((possessions_h>draws)|(possessions_a>draws))),5) if sustain_config is not None else None,
        'simulated_nonoffensive_points_home':round(float(nonoff_home.mean()),3),
        'simulated_nonoffensive_points_away':round(float(nonoff_away.mean()),3),
        'simulated_defensive_return_points_home':round(float(def_pts_home.mean()),3),
