@@ -24,7 +24,7 @@ from cfb.personnel_effects import (quarterback_effects, skill_player_exposures,
 from cfb.pipeline import verify, split_games, normalize_pbp_teams, iso_utc
 from cfb.research_backtest import observed_game, project
 from cfb.failure1_shadow import include_prior_game
-from cfb.failure1_learned_shadow import shadow as fitted_rush_shadow
+from cfb.failure1_learned_shadow import shadow as fitted_rush_shadow, correction as fitted_rush_correction
 from cfb.mandatory_rushing_audit import audit as rushing_audit, gate as rushing_gate
 
 
@@ -114,8 +114,10 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
             sim=simulate(hp,ap,runs=runs,seed=int(g.game_id)%(2**32))
             signals=matchup_signals(hid,aid,histories)
             rush_screen=rushing_audit(hid,aid,histories,signals)
+            rushing_correction=fitted_rush_correction(hid,aid,histories)
             challenger=simulate_build16(hid,aid,histories,neutral,
                         runs=runs,seed=int(g.game_id)%(2**32),
+                        failure1_fit_margin_delta=rushing_correction['margin_delta_points'],
                         stress_runs=(5000 if runs==5000 and
                                      rush_screen['requires_full_rush_stress'] else 0))
             rush_gate=rushing_gate(rush_screen,challenger,None)
@@ -150,6 +152,7 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
                          'failure1_learned_rush_shadow':learned_shadow,
                          'failure1_shadow_distinct_active_challenger':False,
                          'build16_challenger':challenger,
+                         'build16_active_failure1_rushing_correction':rushing_correction,
                          'build16_not_primary':True,
                          'quarterback_participation':qbs,
                          'availability_evidence':statuses,
