@@ -121,7 +121,7 @@ def evaluate(snapshot, max_games=120, runs=5000):
         results.append(result)
     paired=[x for x in results if x.get('paired_5000_verified')]
     active=[x for x in paired if x.get('failure2_status')==
-          'ACTIVE_OFFENSE_ONLY_PPD_SEPARATE_NONOFFENSIVE_SCORING']
+          'ACTIVE_LINKED_DEFENSE_AND_SPECIAL_TEAMS_SCORING']
     def mae(name,rows):
         return round(float(np.mean([x[name] for x in rows])),5) if rows else None
     def bootstrap_gain(rows,iterations=3000):
