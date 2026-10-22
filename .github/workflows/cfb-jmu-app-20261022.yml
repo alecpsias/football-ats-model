@@ -1,0 +1,90 @@
+name: CFB JMU at App 2026-10-22 frozen pregame 5000
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-jmu-app-20261022.yml'
+permissions:
+  contents: read
+
+jobs:
+  matchup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free CFB dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Verify actual 2026 source data
+        run: |
+          mkdir -p cfb_artifacts
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/jmu_app_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/jmu_app_snapshot
+      - name: Resolve exact JMU-App fixture in the verified source schedule
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          root='cfb_artifacts/jmu_app_snapshot/'
+          df=pd.read_parquet(root+'schedule.parquet')
+          h=df.home_team.astype(str).str.lower()
+          a=df.away_team.astype(str).str.lower()
+          mask=h.str.contains('appalachian|app state',regex=True)&a.str.contains('james madison',regex=False)
+          rows=df.loc[mask]
+          if len(rows)!=1:raise ValueError('Fixture identification ambiguous: '+str(rows[['game_id','home_team','away_team','start_date']].to_dict('records')))
+          g=rows.iloc[0]
+          if g.completed:raise ValueError('Game already completed; not pregame')
+          import os
+          with open(os.environ['GITHUB_ENV'],'a') as o:
+              for k,v in {'CFB_HOME_NAME':str(g.home_team),'CFB_AWAY_NAME':str(g.away_team),
+                          'CFB_GAME_ID':str(g.game_id)}.items():
+                  o.write(k+'='+v+'\n')
+          print('IDENTIFIED',g.game_id,str(g.away_team),'at',str(g.home_team),'kickoff UTC',g.start_date)
+          PY
+      - name: Investigate statistics before 5000 model simulations
+        run: |
+          python -m cfb.fresh_matchup --mode pregame \
+            --team-a "$CFB_AWAY_NAME" --team-b "$CFB_HOME_NAME" \
+            --game-id "$CFB_GAME_ID" \
+            --snapshot cfb_artifacts/jmu_app_snapshot \
+            --odds cfb/_market_disabled \
+            --availability-dir cfb/availability \
+            --runs 5000 --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
+            --out cfb_artifacts/jmu_app_pregame.json > cfb_artifacts/jmu_app_stdout.log
+          python - <<'PY'
+          import json
+          x=json.load(open('cfb_artifacts/jmu_app_pregame.json'))
+          c=x.get('build16_challenger') or {}
+          print('PREKICKOFF_JMU_APP_FROZEN_RESULTS')
+          print(json.dumps({
+           'status':x['status'],'away':x['away'],'home':x['home'],'game_id':x['game_id'],
+           'kickoff_utc':x['kickoff_utc'],'generated_at':x['prediction_generated_at_utc'],
+           'source_at':x['source_snapshot_at_utc'],
+           'prior_games_home':x['completed_prior_games_home'],
+           'prior_games_away':x['completed_prior_games_away'],
+           'baseline':x.get('simulation'),'challenger_status':c.get('status'),
+           'build16':c.get('simulation'),
+           'f1':c.get('failure1_scoring_status'),
+           'f2':c.get('failure2_scoring_attribution'),
+           'f3':c.get('failure3_sustainability'),
+           'rush':x.get('mandatory_rushing_audit'),
+           'matchup':x.get('matchup_evidence'),
+           'qb_usage':x.get('quarterback_participation'),
+           'availability':x.get('availability_evidence'),
+           'missing':x.get('missing_statistical_fields'),
+           'market':x.get('market')
+          },indent=2,default=str)[:51000])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jmu-app-frozen-5000-${{ github.run_id }}
+          path: |
+            cfb_artifacts/jmu_app_pregame.json
+            cfb_artifacts/jmu_app_pregame.md
+            cfb_artifacts/jmu_app_stdout.log
+          if-no-files-found: warn
