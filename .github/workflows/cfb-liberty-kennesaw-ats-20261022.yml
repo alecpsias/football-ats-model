@@ -1,0 +1,79 @@
+name: CFB Liberty Kennesaw 2026-10-22 same-seed ATS line sensitivity
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-liberty-kennesaw-ats-20261022.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  odds_sensitivity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Capture and verify source statistics BEFORE kickoff
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/market_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/market_snapshot
+      - name: Exact 5000-outcome spread sensitivity for current published market lines
+        run: |
+          python - <<'PY'
+          import json,datetime
+          from pathlib import Path
+          import pandas as pd
+          from cfb.pipeline import verify,iso_utc
+          from cfb.fresh_matchup import histories_asof,resolve_fixture
+          from cfb.mechanism_build16 import simulate_build16
+          from cfb.failure1_learned_shadow import correction
+          root=Path('cfb_artifacts/market_snapshot')
+          manifest=verify(root)
+          cutoff=iso_utc(manifest['captured_at_utc'])
+          sched=pd.read_parquet(root/'schedule.parquet')
+          pbp=pd.read_parquet(root/'pbp.parquet')
+          roster=pd.read_parquet(root/'roster.parquet')
+          future,mapped,histories,eligible=histories_asof(sched,pbp,roster,cutoff)
+          g=resolve_fixture(future,'Liberty','Kennesaw State','401871056')
+          h,a=int(g.home_id),int(g.away_id)
+          assert str(g.home_team)=='Kennesaw State' and str(g.away_team)=='Liberty'
+          assert cutoff<pd.Timestamp(g.start_date).tz_convert('UTC')
+          f1=correction(h,a,histories)
+          kwargs=dict(home_id=h,away_id=a,histories=histories,
+               neutral=bool(g.neutral_site),runs=5000,seed=401871056,
+               failure1_fit_margin_delta=f1['margin_delta_points'])
+          result={'source_snapshot_at':str(cutoff),'game_id':'401871056',
+               'away':'Liberty','home':'Kennesaw State',
+               'simulations_per_line':5000,'market_quotes_are_public_web_not_archived_in_model':True,
+               'line_sensitivity':[]}
+          for line in (9.5,10.,10.5,11.5):
+              x=simulate_build16(spread_home=line,**kwargs)
+              s=x['simulation']
+              assert s['simulations']==5000
+              result['line_sensitivity'].append({'kennesaw_plus':line,
+                 'home_cover_probability_raw':s['home_cover_probability_raw'],
+                 'liberty_cover_probability_raw':s['away_cover_probability_raw'],
+                 'push_probability_raw':s['push_probability_raw'],
+                 'kennesaw_win_probability_raw':s['home_win_probability_raw'],
+                 'score_liberty':s['mean_score_away'],'score_kennesaw':s['mean_score_home'],
+                 'liberty_margin':-s['mean_margin_home'],
+                 'margin_p10_p50_p90_home':s['margin_p10_p50_p90']})
+          out=Path('cfb_artifacts/kennesaw_ats_5000.json')
+          out.parent.mkdir(exist_ok=True,parents=True)
+          out.write_text(json.dumps(result,indent=2))
+          print('FROZEN_5000_OUTCOME_ATS_SENSITIVITY')
+          print(json.dumps(result,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: liberty-kennesaw-ats-5000-${{ github.run_id }}
+          path: cfb_artifacts/kennesaw_ats_5000.json
+          if-no-files-found: warn
