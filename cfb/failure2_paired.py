@@ -121,8 +121,9 @@ def evaluate(snapshot, max_games=120, runs=5000):
                 'paired_5000_verified':rs['simulations']==cs['simulations']==5000})
         results.append(result)
     paired=[x for x in results if x.get('paired_5000_verified')]
-    active=[x for x in paired if x.get('failure2_status')==
-          'ACTIVE_LINKED_DEFENSE_AND_SPECIAL_TEAMS_SCORING']
+    active=[x for x in paired if x.get('failure2_status') in (
+          'ACTIVE_LINKED_DEFENSE_AND_SPECIAL_TEAMS_SCORING',
+          'ACTIVE_PARTIAL_VERIFIED_SCORING_ONLY')]
     def mae(name,rows):
         return round(float(np.mean([x[name] for x in rows])),5) if rows else None
     def bootstrap_gain(rows,iterations=3000):
@@ -134,7 +135,7 @@ def evaluate(snapshot, max_games=120, runs=5000):
         return [round(float(x),5) for x in np.quantile(gains[draws].mean(axis=1),[.025,.975])]
     signed=[x['mean_margin_change'] for x in paired]
     absolute_shift=round(float(np.mean(np.abs(signed))),5) if signed else None
-    return {'schema':'cfb_failure2_actual_source_paired_build16_v2',
+    return {'schema':'cfb_failure2_actual_source_paired_build16_v3_official_scoring_types',
       'snapshot':str(snapshot),
       'historical_pregame_cohort':count,
       'selected_games':len(targets),'paired_5000_game_comparisons':len(paired),
