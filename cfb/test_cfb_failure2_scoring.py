@@ -8,7 +8,8 @@ class Failure2Tests(unittest.TestCase):
     def test_clean_offense_and_defense_score(self):
         # A 7-point offensive touchdown and a 7-point pick-six.
         raw=pd.DataFrame({'game_play_number':[1,2,3],
-                          'pos_team_id':[10,20,20],
+                          'pos_team_id':[10,10,20],
+                          'offense_score_play':[False,True,False],
                           'home_score':[0,7,14],
                           'away_score':[0,0,0]})
         v=attribute(raw,10,20,14,0)
