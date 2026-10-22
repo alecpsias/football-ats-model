@@ -118,17 +118,14 @@ jobs:
           python -m cfb.archive pack \
             --frozen cfb_artifacts/prospective_frozen \
             --out cfb/archive/forecasts
-      - name: Recover valid pregame odds from the original Oct 20 captured raw ESPN bytes
-        if: ${{ vars.CFB_CAPTURE_ODDS == 'true' }}
+      - name: Recover ALL verifiable original ESPN pregame spread-and-price captures
+        # The actual ESPN core API sends whole-number American odds as JSON
+        # floats (e.g. -110.0) and provider name sometimes 'Draft Kings'.
+        # Previous captures contained intact raw quotes but misclassified them.
+        # Reparse only the UNCHANGED original before-kickoff bytes, retaining
+        # original timestamps, originals and source digests.
         run: |
-          if test -f cfb/archive/odds/recovered/39452026663.zip; then
-            python -m cfb.free_odds verify cfb/archive/odds/recovered/39452026663.zip
-            echo "Previously recovered original odds retained unchanged"
-          else
-            python -m cfb.odds_recover \
-              --original cfb/archive/odds/39452026663.zip \
-              --out cfb/archive/odds/recovered/39452026663.zip
-          fi
+          python -m cfb.recover_all_free_odds --root cfb/archive/odds
       - name: Collect freely observed ESPN spread and prices (if present)
         # Freeze actual captured free sportsbook observations for matched
         # Build16 vs Failure-1 shadow ATS research. Missing ESPN odds
