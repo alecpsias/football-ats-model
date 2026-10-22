@@ -218,7 +218,7 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
                     'disruption_scoring_policy':'No incremental scoring coefficient until independent evidence'}}
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None):
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
         raise ValueError('Stress runs must be 0 or 100..10000')
     home=project_integrated(home_id,away_id,histories,neutral,'home')
@@ -271,6 +271,22 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
             d=rush_evidence['shared_tempo_delta']
             for proj in (h,a):
                 proj['expected_drives']=float(np.clip(proj['expected_drives']+d,6,19))
+    # Experimental chain mechanism: opt-in only, no default impact. The
+    # original third-down success and rushing EPA are already in Build16;
+    # apply only a bounded *relative-to-own-history* interaction residual.
+    chain_evidence=None
+    if chain_research is not None:
+        if rush_research is not None:
+            raise ValueError('Only one optional CFB interaction experiment at a time')
+        from cfb.chain_interaction_research import experiment as chain_experiment
+        chain_evidence=chain_experiment(home_id,away_id,histories,chain_research)
+        if chain_evidence['status']!='UNFITTED_SCENARIO_READY':
+            return {'status':'UNAVAILABLE_CHAIN_RESEARCH_EVIDENCE',
+                    'version':VERSION,'simulation':None,
+                    'chain_research':chain_evidence,'not_primary':True,
+                    'ATS_calibrated':False}
+        h['_ppd']=float(np.clip(h['_ppd']+chain_evidence['ppd_home_delta'],.35,5.5))
+        a['_ppd']=float(np.clip(a['_ppd']+chain_evidence['ppd_away_delta'],.35,5.5))
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
     out=simulate_script(h,a,histories[home_id],histories[away_id],runs=runs,seed=seed,
@@ -316,5 +332,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
        'not_primary':True,'fitted':False,'ATS_calibrated':False}
     if rush_evidence is not None:
         answer['rush_research']=rush_evidence
+        answer['not_deployed']=True
+    if chain_evidence is not None:
+        answer['chain_research']=chain_evidence
         answer['not_deployed']=True
     return answer
