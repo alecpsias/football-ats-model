@@ -140,6 +140,7 @@ class PairTests(unittest.TestCase):
             'simulation':{'simulations':5000,'seed':int(GAME)%2**32,
                           'home_win_probability_raw':.54}}
         eligible=self.root/'activated_ridge_with_baseline'
+        pair['github_run_id']='100006'
         pack(eligible,100006,'2026-10-22T15:00:00+00:00',pair)
         valid,counts=load_first_frozen_pairs(eligible)
         self.assertEqual(len(valid),1)
