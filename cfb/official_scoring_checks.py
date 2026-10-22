@@ -6,6 +6,7 @@ athletics scoring summaries and explicit named return touchdown event checks.
 Published prior to 2026-10-22 ECU/Memphis matchup. No future game results.
 """
 from __future__ import annotations
+import pandas as pd
 
 OFFICIAL_BOOK={
   "401860881":{
@@ -48,6 +49,13 @@ def official_reconciliation(raw,home_id,away_id,home_final,away_final):
     if ('known_home_id' in proof and str(home_id)!=str(proof['known_home_id'])
        or 'known_away_id' in proof and str(away_id)!=str(proof['known_away_id'])):
         return None
+    pair=next((a for a in (('home_score','away_score'),('homeScore','awayScore'),
+                               ('home.score','away.score'),('home_points','away_points'))
+                if set(a).issubset(raw.columns)),None)
+    if pair is None or 'game_play_number' not in raw.columns:return None
+    ordered=raw.sort_values('game_play_number')
+    final=ordered[list(pair)].iloc[-1].apply(pd.to_numeric,errors='coerce').tolist()
+    if final!=[float(home_final),float(away_final)]:return None
     if 'type.text' not in raw.columns or 'text' not in raw.columns:return None
     event_text=(raw['type.text'].fillna('').astype(str)+' '+
                 raw['text'].fillna('').astype(str)).str.lower()
