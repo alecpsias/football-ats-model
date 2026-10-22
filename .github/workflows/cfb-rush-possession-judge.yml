@@ -1,12 +1,7 @@
 name: CFB rush possession 2023-frozen 540-game decision gate
 on:
-  push:
-    branches: [cfb-possession-rush-mechanism-20261022]
-    paths:
-      - 'cfb/rush_possession_decision.py'
-      - 'cfb/FAILURE1_RUSH_POSSESSION_2023_FROZEN.json'
-      - '.github/workflows/cfb-rush-possession-judge.yml'
   workflow_dispatch:
+
 permissions:
   contents: read
   actions: read
