@@ -1,0 +1,37 @@
+name: CFB Failure 3 no-fit Sam Houston diagnostic
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'cfb/failure3_motivation.py'
+      - '.github/workflows/cfb-failure3-motivation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Verify real 2026 source
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/snapshot
+      - name: Read locked prior histories; simulate motivating game without fitting
+        run: |
+          python -m cfb.failure3_motivation --snapshot cfb_artifacts/snapshot \
+            --out cfb_artifacts/failure3_motivation_5000.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: failure3-no-fit-${{ github.run_id }}
+          path: cfb_artifacts/failure3_motivation_5000.json
+          if-no-files-found: warn
