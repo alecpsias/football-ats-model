@@ -1,7 +1,7 @@
 name: CFB possession reconciled with active Build16 ridge
 on:
   push:
-    branches: [cfb-possession-merge-reconciled-20261022]
+    branches: [cfb-possession-final-safe-20261022]
     paths:
       - 'cfb/mechanism_build16.py'
       - 'cfb/rush_possession_response.py'
