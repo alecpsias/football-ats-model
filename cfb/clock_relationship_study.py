@@ -26,6 +26,12 @@ USC_SJSU_OFFICIAL={
     'usc_rushes':40,'sjsu_rushes':24,
     'usc_pass_attempts':36,'sjsu_pass_attempts':32}
 
+# Independently published UNC and TCU Athletic game center, Aug 29, 2026.
+# https://goheels.com/game-center/26876
+UNC_TCU_OFFICIAL={
+    'game_id':401856766,'tcu_id':2628,'unc_id':153,
+    'tcu_possession_seconds':1981,'unc_possession_seconds':1618}
+
 def _weighted(rows,key,weight):
     included=[r for r in rows if r.get(key) is not None and r.get(weight,0)>0]
     if not included:return None
@@ -96,6 +102,24 @@ def study(snapshot,out,min_games=3,max_games=None):
           'pass_plays_away':ref['teams'][str(off['sjsu_id'])]['pass_plays'],
           'official_pass_attempts_home':off['usc_pass_attempts'],
           'official_pass_attempts_away':off['sjsu_pass_attempts']})
+    # Second independent published game, contrasting playing styles and a
+    # neutral site. One second can be omitted in official period bookkeeping.
+    n=UNC_TCU_OFFICIAL
+    other=measured.get(str(n['game_id']))
+    if other is None:
+        second_official={'status':'GAME_NOT_IN_CAPTURE'}
+    else:
+        second_official=clock_reference_difference(other,{
+          n['tcu_id']:n['tcu_possession_seconds'],
+          n['unc_id']:n['unc_possession_seconds']})
+        second_official.update({'game_id':str(n['game_id']),
+          'source':'University of North Carolina Athletics Aug 29 game center',
+          'official_seconds_tcu':n['tcu_possession_seconds'],
+          'official_seconds_unc':n['unc_possession_seconds'],
+          'observed_seconds_tcu':other['teams'][str(n['tcu_id'])]['observed_time_seconds'],
+          'observed_seconds_unc':other['teams'][str(n['unc_id'])]['observed_time_seconds'],
+          'provider_elapsed_only_drives':other['source_only_elapsed_drive_count'],
+          'excluded_drives':other['excluded']})
     # Exclude incomplete possession sources from statistical claims.
     eligible_games=[g for _,g in games.iterrows() if measured[str(g.game_id)]['status']=='COMPLETE_REGULATION_CLOCK_AUDIT']
     history=defaultdict(list);pending=[];rows=[]
@@ -204,6 +228,7 @@ def study(snapshot,out,min_games=3,max_games=None):
         'statuses':dict(statuses),
         'source_clock_completeness_gate':'14 drives, at least 6 per team, 3150-3650 sec; maximum two flagged provider-elapsed-only drives',
         'independent_official_validation':observed_official,
+        'second_independent_official_validation':second_official,
         'observational_regression':regression,
         'historical_prediction_pairs':len(rows),
         'distinct_prediction_games':len(set(r['game_id'] for r in rows)),
