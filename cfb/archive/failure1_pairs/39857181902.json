@@ -1,0 +1,316 @@
+{
+  "ATS_at_joint_observed_spread": {
+    "ATS_calibrated": false,
+    "completed_games_with_joint_real_pregame_quote": 0,
+    "different_ATS_sides": 0,
+    "different_side_game_ids": [],
+    "fair_paired_decisive_spreads": 0,
+    "learned": {
+      "correct": 0,
+      "cover_accuracy": null,
+      "wrong": 0
+    },
+    "original_book_publication_time_verified": false,
+    "reference": {
+      "correct": 0,
+      "cover_accuracy": null,
+      "wrong": 0
+    },
+    "same_ATS_sides": 0,
+    "spread_source_status": "observed ESPN free quote; no exact sportsbook quote publication attestation"
+  },
+  "ATS_calibrated": false,
+  "automatic_challenger_promotion": false,
+  "final_schedule_observed_at_utc": "2026-10-22T21:31:43.012572+00:00",
+  "final_schedule_source_sha256": "9b970cff51bda692cc9d00eab06c73d63ae8e6bceac29301ff33c309f9e462bc",
+  "final_schedule_source_url": "https://github.com/sportsdataverse/sportsdataverse-data/releases/download/cfb_schedules/cfb_schedules_2026.parquet",
+  "first_eligible_paired_forecast_games": 45,
+  "first_eligible_paired_games_with_any_real_pre_kickoff_quote": 41,
+  "first_paired_not_first_ever_forecast": 45,
+  "limitations": [
+    "May use first eligible paired forecast that is LATER than the first-ever forecast; never substitute it as original earliest forecast",
+    "Bookmaker original quote-publication time not verified; only real ESPN observation time",
+    "Mutable final source independently frozen by caller, not an official settlement feed",
+    "No simulation reruns or model fitting after real scores are known",
+    "Repeated-team games induce dependence; paired bootstrap CI is descriptive"
+  ],
+  "margin": {
+    "games": 0,
+    "learned_brier": null,
+    "learned_mae": null,
+    "learned_margin80_coverage": null,
+    "mae_gain_reference_minus_learned": null,
+    "paired_bootstrap95_gain": null,
+    "reference_brier": null,
+    "reference_mae": null,
+    "reference_margin80_coverage": null
+  },
+  "no_historical_forecast_backfill": true,
+  "pending": [
+    {
+      "game_id": "401869845",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401871056",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401862807",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401858271",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401861965",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401862808",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401864525",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401858272",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401856728",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401856841",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401858270",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401858274",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401858496",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401858498",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401862809",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401866450",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401866446",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401866476",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401856727",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401856730",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401856731",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401858273",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401862810",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401864526",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401866447",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401866448",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401866449",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401871094",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401864528",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401869967",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401871093",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401860907",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401860905",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401869935",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401856729",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401856732",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401858275",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401858500",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401860906",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401862811",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401864527",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401871071",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401871072",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401871058",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    },
+    {
+      "game_id": "401871057",
+      "reason": "AWAITING_MINIMUM_THREE_HOURS_AFTER_KICKOFF"
+    }
+  ],
+  "pending_games": 45,
+  "pregame_paired_model_differences": {
+    "avg_abs_change_in_predicted_margin": 0.74187,
+    "changed_outright_winner_direction": 3,
+    "games": 45,
+    "most_divergent_upcoming_margins": [
+      {
+        "away": "North Texas",
+        "build16_predicted_home_margin": 0.992,
+        "forecast_margin_change": 1.778,
+        "game_id": "401862810",
+        "home": "Navy",
+        "kickoff_utc": "2026-10-24T19:30:00+00:00",
+        "learned_predicted_home_margin": 2.77,
+        "severe_rushing_screen": true
+      },
+      {
+        "away": "Rutgers",
+        "build16_predicted_home_margin": 8.616,
+        "forecast_margin_change": 1.659,
+        "game_id": "401858498",
+        "home": "Northwestern",
+        "kickoff_utc": "2026-10-24T16:00:00+00:00",
+        "learned_predicted_home_margin": 10.275,
+        "severe_rushing_screen": true
+      },
+      {
+        "away": "Old Dominion",
+        "build16_predicted_home_margin": 7.236,
+        "forecast_margin_change": 1.649,
+        "game_id": "401871093",
+        "home": "Louisiana Tech",
+        "kickoff_utc": "2026-10-24T21:00:00+00:00",
+        "learned_predicted_home_margin": 8.885,
+        "severe_rushing_screen": true
+      },
+      {
+        "away": "NC State",
+        "build16_predicted_home_margin": -4.147,
+        "forecast_margin_change": -1.6,
+        "game_id": "401858272",
+        "home": "Stanford",
+        "kickoff_utc": "2026-10-24T02:30:00+00:00",
+        "learned_predicted_home_margin": -5.747,
+        "severe_rushing_screen": true
+      },
+      {
+        "away": "USC",
+        "build16_predicted_home_margin": 2.85,
+        "forecast_margin_change": 1.559,
+        "game_id": "401858500",
+        "home": "Wisconsin",
+        "kickoff_utc": "2026-10-24T23:30:00+00:00",
+        "learned_predicted_home_margin": 4.409,
+        "severe_rushing_screen": true
+      }
+    ],
+    "not_a_forward_accuracy_measure": true,
+    "severe_rushing_screen_games": 22
+  },
+  "qualified_completed_paired_games": 0,
+  "schema": "cfb_failure1_same_snapshot_frozen_pair_v1",
+  "scored_pairs": [],
+  "severe_mismatch_margin": {
+    "games": 0,
+    "learned_brier": null,
+    "learned_mae": null,
+    "learned_margin80_coverage": null,
+    "mae_gain_reference_minus_learned": null,
+    "paired_bootstrap95_gain": null,
+    "reference_brier": null,
+    "reference_mae": null,
+    "reference_margin80_coverage": null
+  },
+  "source_archive_verification": {
+    "archive_game_records": 1609,
+    "distinct_first_paired_games": 45,
+    "eligible_pair_records": 540,
+    "fitted_shadow_missing_evidence": 0,
+    "forecast_archive_files": 36,
+    "historical_without_fitted_shadow": 1069,
+    "pair_before_kickoff": 540
+  },
+  "status": "PROSPECTIVE_FROZEN_PAIRED_RUSH_SCORING_RESEARCH_ONLY",
+  "uses_same_snapshot_seed_and_runs": true
+}
