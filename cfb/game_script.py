@@ -278,6 +278,10 @@ def simulate_script(home_projection, away_projection, home_history, away_history
     # rate and no duplicate credit to offensive PPD.
     nonoff_home=np.zeros(n,dtype=np.int32)
     nonoff_away=np.zeros(n,dtype=np.int32)
+    # Paired counterfactuals MUST keep the core drive/OT random stream
+    # identical. The separate fixed-seed stream is used only for rare
+    # non-offensive score draws.
+    nonoff_rng=np.random.default_rng(seed ^ 0xF2F2A11)
     if mechanisms is not None:
         samples=mechanisms.get('nonoffensive_score_samples')
         if samples is not None:
@@ -289,7 +293,7 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                         type(v) not in (int,float) or not np.isfinite(v)
                         or v<0 or v>28 for v in observed):
                     raise ValueError('Invalid verified non-offensive point sample')
-                target[:]=rng.choice(np.asarray(observed,dtype=np.int32),size=n)
+                target[:]=nonoff_rng.choice(np.asarray(observed,dtype=np.int32),size=n)
             hs+=nonoff_home
             ass+=nonoff_away
     regulation_margin=hs.astype(float)-ass
