@@ -27,6 +27,7 @@ from cfb.pipeline import verify, normalize_pbp_teams, iso_utc
 from cfb.field_special import observed_special_teams
 from cfb.scoring_attribution import attribute
 from cfb.sustainability import observed as observed_sustainability
+from cfb.empirical_drive_clock import observe as observed_drive_clock
 
 
 def total(rows, key):
@@ -162,7 +163,8 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays
             return None
         return int((df['int'].eq(True)|df['pos_fumble_lost'].eq(True)).sum())
     opp_turnovers=turnovers_observed(opp)
-    return {'sustainability':observed_sustainability(plays,team,opponent),
+    return {'drive_clock':observed_drive_clock(special_plays,plays,team,opponent,home_id),
+            'sustainability':observed_sustainability(plays,team,opponent),
             'scoring_attribution':attribution,
             'defensive_return_points':attribution['defensive_return_points'][attack_side] if verified else None,
             'defensive_return_td_count':attribution['defensive_return_tds'][attack_side] if verified else None,
