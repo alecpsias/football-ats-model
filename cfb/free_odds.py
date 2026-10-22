@@ -25,6 +25,11 @@ from cfb.market import _date, _american
 
 CORE='https://sports.core.api.espn.com/v2/sports/football/leagues/college-football'
 PREFERRED=('DraftKings','FanDuel','BetMGM','Caesars','ESPN BET')
+# The real October 22 2026 ESPN CFB core odds endpoint reports provider
+# 100 as 'Draft Kings' (with a space), not 'DraftKings'. Previously all
+# such genuine complete markets were silently rejected. Restrict aliases to
+# observed exact spellings, keep original unmodified source bytes in archive.
+PROVIDER_ALIASES={'Draft Kings':'DraftKings'}
 MAX_RESPONSE_BYTES=2_000_000
 
 
@@ -54,7 +59,8 @@ def _odds_item(item):
     if not isinstance(item,dict):return None
     p=item.get('provider',{})
     if not isinstance(p,dict) or not isinstance(p.get('name'),str):return None
-    book=p['name'].strip()
+    observed_book=p['name'].strip()
+    book=PROVIDER_ALIASES.get(observed_book,observed_book)
     if book not in PREFERRED:return None
     try:
         spread=float(item['spread'])
