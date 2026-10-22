@@ -25,6 +25,11 @@ from cfb.market import _date, _american
 
 CORE='https://sports.core.api.espn.com/v2/sports/football/leagues/college-football'
 PREFERRED=('DraftKings','FanDuel','BetMGM','Caesars','ESPN BET')
+# The real October 22 2026 ESPN CFB core odds endpoint reports provider
+# 100 as 'Draft Kings' (with a space), not 'DraftKings'. Previously all
+# such genuine complete markets were silently rejected. Restrict aliases to
+# observed exact spellings, keep original unmodified source bytes in archive.
+PROVIDER_ALIASES={'Draft Kings':'DraftKings'}
 MAX_RESPONSE_BYTES=2_000_000
 
 
@@ -49,17 +54,32 @@ def fetch(url, timeout=12):
     return body
 
 
+def _espn_american(value):
+    """Accept ESPN's exact integral JSON floats (e.g. -110.0).
+
+    Do not loosen the shared American-odds validator: reject fractional,
+    Boolean, NaN, infinite, suspicious/out-of-range values. Strings must
+    already satisfy the standard signed-integer parser.
+    """
+    if type(value) is float:
+        if not math.isfinite(value) or not value.is_integer():
+            raise ValueError('ESPN float spread price must be an exact integer')
+        return _american(int(value))
+    return _american(value)
+
+
 def _odds_item(item):
     """Require signed home-side spread AND BOTH actual spread prices."""
     if not isinstance(item,dict):return None
     p=item.get('provider',{})
     if not isinstance(p,dict) or not isinstance(p.get('name'),str):return None
-    book=p['name'].strip()
+    observed_book=p['name'].strip()
+    book=PROVIDER_ALIASES.get(observed_book,observed_book)
     if book not in PREFERRED:return None
     try:
         spread=float(item['spread'])
         home=item['homeTeamOdds'];away=item['awayTeamOdds']
-        home_odds=_american(home['spreadOdds']);away_odds=_american(away['spreadOdds'])
+        home_odds=_espn_american(home['spreadOdds']);away_odds=_espn_american(away['spreadOdds'])
         if not math.isfinite(spread) or abs(spread)>75 or abs(spread*2-round(spread*2))>1e-8:
             return None
         h_fav=home.get('favorite');a_fav=away.get('favorite')
@@ -68,6 +88,18 @@ def _odds_item(item):
         if spread<0 and not (h_fav and not a_fav):return None
         if spread>0 and not (a_fav and not h_fav):return None
         if spread==0 and h_fav==a_fav==True:return None
+        # ESPN returns 'spread' as the signed HOME-team line in the
+        # observed CFB core collection. When both current home/away team
+        # point-spreads are present, cross-validate rather than assuming.
+        h_current=home.get('current',{});a_current=away.get('current',{})
+        if isinstance(h_current,dict) and isinstance(a_current,dict):
+            hp=h_current.get('pointSpread');ap=a_current.get('pointSpread')
+            if hp is not None or ap is not None:
+                if not isinstance(hp,dict) or not isinstance(ap,dict):return None
+                hline=float(hp['alternateDisplayValue'])
+                aline=float(ap['alternateDisplayValue'])
+                if not math.isfinite(hline) or not math.isfinite(aline):return None
+                if abs(hline-spread)>1e-8 or abs(hline+aline)>1e-8:return None
     except (KeyError,TypeError,ValueError,OverflowError):
         return None
     return {'book':book,'spread_home':spread,'home_odds_american':home_odds,
