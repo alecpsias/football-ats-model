@@ -25,6 +25,7 @@ from cfb.matchups import matchup_signals
 from cfb.calibration import calibrate
 from cfb.pipeline import verify, normalize_pbp_teams, iso_utc
 from cfb.field_special import observed_special_teams
+from cfb.scoring_attribution import attribute
 
 
 def total(rows, key):
@@ -36,7 +37,7 @@ def mean_epa(records, kind):
     return total(records, kind + '_sum') / count if count else None
 
 
-def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays=None):
+def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays=None, home_id=None):
     """Read observed PBP per game without accessing future fixtures."""
     off = plays.loc[plays.pos_team_id.eq(team)]
     opp = plays.loc[plays.pos_team_id.eq(opponent)]
@@ -142,7 +143,23 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays
     faced_rz=int(drzone.drive_id.nunique()) if len(drzone) else 0
     conceded_rz_tds=int(drzone.loc[drzone.offense_score_play.eq(True)&drzone.td_play.eq(True),'drive_id'].nunique()) if len(drzone) else 0
 
-    return {'opponent_id':int(opponent),
+    # Use full, unfiltered events: special-teams/defensive scores are absent
+    # from scrimmage-only normalized plays. Never infer unknown components.
+    attribution=(attribute(special_plays,home_id,
+                           opponent if str(home_id)==str(team) else team,
+                           points if str(home_id)==str(team) else conceded,
+                           conceded if str(home_id)==str(team) else points)
+                 if home_id is not None else
+                 {'status':'UNVERIFIED_SCORE_ATTRIBUTION','reason':'NO_HOME_TEAM_ID'})
+    attack_side='home' if str(home_id)==str(team) else 'away'
+    defense_side='away' if attack_side=='home' else 'home'
+    verified=attribution['status']=='VERIFIED_RAW_SCORE_RECONCILIATION'
+    return {'scoring_attribution':attribution,
+            'offensive_points':attribution['offensive_points'][attack_side] if verified else None,
+            'offensive_points_conceded':attribution['offensive_points'][defense_side] if verified else None,
+            'nonoffensive_points':attribution['nonoffensive_points'][attack_side] if verified else None,
+            'opponent_nonoffensive_points':attribution['nonoffensive_points'][defense_side] if verified else None,
+            'opponent_id':int(opponent),
             'mechanism':observe_game_context(plays,team,opponent),
             'disruption_off':observed_disruption(plays,team),
             'disruption_def':observed_disruption(plays,opponent),
