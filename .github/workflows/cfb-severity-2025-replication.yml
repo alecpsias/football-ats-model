@@ -1,10 +1,6 @@
 name: CFB Failure 1 cross-season replication 2025
 
 on:
-  push:
-    branches: [cfb-severity-negative-script-research-20261022]
-    paths:
-      - '.github/workflows/cfb-severity-2025-replication.yml'
   workflow_dispatch:
 
 permissions:
