@@ -1,16 +1,6 @@
 name: CFB Failure 1 severe rushing mismatch research
 
 on:
-  push:
-    branches: [cfb-severity-negative-script-research-20261022]
-    paths:
-      - 'cfb/rush_severity_source.py'
-      - 'cfb/rush_severity_research.py'
-      - 'cfb/severity_study.py'
-      - 'cfb/test_cfb_severity_research.py'
-      - 'cfb/mechanism_build16.py'
-      - 'cfb/game_script.py'
-      - '.github/workflows/cfb-severity-mismatch-study.yml'
   workflow_dispatch:
 
 permissions:
