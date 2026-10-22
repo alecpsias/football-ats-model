@@ -1,11 +1,6 @@
 name: CFB Failure 1 quantitative rushing correction independent seasons
 
 on:
-  push:
-    branches: [cfb-failure1-quantitative-validation-20261022]
-    paths:
-      - 'cfb/failure1_quantitative_validation.py'
-      - '.github/workflows/cfb-failure1-quantitative-validation.yml'
   workflow_dispatch:
 
 permissions:
