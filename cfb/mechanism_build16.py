@@ -218,7 +218,9 @@ def mechanism_profile(home_id,away_id,histories, home_projection,away_projection
                     'disruption_scoring_policy':'No incremental scoring coefficient until independent evidence'}}
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None):
+    if sum(v is not None for v in (rush_research,chain_research,mismatch_research))>1:
+        raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
         raise ValueError('Stress runs must be 0 or 100..10000')
     home=project_integrated(home_id,away_id,histories,neutral,'home')
@@ -287,6 +289,23 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                     'ATS_calibrated':False}
         h['_ppd']=float(np.clip(h['_ppd']+chain_evidence['ppd_home_delta'],.35,5.5))
         a['_ppd']=float(np.clip(a['_ppd']+chain_evidence['ppd_away_delta'],.35,5.5))
+    # Failure-1 severe-rushing mismatch: pregame-only opt-in laboratory effect.
+    # Preserve default Build16 and forbid simultaneous experimental toggles.
+    mismatch_evidence=None
+    if mismatch_research is not None:
+        if chain_research is not None or rush_research is not None:
+            raise ValueError('Only one within-challenger research ablation permitted')
+        from cfb.rush_severity_research import experiment as severity_experiment
+        mismatch_evidence=severity_experiment(home_id,away_id,histories,mismatch_research)
+        if mismatch_evidence['status']!='UNFITTED_SCENARIO_READY':
+            return {'status':'UNAVAILABLE_SEVERE_RUSH_EVIDENCE',
+                    'version':VERSION,'simulation':None,'not_primary':True,
+                    'mismatch_research':mismatch_evidence,'ATS_calibrated':False}
+        h['_ppd']=float(np.clip(h['_ppd']+mismatch_evidence['ppd_home_delta'],.35,5.5))
+        a['_ppd']=float(np.clip(a['_ppd']+mismatch_evidence['ppd_away_delta'],.35,5.5))
+        if mismatch_research in ('resilience','combined'):
+            profile['home']['trailing_rush_resilience_ppd']=mismatch_evidence['home_trailing_only_ppd']
+            profile['away']['trailing_rush_resilience_ppd']=mismatch_evidence['away_trailing_only_ppd']
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
     out=simulate_script(h,a,histories[home_id],histories[away_id],runs=runs,seed=seed,
@@ -335,5 +354,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         answer['not_deployed']=True
     if chain_evidence is not None:
         answer['chain_research']=chain_evidence
+        answer['not_deployed']=True
+    if mismatch_evidence is not None:
+        answer['mismatch_research']=mismatch_evidence
         answer['not_deployed']=True
     return answer

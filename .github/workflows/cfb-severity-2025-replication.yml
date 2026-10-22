@@ -1,0 +1,34 @@
+name: CFB Failure 1 cross-season replication 2025
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replication-2025:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Verify full CFB regression suite
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Collect independent prior-season free CFB PBP
+        run: python -m cfb.pipeline collect --season 2025 --out cfb_artifacts/severity_2025_snapshot
+      - name: Apply frozen V2 hypotheses to independent season without coefficient refitting
+        run: |
+          python -m cfb.severity_study \
+            --snapshot cfb_artifacts/severity_2025_snapshot \
+            --out cfb_artifacts/severity_2025_results.json \
+            --runs 5000 --max-games 180
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-failure1-2025-separate-season-replication
+          path: cfb_artifacts/severity_2025_results.json
+          if-no-files-found: warn

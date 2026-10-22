@@ -207,6 +207,20 @@ def simulate_script(home_projection, away_projection, home_history, away_history
         current=1-np.exp(-plays*(desired*ip+fl))
         reference=1-np.exp(-plays*(neutral*ip+fl))
         return np.clip(original + np.clip(current-reference,-.08,.08),.003,.47)
+    def trailing_rush_resilience_ppd(side,score_diff):
+        """Optional, pregame-frozen severe-mismatch response in trailing scripts.
+
+        This shifts offensive scoring opportunity ONLY on possessions where
+        that team is down >=9. Absence of research evidence means zero shift;
+        original Build16 calls are numerically identical.
+        """
+        if mechanisms is None:return np.zeros(n,dtype=float)
+        x=mechanisms[side].get('trailing_rush_resilience_ppd')
+        if x is None:return np.zeros(n,dtype=float)
+        if not isinstance(x,(int,float)) or isinstance(x,bool) or not math.isfinite(x) or abs(x)>.25:
+            raise ValueError('Invalid unfitted trailing-rush sensitivity')
+        return np.where(score_diff<=-9,float(x),0.)
+
     def next_field_bonus(turnovers):
         if mechanisms is None:return turnovers.astype(float)
         data=mechanisms['turnover_field']
@@ -247,13 +261,15 @@ def simulate_script(home_projection, away_projection, home_history, away_history
             for side in (('home','away') if hfirst else ('away','home')):
                 if side=='home':
                     prop=state_propensity('home',to_h,hs-ass)
-                    pts,to=_regulation_draw(h,rng,prop,latent_h+global_env,short_h,mask)
+                    pts,to=_regulation_draw(h,rng,prop,latent_h+global_env+
+                        trailing_rush_resilience_ppd('home',hs-ass),short_h,mask)
                     hs+=pts;turnovers_h+=to.astype(np.int16)
                     short_h=np.where(mask,0.,short_h)
                     short_a=np.where(to,next_field_bonus(to),short_a)
                 else:
                     prop=state_propensity('away',to_a,ass-hs)
-                    pts,to=_regulation_draw(a,rng,prop,latent_a+global_env,short_a,mask)
+                    pts,to=_regulation_draw(a,rng,prop,latent_a+global_env+
+                        trailing_rush_resilience_ppd('away',ass-hs),short_a,mask)
                     ass+=pts;turnovers_a+=to.astype(np.int16)
                     short_a=np.where(mask,0.,short_a)
                     short_h=np.where(to,next_field_bonus(to),short_h)
