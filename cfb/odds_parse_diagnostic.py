@@ -11,6 +11,9 @@ for gid in ['401862810','401858498','401871093','401862808','401871055']:
   for obj in rows[:2]:
     try:
       h=obj['homeTeamOdds'];a=obj['awayTeamOdds']
+      print('RAW_ODDS_TYPES',gid,
+         'home',repr(h['spreadOdds']),type(h['spreadOdds']).__name__,
+         'away',repr(a['spreadOdds']),type(a['spreadOdds']).__name__,flush=True)
       spread=float(obj['spread'])
       lineh=float(h['current']['pointSpread']['alternateDisplayValue'])
       linea=float(a['current']['pointSpread']['alternateDisplayValue'])
