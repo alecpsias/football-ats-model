@@ -12,7 +12,7 @@ import numpy as np
 VERSION='cfb-failure3-sustainability-v1'
 # Hypothetical reference levels. Must be independently calibrated before
 # promotion to an ATS confidence model.
-PRIOR_CHAIN=.28
+PRIOR_CHAIN=.42  # Explicit structural benchmark: >=3 first-down series/drive
 PRIOR_EARLY_SUCCESS=.45
 PRIOR_LOW_CHAIN=.34
 PRIOR_EXPLOSIVE_TD=.20
@@ -119,7 +119,7 @@ def _match(off,opdef):
     low_excess=max(0.,min(1.,(low-PRIOR_LOW_CHAIN)/(1-PRIOR_LOW_CHAIN)))
     explosive_excess=max(0.,min(1.,(explosive_td-PRIOR_EXPLOSIVE_TD)/
                                       (1-PRIOR_EXPLOSIVE_TD)))
-    interaction=(chain_weak*(.3+.7*explosive_excess)*
+    interaction=(chain_weak*(.15+.85*explosive_excess)*
                   (.45+.35*early_weak+.20*low_excess))
     correction=-min(MAX_PENALTY_PPD,.65*weight*interaction)
     return {'status':'AVAILABLE_BOUNDED_UNFITTED',
