@@ -1,0 +1,45 @@
+{
+  "schema": "cfb_actual_pregame_spread_capture_repair_receipt_20261022",
+  "date_utc": "2026-10-22",
+  "source": "Official ESPN public core CFB odds JSON; provider source is ESPN with reported bookmaker label, not direct bookmaker attestation",
+  "diagnostic": "https://github.com/alecpsias/football-ats-model/actions/runs/39838396986",
+  "full_test": "https://github.com/alecpsias/football-ats-model/actions/runs/39840976442",
+  "identified_causes": [
+    "ESPN emits provider name Draft Kings in one public response variant; earlier canonical list accepted DraftKings only.",
+    "ESPN spreadOdds prices are JSON whole-number floats (-110.0, -112.0); original strict integer-only American odds parser rejected them."
+  ],
+  "changes": [
+    "Exact provider-label alias Draft Kings to canonical DraftKings.",
+    "Local adapter to convert only finite exact whole-number floats to strict American odds integer parser; rejects fractional, boolean, NaN, Infinity and out-of-range.",
+    "Independent home/away current team pointSpread cross-check when present to verify signed home convention.",
+    "Append-only repackaging of already captured valid original pregame JSON bytes: no network access during recovery; original timestamps and source ZIPs unchanged.",
+    "Scheduled snapshot workflow always reparses original prior captures, then captures new actual free public ESPN lines and grades paired forecasts using genuine original quotes."
+  ],
+  "verification": {
+    "cfb_regression_tests": 303,
+    "overall": "PASS",
+    "historical_original_pregame_archives_examined": 6,
+    "prior_original_price_observations_recovered": 254,
+    "unique_games_with_original_captured_market_quote": 45,
+    "first_valid_5000_run_model_pairs": 45,
+    "eligible_same_game_paired_model_and_genuine_pregame_market": 41,
+    "freshly_captured_upcoming_games": 45,
+    "new_complete_public_spread_and_both_price_quotes": 41,
+    "new_capture_fetch_errors": 0,
+    "actual_completed_games_to_grade_so_far": 0,
+    "quote_provenance": "Original ESPN public response, SHA verified, observed before kickoff"
+  },
+  "limitations": [
+    "254 quotes are observations across several runs, NOT independent games.",
+    "Only 41 games have a joint pair and valid quote, not 45.",
+    "Quote observed time is verifiable capture time, not independently bookmaker's first publication time.",
+    "Current ESPN line may differ from any chosen book's close, and can move.",
+    "ATS outcomes are not available until final scores appear; do not claim cover accuracy now."
+  ],
+  "live_model_policy": {
+    "baseline_changed": false,
+    "active_Build16_scoring_changed": false,
+    "learned_rush_coefficient_promoted": false,
+    "one_challenger_preserved": true
+  }
+}
