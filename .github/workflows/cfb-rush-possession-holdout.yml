@@ -1,9 +1,7 @@
 name: CFB rushing possession 2023-fit independent 2024-2026 holdout
 on:
-  push:
-    branches: [cfb-possession-rush-mechanism-20261022]
-    paths: ['.github/workflows/cfb-rush-possession-holdout.yml']
   workflow_dispatch:
+
 permissions:
   contents: read
   actions: read
