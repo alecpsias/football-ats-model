@@ -17,6 +17,7 @@ from collections import defaultdict
 import numpy as np
 
 from cfb.engine import CFB_RULES, _resolve_overtime, validate_projection
+from cfb.return_scoring import scoring_rates, touchdown_points
 
 VERSION = 'cfb-game-script-research-v1'
 # Hypotheses, explicitly not empirical fitted coefficients.
@@ -186,6 +187,20 @@ def simulate_script(home_projection, away_projection, home_history, away_history
     to_a=beta_prop(a,evidence['away_turnover_beta_concentration'])
     hs=np.zeros(n,dtype=np.int32); ass=np.zeros(n,dtype=np.int32)
     turnovers_h=np.zeros(n,dtype=np.int16);turnovers_a=np.zeros(n,dtype=np.int16)
+    # Independent event RNG: the two coupled variants share identical seed
+    # for the base drive model, while rare return outcomes are reproducible.
+    return_rng=np.random.default_rng(seed ^ 0xF2F2A11)
+    return_rates=(scoring_rates(mechanisms['nonoffensive_scoring'])
+        if mechanisms is not None and mechanisms.get('nonoffensive_scoring') is not None else None)
+    def_td_home=np.zeros(n,dtype=np.int16)
+    def_td_away=np.zeros(n,dtype=np.int16)
+    def_pts_home=np.zeros(n,dtype=np.int32)
+    def_pts_away=np.zeros(n,dtype=np.int32)
+    st_td_home=np.zeros(n,dtype=np.int16)
+    st_td_away=np.zeros(n,dtype=np.int16)
+    st_pts_home=np.zeros(n,dtype=np.int32)
+    st_pts_away=np.zeros(n,dtype=np.int32)
+    suppressed_shortfields=np.zeros(n,dtype=np.int16)
     short_h=np.zeros(n,dtype=float);short_a=np.zeros(n,dtype=float)
     def state_propensity(side,original,delta):
         """Observed game-state passing shifts affect only interception exposure.
@@ -265,37 +280,55 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                         trailing_rush_resilience_ppd('home',hs-ass),short_h,mask)
                     hs+=pts;turnovers_h+=to.astype(np.int16)
                     short_h=np.where(mask,0.,short_h)
-                    short_a=np.where(to,next_field_bonus(to),short_a)
+                    # A defensive return TD happens ON this turnover, not as
+                    # a second independent scoring opportunity. Never add
+                    # the regular turnover short-field bonus for that play.
+                    td_return=(to & (return_rng.random(n)<
+                        return_rates['home_turnover_td_allowed_probability'])
+                        if return_rates is not None else np.zeros(n,dtype=bool))
+                    if return_rates is not None:
+                        credit=touchdown_points(return_rng,td_return,
+                            return_rates['away_defense_return_points_sample'])
+                        ass+=credit;def_pts_away+=credit
+                        def_td_away+=td_return.astype(np.int16)
+                        suppressed_shortfields+=td_return.astype(np.int16)
+                    short_a=np.where(to,next_field_bonus(to & ~td_return),short_a)
                 else:
                     prop=state_propensity('away',to_a,ass-hs)
                     pts,to=_regulation_draw(a,rng,prop,latent_a+global_env+
                         trailing_rush_resilience_ppd('away',ass-hs),short_a,mask)
                     ass+=pts;turnovers_a+=to.astype(np.int16)
                     short_a=np.where(mask,0.,short_a)
-                    short_h=np.where(to,next_field_bonus(to),short_h)
-    # Failure 2: sample non-offensive points from actual earlier verified
-    # games, separately from offensive possessions. No invented historical
-    # rate and no duplicate credit to offensive PPD.
-    nonoff_home=np.zeros(n,dtype=np.int32)
-    nonoff_away=np.zeros(n,dtype=np.int32)
-    # Paired counterfactuals MUST keep the core drive/OT random stream
-    # identical. The separate fixed-seed stream is used only for rare
-    # non-offensive score draws.
-    nonoff_rng=np.random.default_rng(seed ^ 0xF2F2A11)
-    if mechanisms is not None:
-        samples=mechanisms.get('nonoffensive_score_samples')
-        if samples is not None:
-            if not isinstance(samples,dict):
-                raise ValueError('Invalid non-offensive scoring evidence')
-            for label,target in (('home',nonoff_home),('away',nonoff_away)):
-                observed=samples.get(label)
-                if not isinstance(observed,list) or len(observed)<3 or any(
-                        type(v) not in (int,float) or not np.isfinite(v)
-                        or v<0 or v>28 for v in observed):
-                    raise ValueError('Invalid verified non-offensive point sample')
-                target[:]=nonoff_rng.choice(np.asarray(observed,dtype=np.int32),size=n)
-            hs+=nonoff_home
-            ass+=nonoff_away
+                    td_return=(to & (return_rng.random(n)<
+                        return_rates['away_turnover_td_allowed_probability'])
+                        if return_rates is not None else np.zeros(n,dtype=bool))
+                    if return_rates is not None:
+                        credit=touchdown_points(return_rng,td_return,
+                            return_rates['home_defense_return_points_sample'])
+                        hs+=credit;def_pts_home+=credit
+                        def_td_home+=td_return.astype(np.int16)
+                        suppressed_shortfields+=td_return.astype(np.int16)
+                    short_h=np.where(to,next_field_bonus(to & ~td_return),short_h)
+    # Unlike defensive return TDs, special-teams touchdowns are not
+    # generated by an offensive interception or lost fumble. Model their
+    # own rare scoring probability separately at the regulation level.
+    # This approximation does not yet simulate exact kick/punt timing.
+    if return_rates is not None:
+        for side,rate,td_counter,points_counter,score in (
+            ('home',return_rates['home_special_td_per_game'],
+             st_td_home,st_pts_home,hs),
+            ('away',return_rates['away_special_td_per_game'],
+             st_td_away,st_pts_away,ass)):
+            # Bernoulli(game rate) rather than replaying 7 points/game from
+            # a team with one anomalous return in a small historical sample.
+            event=return_rng.random(n)<rate
+            values=touchdown_points(return_rng,event,
+                return_rates[side+'_special_points_sample'])
+            td_counter+=event.astype(np.int16)
+            points_counter+=values
+            score+=values
+    nonoff_home=def_pts_home+st_pts_home
+    nonoff_away=def_pts_away+st_pts_away
     regulation_margin=hs.astype(float)-ass
     reg_ties=int(np.count_nonzero(hs==ass))
     if allow_overtime:
@@ -328,6 +361,16 @@ def simulate_script(home_projection, away_projection, home_history, away_history
        'mean_total':round(float(scores.mean()),3),
        'simulated_nonoffensive_points_home':round(float(nonoff_home.mean()),3),
        'simulated_nonoffensive_points_away':round(float(nonoff_away.mean()),3),
+       'simulated_defensive_return_points_home':round(float(def_pts_home.mean()),3),
+       'simulated_defensive_return_points_away':round(float(def_pts_away.mean()),3),
+       'simulated_special_teams_points_home':round(float(st_pts_home.mean()),3),
+       'simulated_special_teams_points_away':round(float(st_pts_away.mean()),3),
+       'simulated_defensive_return_tds_home':round(float(def_td_home.mean()),5),
+       'simulated_defensive_return_tds_away':round(float(def_td_away.mean()),5),
+       'shortfield_rewards_suppressed_by_return_td':round(float(suppressed_shortfields.mean()),5),
+       'defensive_return_tds_counted':int(def_td_home.sum()+def_td_away.sum()),
+       'suppressed_shortfield_rewards_counted':int(suppressed_shortfields.sum()),
+       'nonoffensive_rate_evidence':return_rates,
        'simulated_turnovers_home':round(float(turnovers_h.mean()),3),
        'simulated_turnovers_away':round(float(turnovers_a.mean()),3),
        'simulated_regulation_drives_per_side':round(float((draws-burn.astype(int)).mean()),3),
