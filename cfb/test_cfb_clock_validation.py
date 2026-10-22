@@ -48,6 +48,15 @@ class ClockAuditTests(unittest.TestCase):
         self.assertEqual(z['excluded']['source_clock_disagreement'],1)
         self.assertEqual(z['teams']['30']['observed_time_seconds'],0)
 
+    def test_provider_elapsed_only_with_missing_endpoint_is_flagged(self):
+        x=plays()
+        x.loc[x['drive.id']=='x','drive.start.clock.displayValue']=None
+        z=audit_game(x,100,30,23)
+        self.assertEqual(z['teams']['30']['observed_time_seconds'],150)
+        self.assertEqual(z['source_only_elapsed_drive_count'],1)
+        self.assertEqual(z['drives'][0]['clock_verification'],'SOURCE_ELAPSED_ONLY')
+        self.assertIsNone(z['drives'][0]['clock_delta_seconds'])
+
     def test_missing_source_never_uses_play_count_proxy(self):
         x=plays().drop(columns=['drive.timeElapsed.displayValue'])
         z=audit_game(x,100,30,23)
