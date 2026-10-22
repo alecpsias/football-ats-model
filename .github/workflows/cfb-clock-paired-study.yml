@@ -1,16 +1,6 @@
 name: CFB 100-game measured-clock paired validation
 
 on:
-  push:
-    branches: [cfb-possession-clock-validation-20261022]
-    paths:
-      - 'cfb/rushing_interaction_research.py'
-      - 'cfb/rushing_study.py'
-      - 'cfb/clock_possession_validation.py'
-      - 'cfb/clock_relationship_study.py'
-      - 'cfb/box_reconciliation_gate.py'
-      - 'cfb/test_cfb_rushing_research.py'
-      - '.github/workflows/cfb-clock-paired-study.yml'
   workflow_dispatch:
 
 permissions:
