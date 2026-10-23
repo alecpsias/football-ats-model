@@ -17,6 +17,7 @@ from collect_extra_metrics import parse_stamp
 from model import MODEL_RULES, InputError, validate_team, projection, simulate
 from mechanism_research import extract_mechanisms
 from nfl_stateful_candidate import stateful_candidate_simulation
+from nfl_qb_adjustments import estimate_qb_adjustments
 from nfl_challenger_policy import (ACTIVE_CHALLENGER_VERSION, BASELINE_VERSION,
                                    require_single_active_challenger)
 
@@ -144,13 +145,17 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
         if schedule is None:schedule=load_table(snapshot/manifest['datasets']['schedule']['local_file'])
     challenger_candidate=None
     challenger_profile=None
+    qb_adjustments = None
     challenger_status='UNAVAILABLE_RESEARCH_ONLY'
     challenger_reason=None
     try:
         challenger_profile=extract_mechanisms(
             pbp,schedule,cutoff,(g['home']['name'],g['away']['name']))
+        qb_adjustments=estimate_qb_adjustments(
+            pbp,schedule,cutoff,g['home']['name'],g['away']['name'],
+            {g['home']['name']:h,g['away']['name']:a})
         challenger_candidate=stateful_candidate_simulation(
-            h,a,challenger_profile,r,runs,seed)
+            h,a,challenger_profile,r,runs,seed,qb_adjustments=qb_adjustments)
         challenger_status='AVAILABLE_RESEARCH_ONLY'
     except (InputError, ValueError, KeyError, ArithmeticError) as exc:
         # Missing challenger features cannot contaminate the valid baseline.
@@ -182,17 +187,18 @@ def forecast_one(snapshot:Path,extra:Path,row:pd.Series, cutoff,injuries=None,ru
        'player_availability_evidence':personnel_evidence,
        'conditional_qb_scenarios':conditional_scenarios,
        'challenger':{'version':ACTIVE_CHALLENGER_VERSION,'candidate':challenger_candidate,
-           'observations':challenger_profile,'status':challenger_status,
+           'observations':challenger_profile,'qb_adjustments':qb_adjustments,
+           'status':challenger_status,
            'missing_reason':challenger_reason,
            'baseline_locked_margin_home':sim['mean_margin_home'],
-           'comparison_status':'ONLY_ACTIVE_CHALLENGER_UNFITTED_NOT_VALIDATED; NO ATS EDGE'},
+           'comparison_status':'ONLY_ACTIVE_CHALLENGER_SHRUNK_QB_FIT_NOT_ATS_VALIDATED; NO ATS EDGE'},
        'personnel_analysis_version':'0.8.0',
        'limitations':['No verified active/inactive lineup; all personnel shifts set to NEUTRAL SCENARIO, NOT measured zero impact',
            'No verified signed market spread; no ATS recommendation or EV',
            'Provisional model coefficients and raw probabilities not historically calibrated',
            'QB replacement scenarios are conditional and not the main forecast; no starter/inactive confirmation',
-           'Exactly one active evolving challenger, v0.10, incorporating earlier mechanism research',
-           'v0.10 stateful challenger is unfitted, no in-game injury adjustment, and not a calibrated ATS edge'],
+           'Exactly one active evolving challenger, v0.11, incorporating earlier mechanisms and shrunk QB form',
+           'v0.11 QB form is inferred from previous completed game, not confirmed current starter; no in-game injury adjustment or calibrated ATS edge'],
        'audit':{'snapshot':str(snapshot),'derived_metrics':str(extra),'source_sha256':overlay['source_sha256'],
             'pressure_rate_reference':ref_to_number(g['pressure_reference_rate']),
             'advanced_missing':overlay['missing'],'statistics_provenance_issues':[x for x in audit['asof_issues'] if not x.startswith('market.as_of_utc:')],
@@ -239,7 +245,7 @@ def generate(snapshot:Path,extra:Path,out:Path,injuries:Path|None=None,window_ho
                 'reported_out_players':sum(len(t['reported_out']) for t in obj['player_availability_evidence']['teams'].values())})
         except (InputError,ValueError,KeyError,TypeError) as exc:
             records.append({'game_id':game_id,'status':'BLOCKED','reason':str(exc)})
-    index={'schema':'future_core_index_v0.10','capture_cutoff_utc':cutoff.isoformat(),
+    index={'schema':'future_core_index_v0.11','capture_cutoff_utc':cutoff.isoformat(),
       'window_hours':window_hours,'pre_inactives_lock_minutes':PREGAME_LOCK_MINUTES,
       'games':records,'n_projected':sum(x['status']=='PROJECTED_UNCALIBRATED' for x in records),
       'n_blocked':sum(x['status']=='BLOCKED' for x in records),
