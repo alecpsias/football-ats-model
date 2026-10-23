@@ -29,6 +29,7 @@ from cfb.matchup_cycle import _market, postgame as compare_postgame, markdown as
 from cfb.pipeline import (verify, split_games, normalize_pbp_teams, team_features,
                           missing_features, iso_utc)
 from cfb.research_backtest import observed_game, project
+from cfb.chain_source import observed_chain, append_historical_chain
 from cfb.free_odds import verify_odds_archive
 from cfb.learn_forward import investigate
 from cfb.personnel import quarterback_usage, load_official_statuses, correlate_availability
@@ -84,6 +85,15 @@ def histories_asof(schedule, pbp, roster, cutoff):
                         special_plays=raw_by_game.get(g.game_id),home_id=hid)
         if h is None or a is None:continue
         include_prior_game(h,a,part,hid,aid)
+        # Carry verified *previous-game* early-down, third-down distance, and
+        # sustained-drive counts into every fresh matchup. This is the same
+        # historical chain extraction used by the prospective/paired pipelines.
+        # Missing or ambiguous PBP fails closed to the prior Build16 component.
+        for prior,team,opponent in ((h,hid,aid),(a,aid,hid)):
+            chain=observed_chain(part,team,opponent)
+            if chain.get('status')=='OBSERVED_QUALIFIED':
+                append_historical_chain(prior,chain,'offense')
+                append_historical_chain(prior,chain,'opponent')
         h['opponent_id']=aid; a['opponent_id']=hid
         h['source_game_id']=str(g.game_id);a['source_game_id']=str(g.game_id)
         histories[hid].append(h);histories[aid].append(a)
