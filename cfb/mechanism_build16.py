@@ -385,6 +385,13 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         if situational_chain_evidence['status']=='UNFITTED_SCENARIO_READY':
             h['_ppd']=float(np.clip(h['_ppd']+situational_chain_evidence['ppd_home_delta'],.35,5.5))
             a['_ppd']=float(np.clip(a['_ppd']+situational_chain_evidence['ppd_away_delta'],.35,5.5))
+            # The experiment() helper labels opt-in research as not deployed;
+            # override that metadata when this exact adjustment ACTUALLY
+            # enters the default CFB challenger scoring path.
+            situational_chain_evidence['not_deployed']=False
+            situational_chain_evidence['active_in_default_build16']=True
+        else:
+            situational_chain_evidence['active_in_default_build16']=False
     # Experimental chain mechanism: opt-in only, no default impact. The
     # original third-down success and rushing EPA are already in Build16;
     # apply only a bounded *relative-to-own-history* interaction residual.
@@ -583,7 +590,9 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
        'failure2_scoring_attribution':scoring_audit,
        'failure3_sustainability':sustain_evidence,
        'coupled_rush_possession_interaction':coupled_evidence,
-       'situational_chain_active_by_default':situational_chain_enabled,
+       'situational_chain_active_by_default':bool(
+           situational_chain_evidence is not None and
+           situational_chain_evidence.get('active_in_default_build16')),
        'situational_chain_evidence':situational_chain_evidence,
        'redzone_kicking_active_by_default':redzone_kicking_enabled,
        'redzone_kicking_evidence':redzone_kicking}
