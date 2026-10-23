@@ -27,6 +27,7 @@ jobs:
           python -m unittest cfb.test_cfb_continuous_rush_sos -v
           python -m unittest cfb.test_cfb_failure1_ridge -v
           python -m unittest cfb.test_cfb_failure3_sustainability -v
+          python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
       - name: Print missing-artifact fallback until fitted training file is installed
         run: |
           python - <<'PY'
