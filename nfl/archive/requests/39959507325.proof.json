@@ -1,0 +1,29 @@
+{
+  "ats_calibrated": false,
+  "away": "SF",
+  "challenger_home_margin": 1.596,
+  "challenger_model_version": "0.11.0",
+  "challenger_runs": 5000,
+  "forecast_at_or_after_source_utc": "2026-10-23T13:15:27.329276+00:00",
+  "game_id": "2026_07_SF_ATL",
+  "git_commit_sha": "dbf3e4d3444c6ebabf2c8e45ca015fa72a340740",
+  "github_actions_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39959507325",
+  "github_run_id": "39959507325",
+  "home": "ATL",
+  "kickoff_utc": "2026-10-25T17:00:00+00:00",
+  "league": "NFL",
+  "market_quote_verified": false,
+  "primary_home_margin": -3.07,
+  "primary_model_version": "0.8.1+single_challenger_0.11.0",
+  "primary_runs": 5000,
+  "result_sha256": "a44b84cd682feb74983ee2a4b12f97f1cece5a68ab636646e38d09df506f2525",
+  "schema": "simulation_execution_receipt_v1",
+  "source_as_of_utc": "2026-10-23T13:15:14.858191+00:00",
+  "source_fingerprint": {
+    "derived": "1d18f882b364fe988f875b0605c8f0ddbd55dabee943d7a3696d5f780f5b9116",
+    "pbp": "d71ee1c4b64c87789fc4b006f9b5228562d2b58f83a65dffb0a136b003fc32bc",
+    "pfr_pass": "7ffc7140bdb5811a891e5925b14952119ebc049376740aaad0cee51ecd4f5f63"
+  },
+  "status": "VERIFIED_5000_SIMULATIONS_RESEARCH_ONLY",
+  "warning": "This verifies execution, not an empirically validated ATS edge."
+}
