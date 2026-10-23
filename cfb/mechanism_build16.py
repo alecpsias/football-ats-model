@@ -413,11 +413,15 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
     residual_audit={'status':'DISABLED_FOR_PAIRED_REFERENCE','applied':False}
     residual_default_active=False
     if continuous_rush_sos_residual_delta is None and continuous_rush_sos_enabled:
-        from cfb.continuous_rush_sos_active import resolve as resolve_frozen_residual
-        from_frozen,residual_audit=resolve_frozen_residual(home_id,away_id,histories)
-        if from_frozen is not None:
-            continuous_rush_sos_residual_delta=from_frozen
-            residual_default_active=True
+        if any(z is not None for z in (rush_research,chain_research,mismatch_research)):
+            residual_audit={'status':'DISABLED_DURING_OTHER_CONTROLLED_RESEARCH_ABLATION',
+                            'applied':False}
+        else:
+            from cfb.continuous_rush_sos_active import resolve as resolve_frozen_residual
+            from_frozen,residual_audit=resolve_frozen_residual(home_id,away_id,histories)
+            if from_frozen is not None:
+                continuous_rush_sos_residual_delta=from_frozen
+                residual_default_active=True
     elif continuous_rush_sos_residual_delta is not None:
         residual_audit={'status':'MANUAL_RESEARCH_RESIDUAL','applied':True}
     # Improvements 1 + 3. Source-qualified continuous rushing advantage and
