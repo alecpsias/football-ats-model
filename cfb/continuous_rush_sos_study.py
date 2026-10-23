@@ -73,7 +73,8 @@ def _summarize(rows):
     a=np.array([r['candidate_margin'] for r in rows],float)
     before=np.abs(y-m);after=np.abs(y-a)
     def brier(which):
-        return float(np.mean([(r['actual_margin']>0)-r[which] for r in rows]**2))
+        errors=np.array([float(r['actual_margin']>0)-r[which] for r in rows],float)
+        return float(np.mean(np.square(errors)))
     # Cast boolean to float explicitly; no tying home-win counts to an ATS bet.
     return {'n':len(rows),
       'margin_mae_reference':round(float(before.mean()),5),
@@ -98,6 +99,11 @@ def evaluate(snapshot,model,year,max_games=120):
     rows=[];missing=collections.Counter()
     for i,g in enumerate(games):
         if not g['kickoff'].startswith(str(year)):continue
+        # The 2026 Liberty-Kennesaw result motivated this research design.
+        # Exclude it even from later-year promotion/model-choice summaries.
+        if g['game_id']=='401871056':
+            missing['EXCLUDED_MOTIVATING_LIBERTY_KENNESAW_GAME']+=1
+            continue
         feat=feature_vector(g['home_id'],g['away_id'],g['historical'])
         scored=score(model,feat)
         if scored['status']!='FROZEN_EARLIER_SEASON_RESIDUAL_AVAILABLE':
