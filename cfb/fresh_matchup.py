@@ -33,6 +33,8 @@ from cfb.chain_source import observed_chain, append_historical_chain
 from cfb.free_odds import verify_odds_archive
 from cfb.learn_forward import investigate
 from cfb.personnel import quarterback_usage, load_official_statuses, correlate_availability
+from cfb.live_availability import fetch_matchup as capture_live_availability
+from cfb.personnel_active import estimate as estimate_current_personnel
 from cfb.personnel_effects import (quarterback_effects, skill_player_exposures,
                                    simulate_personnel_scenarios, other_position_availability)
 
@@ -190,6 +192,14 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
          'away':quarterback_usage(mapped,roster,eligible,aid)}
     availability=load_official_statuses(availability_root,str(g.game_id),
         kickoff.isoformat(),stamp.isoformat(),expected_teams=[str(hid),str(aid)])
+    # The captured site report is a THIRD-PARTY transcription linked to the
+    # conference; it is not misrepresented as independently certified official.
+    # Only when a live report is fetched before kickoff can it qualify as a
+    # provisional default adjustment source. Network/report failure -> zero.
+    if availability.get('status')=='NO_OFFICIAL_REPORT_CAPTURE' and availability_root:
+        availability=capture_live_availability(
+            str(g.away_team),str(g.home_team),aid,hid,kickoff.isoformat(),
+            roster=roster,observed_at=stamp.isoformat())
     risks={'home':correlate_availability(qbs['home'],availability),
            'away':correlate_availability(qbs['away'],availability)}
     qb_effects={'home':quarterback_effects(mapped,eligible,roster,hid,qbs['home'],availability),
@@ -198,6 +208,8 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
                      'away':skill_player_exposures(mapped,eligible,roster,aid,availability)}
     other_availability={'home':other_position_availability(roster,availability,hid),
                         'away':other_position_availability(roster,availability,aid)}
+    active_personnel=estimate_current_personnel(
+        mapped,eligible,roster,hid,aid,availability,qb_effects,histories)
     manifest_sha=hashlib.sha256((root/'manifest.json').read_bytes()).hexdigest()
     result={'schema':SCHEMA,'mode':'pregame',
         'status':'INSUFFICIENT_PRIOR_OBSERVATIONS_NO_PREDICTION',
@@ -228,14 +240,18 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
         'skill_player_availability_exposure':skill_exposures,
         'other_position_availability':other_availability,
         'conditional_personnel_scenarios':None,
-        'personnel_adjustment_to_model_points':None,
+        'personnel_adjustment_to_model_points':{
+            'ppd_home':active_personnel['ppd_home'],
+            'ppd_away':active_personnel['ppd_away'],
+            'team_expected_points_not_invented':True},
+        'build16_active_personnel_evidence':active_personnel,
         'market':{'status':'NO_SOURCE_OBSERVED_PREKICKOFF_SPREAD','ats_research_side':None},
         'mandatory_rushing_audit':None,'rushing_ats_risk_gate':None,
         'failure1_learned_rush_shadow':None,
         'locked_market_evidence':None,
         'limitations':['Quarterback usage measured from prior games; next-game starters are NOT verified',
-          'Only source-backed optional availability snapshots are displayed; no uncalibrated injury point deductions',
-          'Unverified current injuries and projected lineups are NOT incorporated',
+          'Captured linked-conference third-party reports may drive sample-shrunk skill effects, not official verified starters',
+          'No current official lineup verification; OL/DB/DL effects remain qualitative unless measurable',
           'Full pressure, charted special-teams EPA and penalties remain missing; source-backed kicks and matched field position are included in Build16 where available',
           'Prior-game row publication times are not independently proven by a later snapshot',
           'Possession model is uncalibrated; score estimates and ATS difference are research only',
@@ -255,6 +271,7 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
                      seed=int(g.game_id)%(2**32),
                      spread_home=q['quote']['spread_home'] if q else None,
                      failure1_fit_margin_delta=rushing_correction['margin_delta_points'],
+                     personnel_evidence=active_personnel,
                      stress_runs=(5000 if rush_screen['requires_full_rush_stress']
                                   else max(100,min(400,runs//8))))
         personnel=simulate_personnel_scenarios(hp,ap,qb_effects['home'],qb_effects['away'],
