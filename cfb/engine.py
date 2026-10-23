@@ -113,7 +113,7 @@ def _two_point_rate(p, r):
                          (p['_ppd'] - r['league_ppd']), .18, .72))
 
 
-def _resolve_overtime(home, away, rules, rng, hs, ass):
+def _resolve_overtime(home, away, rules, rng, hs, ass, *, field_goals=None, kick_rng=None):
     """Apply NCAA extra-period structure to tied-at-regulation draws.
 
     For OT 1 and 2, model paired series starting on opponent 25; OT 2
@@ -135,6 +135,12 @@ def _resolve_overtime(home, away, rules, rng, hs, ass):
                                      rules['ot_25_ppd_multiplier'])
             ap, _ = _draw_possession(away, rules, rng, tied, zeros, noise,
                                      rules['ot_25_ppd_multiplier'])
+            if field_goals is not None:
+                from cfb.redzone_kicking import draw_missed_field_goals
+                if kick_rng is None:
+                    raise CFBEngineError('FG overtime adjudication needs independent RNG')
+                hp,_=draw_missed_field_goals(hp,field_goals.get('home'),kick_rng)
+                ap,_=draw_missed_field_goals(ap,field_goals.get('away'),kick_rng)
             if period == 2:
                 for p, points in ((home, hp), (away, ap)):
                     td = tied & (points >= 6)
