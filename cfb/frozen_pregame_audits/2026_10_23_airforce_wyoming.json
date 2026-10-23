@@ -1,0 +1,143 @@
+{
+  "schema": "cfb_frozen_pregame_build16_ats_v1",
+  "fixture": {
+    "game_id": "401864525",
+    "date_local": "2026-10-23",
+    "away": "Air Force",
+    "home": "Wyoming",
+    "kickoff_utc": "2026-10-24T01:00:00+00:00",
+    "local_kickoff": "2026-10-23 19:00 America/Denver"
+  },
+  "frozen_provenance": {
+    "github_workflow_run_id": 39998208664,
+    "url": "https://github.com/alecpsias/football-ats-model/actions/runs/39998208664",
+    "source_snapshot_utc": "2026-10-23T17:49:43.552825+00:00",
+    "prediction_generated_at_utc": "2026-10-23T17:49:44.542910+00:00",
+    "main_git_sha": "564c9ee887441a0d8bc892f08d539f64d1dac453",
+    "regression_pass": true,
+    "workflow_success": true,
+    "simulation_draws": 5000,
+    "paired_seed": 401864525,
+    "prior_games_airforce": 6,
+    "prior_games_wyoming": 7
+  },
+  "baseline": {
+    "airforce": 24.218,
+    "wyoming": 20.954,
+    "airforce_margin": 3.264,
+    "total": 45.172,
+    "airforce_win_frequency": 0.593
+  },
+  "challenger": {
+    "airforce": 24.959,
+    "wyoming": 17.602,
+    "airforce_margin": 7.357,
+    "total": 42.562,
+    "airforce_win_frequency": 0.6854,
+    "margin_sd": 16.121,
+    "margin_p10_p50_p90_home_wyoming": [
+      -28,
+      -8,
+      14
+    ],
+    "regulation_airforce_margin": 7.288,
+    "overtime_point_addition": 0.321,
+    "field_goal_distance_regression_active": true,
+    "redzone_opponent_adjusted_active": true,
+    "situational_early_third_chain_active": true,
+    "position_clocks_source_verified": true,
+    "turnover_return_attributed": true
+  },
+  "spreads": [
+    {
+      "airforce_spread": -4.5,
+      "airforce_cover_raw": 0.59,
+      "wyoming_cover_raw": 0.41
+    },
+    {
+      "airforce_spread": -5.5,
+      "airforce_cover_raw": 0.58,
+      "wyoming_cover_raw": 0.42
+    },
+    {
+      "airforce_spread": -6.5,
+      "airforce_cover_raw": 0.554,
+      "wyoming_cover_raw": 0.446
+    }
+  ],
+  "adverses": {
+    "matched_rush_sos_epa_advantage_airforce": 0.117919602054689,
+    "mandatory_rush_screen": "SEVERE_RUSH_MISMATCH_REQUIRES_5000_RUN_STRESS",
+    "rush_stress_runs_per_scenario": 5000,
+    "rush_stress_margins_wyoming": {
+      "away_scoring_stall": -4.279,
+      "away_turnover_swing": -7.047,
+      "fewer_possessions": -7.134,
+      "home_scoring_stall": -10.658,
+      "home_turnover_swing": -7.782,
+      "more_possessions": -7.557
+    },
+    "airforce_scoring_stall_sim_fraction": 0.2144,
+    "wyoming_scoring_stall_fraction": 0.3144,
+    "airforce_plus_two_turnovers_fraction": 0.0374,
+    "wyoming_plus_two_turnovers_fraction": 0.21,
+    "low_turnover_recovery_regression": true
+  },
+  "redzone_kicking": {
+    "airforce_rz_td_probability_matched": 0.573806,
+    "wyoming_rz_td_probability_matched": 0.527535,
+    "airforce_fg_probability_matched": 0.79207,
+    "wyoming_fg_probability_matched": 0.816639,
+    "observed_airforce_fg": "7-for-8",
+    "observed_wyoming_fg": "10-for-10"
+  },
+  "qb_context": {
+    "airforce_current_starter": "Evan Medders",
+    "airforce_prior_qb": "Liam Szarka",
+    "szarka_season_ending_injury_source": "https://gowyo.com/news/2026/10/19/football-cowboys-host-air-force-on-friday-night-for-cowboys-and-coal-black-out-out-game.aspx",
+    "qb_starter_numeric_lineup_override_not_verified": true,
+    "medders_qb_rush_epa_prior": 0.4587,
+    "szarka_qb_rush_epa_prior": 0.2795,
+    "wyoming_qb": "Tyler Hughes",
+    "wyoming_qb_rush_epa_prior": 0.3231
+  },
+  "market": {
+    "airforce_spread_current": -5.5,
+    "alt": -4.5,
+    "opening": -6.5,
+    "total_range": [
+      44.5,
+      45.5
+    ],
+    "sharp_split_snapshot_source": "https://wiseguyteam.com/cfb-betting-splits",
+    "snapshot_time": "2026-10-22T17:07:00-04:00",
+    "circa_wyoming_plus_5_5_spread_handle": 0.95,
+    "draftkings_wyoming_plus_5_5_spread_handle": 0.99,
+    "odds_source": "https://www.sportsline.com/NCAAF/game-forecast/NCAAF_20261023_AF%40WYO/",
+    "market_per_quote_origin_timestamp_not_repository_verified": true
+  },
+  "decision": {
+    "favored_winner": "Air Force",
+    "preferred_ats_side": "Air Force -4.5 (prefer over -5.5)",
+    "ats_at_minus_5_5": "modest Air Force lean; price-sensitive",
+    "group": "C",
+    "confidence_out_of_10": 5.7,
+    "representative_score": "Air Force 25 Wyoming 18",
+    "why_c": [
+      "Baseline disagrees with challenger at current ATS line",
+      "Circa and DraftKings reported spread handle strongly on Wyoming",
+      "Season-long QB history mixes injured Szarka with starter Medders",
+      "Large margin uncertainty and raw uncalibrated cover frequencies",
+      "Wyoming home 3-0 and dual-threat Tyler Hughes"
+    ],
+    "total_lean": "Under 45.5 (less conviction than ATS)",
+    "not_calibrated_ats_probability": true
+  },
+  "safeguards": {
+    "target_final_used": false,
+    "prior_games_24h_embargo": true,
+    "baseline_preserved": true,
+    "only_one_challenger": true,
+    "team_personnel_not_quantitatively_applied_without_verified_status": true
+  }
+}
