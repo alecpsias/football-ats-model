@@ -1,0 +1,131 @@
+{
+  "schema": "cfb_build16_personnel_refresh_pregame_v1",
+  "fixture": {
+    "game_id": "401861965",
+    "date_local": "2026-10-23",
+    "away": "Massachusetts",
+    "home": "UConn",
+    "kickoff_utc": "2026-10-23T23:00:00+00:00"
+  },
+  "provenance": {
+    "run_id": 40023632742,
+    "url": "https://github.com/alecpsias/football-ats-model/actions/runs/40023632742",
+    "commit": "0e547f4517dbdd02767efe168ab7c7adcb5b41f5",
+    "snapshot_captured_utc": "2026-10-23T21:01:44.521485+00:00",
+    "forecast_label_utc": "2026-10-23T21:01:46.090940+00:00",
+    "source_data_pre_game": true,
+    "full_regression_suite_passed": true,
+    "run_success": true,
+    "simulations_per_variant": 5000,
+    "seed": 401861965
+  },
+  "prior_original_pregame": {
+    "preserved_at": "https://github.com/alecpsias/football-ats-model/blob/main/cfb/frozen_pregame_audits/2026_10_23_umass_uconn.json",
+    "uconn_points": 28.888,
+    "umass_points": 23.451,
+    "uconn_margin": 5.436,
+    "umass_cover_plus_14_5": 0.7016
+  },
+  "new_baseline": {
+    "uconn_points": 28.022,
+    "umass_points": 25.742,
+    "uconn_margin": 2.28,
+    "total": 53.763,
+    "uconn_win_raw": 0.5598
+  },
+  "new_default_build16": {
+    "uconn_points": 28.888,
+    "umass_points": 23.451,
+    "uconn_margin": 5.436,
+    "total": 52.339,
+    "uconn_win_raw": 0.6218,
+    "umass_cover_plus_14_5_raw": 0.7016,
+    "umass_cover_plus_16_5_raw": 0.7232,
+    "margin_standard_deviation": 17.984,
+    "uconn_margin_10_50_90": [
+      -18,
+      6,
+      28
+    ],
+    "personnel_applied": false,
+    "regressed_fg_active": true,
+    "situational_drive_chain_active": true,
+    "source_observed_regulation_clock_active": true,
+    "rush_severe_stress_triggered": true,
+    "rush_sos_epa_advantage_uconn": 0.1732958810031984
+  },
+  "personnel_capture": {
+    "attempted_url": "https://kickoffstatus.com/games/2026-10-23-massachusetts-at-uconn/",
+    "status": "NO_VERIFIED_LIVE_AVAILABILITY",
+    "reason": "LIVE_SOURCE_UNAVAILABLE",
+    "players_source_verified": 0,
+    "automatic_ppd_adjustment_umass": 0,
+    "automatic_ppd_adjustment_uconn": 0,
+    "limitation": "Independent matchup has no qualifying official conference availability report; report cannot be fabricated; inability to apply the numerical injury correction must be disclosed."
+  },
+  "conditional_qb_sensitivity": {
+    "model": "Same Build16, separate sample-regressed QB switch; not lineup verification or locked game-day forecast",
+    "reference": "L. Inagawa",
+    "candidate": "W. Watson III",
+    "reference_present_verified": false,
+    "candidate_confirmed_healthy": false,
+    "measured_conditional_ppd_delta_umass": 0.13494,
+    "umass_points": 24.852,
+    "uconn_points": 28.664,
+    "uconn_margin": 3.811,
+    "uconn_win_raw": 0.5876,
+    "umass_cover_plus_14_5_raw": 0.725,
+    "simulation_runs": 5000,
+    "warning": "Historical team forecast already blends previous Watson and backup games; a full counterfactual replacement addition can double-count Watson's previously observed efficiency. Use only as a conditional sensitivity."
+  },
+  "external_verification": {
+    "market": {
+      "uconn_spread_current": -14.5,
+      "opening": -16.5,
+      "total_current": 50.5,
+      "moneyline_uconn": -700,
+      "url": "https://www.actionnetwork.com/ncaaf-game/umass-uconn-score-odds-october-23-2026/289630"
+    },
+    "watson_status": {
+      "expected_to_play_but_pregame_evaluation_pending": true,
+      "source": "https://www.rotowire.com/cfootball/headlines/william-watson-injury-expected-to-return-friday-236391",
+      "primary_source": "ESPN Pete Thamel",
+      "ankle_running_limit_unverified": true
+    },
+    "independent_matchup": {
+      "source": "https://tempocfb.net/games/2026/8/massachusetts-at-uconn",
+      "ppd_umass": 1.73,
+      "ppd_uconn": 3.07,
+      "offense_success_umass": 0.402,
+      "offense_success_uconn": 0.469,
+      "warning": "Strong independent UConn scoring advantage conflicts with Build16 spread estimate."
+    }
+  },
+  "scenarios": {
+    "umass_scoring_stall_share": 0.279,
+    "uconn_mean_margin_if_umass_stall": 20.581,
+    "uconn_scoring_stall_share": 0.2388,
+    "umass_mean_margin_if_uconn_stall": 11.681,
+    "umass_extra_turnovers_share": 0.0926,
+    "uconn_mean_margin_if_umass_extra_turnovers": 14.065,
+    "uconn_extra_turnovers_share": 0.1714,
+    "umass_mean_margin_if_uconn_extra_turnovers": 2.753,
+    "source_run_is_conditional_not_calibrated": true
+  },
+  "ats_assessment": {
+    "directional_side": "UMass +14.5",
+    "group": "C",
+    "confidence_out_of_10": 5.5,
+    "representative_frozen_model_score": "UConn 29 UMass 23",
+    "at_16_5": "UMass preferred price",
+    "total": "PASS",
+    "rationale": "Two touchdown market cushion plus Watson expected to return and UConn weak pass defense, but very large model vs bookmaker outright probability conflict, independent opponent-adjusted PPD projects strong UConn separation, and report-based numerical injury layer did not activate. Raw 70-72% model cover rates uncalibrated."
+  },
+  "safeguards": {
+    "baseline_unchanged": true,
+    "one_challenger": true,
+    "original_frozen_projection_not_overwritten": true,
+    "target_final_not_accessed": true,
+    "personnel_source_absence_explicit": true
+  }
+}
