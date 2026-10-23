@@ -297,7 +297,7 @@ def _failure2_verified_scoring_histories(home_id,away_id,histories):
 
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical'):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None):
     if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
@@ -408,6 +408,27 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         if not 6<=drives<=19:raise ValueError('Invalid expected drives')
         h['_ppd']=float(np.clip(h['_ppd']+fitted_delta/(2*drives),.35,5.5))
         a['_ppd']=float(np.clip(a['_ppd']-fitted_delta/(2*drives),.35,5.5))
+    # Improvements 1 + 3. Source-qualified continuous rushing advantage and
+    # opponent-adjusted margin residual, FIT ON AN EARLIER YEAR'S ERRORS.
+    # This is a second *layer inside the same Build16 research candidate*, not
+    # a separate published model. It operates on LEFTOVER margin errors
+    # after the existing EPA blend and fitted Failure1 correction, so a raw
+    # SOS "rating" is never blindly added as extra scoring points.
+    # Default None preserves every original reference/production forecast.
+    if continuous_rush_sos_residual_delta is not None:
+        if any(z is not None for z in (rush_research,chain_research,mismatch_research)):
+            raise ValueError("Do not combine independent research ablations")
+        if type(continuous_rush_sos_residual_delta) not in (float,int):
+            raise ValueError("Fitted continuous residual must be numeric")
+        residual=float(continuous_rush_sos_residual_delta)
+        if not np.isfinite(residual) or abs(residual)>6.:
+            raise ValueError("Fitted continuous margin residual must be within ±6 points")
+        drives=(float(h['expected_drives'])+float(a['expected_drives']))/2.
+        if not 6<=drives<=19:raise ValueError("Invalid drive count for residual")
+        h['_ppd']=float(np.clip(h['_ppd']+residual/(2*drives),.35,5.5))
+        a['_ppd']=float(np.clip(a['_ppd']-residual/(2*drives),.35,5.5))
+    # Never change fixed historical run frequencies, EPA, tempo, or turn-over
+    # sources using the fitted margin residual. Only both simulated PPDs move.
     # Failure 3: opponent-specific stable-drive versus explosive-only TD
     # fragility. Offense PPD already includes EPA and scoring drives, so only
     # a bounded incremental residual is applied. No alteration to baseline.
@@ -499,6 +520,14 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         answer['not_deployed']=True
     if mismatch_evidence is not None:
         answer['mismatch_research']=mismatch_evidence
+        answer['not_deployed']=True
+    if continuous_rush_sos_residual_delta is not None:
+        answer['continuous_rush_sos_residual_research']={
+            'status':'ACTIVE_UNPROMOTED_SINGLE_BUILD16_ABLATION',
+            'margin_delta_points_home':float(continuous_rush_sos_residual_delta),
+            'applied_to_simulated_home_and_away_ppd':True,
+            'double_counting_guard':'FIT_TO_BUILD16_REMAINING_MARGIN_ERROR_NOT_RAW_EPA',
+            'not_default':True,'ATS_calibrated':False}
         answer['not_deployed']=True
     if fitted_delta is not None:
         answer['failure1_fitted_rushing_margin_delta']=fitted_delta
