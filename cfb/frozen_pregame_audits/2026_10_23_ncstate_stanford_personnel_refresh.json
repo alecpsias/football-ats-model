@@ -1,0 +1,159 @@
+{
+  "schema": "cfb_frozen_personnel_refresh_ats_v1",
+  "fixture": {
+    "game_id": "401858272",
+    "date_local": "2026-10-23",
+    "away": "NC State",
+    "home": "Stanford",
+    "kickoff_utc": "2026-10-24T02:30:00+00:00"
+  },
+  "provenance": {
+    "run_id": 40028268856,
+    "run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/40028268856",
+    "github_sha": "4672aa0eddae4588e387e1bb4c419cd8ba1e204b",
+    "workflow_conclusion": "success",
+    "regression_suite": "passed",
+    "pbp_snapshot_at_utc": "2026-10-23T21:39:19.055631+00:00",
+    "forecast_generated_label_at_utc": "2026-10-23T21:39:20.578453+00:00",
+    "live_report_capture_at_utc": "2026-10-23T21:44:00.647788+00:00",
+    "timestamp_note": "Forecast-generated label predates completion of live-report network capture; do not use it as the completed injury-adjusted freeze time",
+    "target_final_not_used": true,
+    "matched_seed": 401858272,
+    "runs_per_simulation": 5000
+  },
+  "original_frozen_unchanged": "cfb/frozen_pregame_audits/2026_10_23_ncstate_stanford.json",
+  "baseline": {
+    "ncstate": 31.48,
+    "stanford": 25.017,
+    "ncstate_margin": 6.462,
+    "total": 56.497,
+    "ncstate_win_raw": 0.668
+  },
+  "build16_personnel_off": {
+    "ncstate": 32.59,
+    "stanford": 23.721,
+    "ncstate_margin": 8.869,
+    "total": 56.311,
+    "ncstate_cover_minus_6_5_raw": 0.5658,
+    "ncstate_win_raw": 0.6798
+  },
+  "build16_personnel_on": {
+    "ncstate": 32.364,
+    "stanford": 24.062,
+    "ncstate_margin": 8.302,
+    "total": 56.426,
+    "ncstate_win_raw": 0.6716,
+    "margin_sd": 19.425,
+    "ncstate_margin_p10_p50_p90": [
+      -17,
+      9,
+      33.1
+    ],
+    "personnel_active": true,
+    "fg_distance_regression_active": true,
+    "early_down_chain_active": true,
+    "verified_clock_active": true,
+    "defensive_return_td_linked_to_turnovers": true,
+    "regulation_ncstate_margin": 8.275
+  },
+  "same_seed_spread_sensitivity": [
+    {
+      "stanford_spread": 5.5,
+      "ncstate_spread": -5.5,
+      "ncstate_cover_raw": 0.572,
+      "stanford_cover_raw": 0.428
+    },
+    {
+      "stanford_spread": 6.5,
+      "ncstate_spread": -6.5,
+      "ncstate_cover_raw": 0.5514,
+      "stanford_cover_raw": 0.4486
+    },
+    {
+      "stanford_spread": 7.5,
+      "ncstate_spread": -7.5,
+      "ncstate_cover_raw": 0.5156,
+      "stanford_cover_raw": 0.4844
+    }
+  ],
+  "personnel": {
+    "source_url": "https://kickoffstatus.com/games/2026-10-23-nc-state-at-stanford/",
+    "source_kind": "Third-party ACC linked availability transcription, not independently official source authenticated",
+    "capture_at_utc": "2026-10-23T21:44:00.647788+00:00",
+    "source_report_status": "PREGAME_SECONDARY_CONFERENCE_TRANSCRIPTION_CAPTURED",
+    "reported_player_rows": 30,
+    "ncstate_out": 14,
+    "stanford_out": 12,
+    "net_ppd_adjustment_ncstate": -0.020326,
+    "net_ppd_adjustment_stanford": 0,
+    "affected_ncstate": [
+      {
+        "name": "Dylan McCoy",
+        "ppd": -0.002659
+      },
+      {
+        "name": "Jayden Duke Scott",
+        "ppd": -0.009685
+      },
+      {
+        "name": "Jojo Trader",
+        "ppd": -0.007982
+      }
+    ],
+    "kicker_konieczynski_out": true,
+    "kicker_numeric_override": false,
+    "offensive_line_effect_fitted": false,
+    "individual_defensive_losses_fitted": false,
+    "measured_contribution_is_incremental_to_existing_team_history": true
+  },
+  "rush_stress": {
+    "status": "SEVERE_RUSH_MISMATCH_REQUIRES_5000_RUN_STRESS",
+    "matched_rush_sos_epa_advantage_ncstate": 0.218132,
+    "stress_runs_per_scenario": 5000,
+    "ncstate_margin_if_own_offense_stalls": 4.401,
+    "ncstate_margin_with_unfavorable_turnovers": 7.704,
+    "ncstate_margin_fewer_possessions": 8.211,
+    "ncstate_margin_if_stanford_stalls": 12.119,
+    "ncstate_margin_favorable_turnovers": 8.6,
+    "ncstate_margin_more_possessions": 8.548,
+    "stress_not_empirically_calibrated": true
+  },
+  "further_causal_risks": {
+    "ncstate_FBS_2h_points_for": 53,
+    "ncstate_FBS_2h_points_against": 115,
+    "ncstate_FBS_games_in_2h_sample": 5,
+    "source": "https://www.wral.com/sports/ncstate-football-dave-doeren-second-half-struggles-road-game-at-stanford-october-2026/",
+    "west_coast_late_kickoff_risk": true,
+    "pressure_and_pass_protection_EPA_unavailable": true,
+    "penalty_EPA_unavailable": true,
+    "individual_special_teams_EPA_unavailable": true
+  },
+  "market": {
+    "quoted_ncstate_spread_range": [
+      -6.5,
+      -7.5
+    ],
+    "total": 55.5,
+    "oct22_dk_ncstate_spread_tickets": 0.79,
+    "oct22_circa_stanford_spread_handle": 0.69,
+    "source": "https://wiseguyteam.com/cfb-betting-splits",
+    "live_quote_source": "https://www.actionnetwork.com/content/nc-state-wolfpack-vs-stanford-cardinal-prediction-pick-odds-college-football-friday-october-23/embed",
+    "betting_lines_not_frozen_from_api_with_timestamp": true
+  },
+  "recommendation": {
+    "preferred_direction_at_minus_6_5": "NC State -6.5",
+    "grade": "C",
+    "confidence_out_of_10": 5.2,
+    "at_minus_7_5": "PASS",
+    "representative_score": "NC State 32 Stanford 24",
+    "total": "PASS",
+    "reason": "Only +1.8 points model edge at -6.5; baseline is Stanford cover; 2H deficits and 8 missing prior starters, unquantified OL/coverage, wide 19.4pt margin SD; uncalibrated raw ATS rates"
+  },
+  "integrity": {
+    "single_cfb_challenger": true,
+    "independent_cfb_baseline_retained": true,
+    "original_pregame_immutable": true,
+    "no_target_result_leakage": true,
+    "source_24h_embargo": true
+  }
+}
