@@ -1,0 +1,123 @@
+name: CFB Air Force at Wyoming 2026-10-23 Build16 ATS 5000
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-airforce-wyoming-20261023.yml'
+permissions:
+  contents: read
+jobs:
+  pregame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free CFB dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Full CFB regression suite
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Collect verified 2026 source statistics
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/airforce_wyoming_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/airforce_wyoming_snapshot
+      - name: Resolve one Air Force at Wyoming pregame fixture in source data
+        run: |
+          python - <<'PY'
+          import os
+          import pandas as pd
+          s=pd.read_parquet('cfb_artifacts/airforce_wyoming_snapshot/schedule.parquet')
+          away=s.away_team.astype(str).str.lower()
+          home=s.home_team.astype(str).str.lower()
+          mask=(away.str.contains('air force',regex=False)&home.str.contains('wyoming',regex=False)&
+            pd.to_datetime(s.start_date,utc=True,errors='coerce').dt.date.eq(pd.Timestamp('2026-10-24').date()))
+          rows=s.loc[mask]
+          if len(rows)!=1:raise RuntimeError('Fixture missing/ambiguous: '+str(s.loc[away.str.contains('air force',regex=False)&home.str.contains('wyoming',regex=False),['game_id','away_team','home_team','start_date','completed']].to_dict('records')))
+          g=rows.iloc[0]
+          if bool(g.completed):raise RuntimeError('Target game already completed')
+          with open(os.environ['GITHUB_ENV'],'a') as o:o.write('GAME_ID='+str(g.game_id)+'\n')
+          print('VERIFIED_FIXTURE',str(g.game_id),g.away_team,'at',g.home_team,g.start_date)
+          PY
+      - name: Freeze historical matchup then exactly 5000 Build16 simulation draws
+        run: |
+          python -m cfb.fresh_matchup --mode pregame \
+            --team-a "Air Force" --team-b "Wyoming" --game-id "$GAME_ID" \
+            --snapshot cfb_artifacts/airforce_wyoming_snapshot \
+            --odds cfb/_market_disabled --availability-dir cfb/availability \
+            --runs 5000 --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
+            --out cfb_artifacts/airforce_wyoming_pregame.json > cfb_artifacts/airforce_wyoming_stdout.log
+          python - <<'PY'
+          import json
+          x=json.load(open('cfb_artifacts/airforce_wyoming_pregame.json'))
+          b=x.get('build16_challenger') or {}
+          print('AIRFORCE_WYOMING_FROZEN_5000')
+          print(json.dumps({
+            'status':x.get('status'),'game_id':x.get('game_id'),'home':x.get('home'),'away':x.get('away'),
+            'kickoff':x.get('kickoff_utc'),'snapshot_at':x.get('source_snapshot_at_utc'),
+            'generated_at':x.get('prediction_generated_at_utc'),
+            'history_home':x.get('completed_prior_games_home'),'history_away':x.get('completed_prior_games_away'),
+            'baseline':x.get('simulation'),'build16':b.get('simulation'),'build16_status':b.get('status'),
+            'rushing_audit':x.get('mandatory_rushing_audit'),
+            'rushing_gate':x.get('rushing_ats_risk_gate'),
+            'matchup':x.get('matchup_evidence'),'qb':x.get('quarterback_participation'),
+            'chain':b.get('situational_chain_evidence'),
+            'redzone_kicking':b.get('redzone_kicking_evidence'),
+            'nonoffensive':b.get('failure2_scoring_attribution'),
+            'availability':x.get('availability_evidence'),'missing':x.get('missing_statistical_fields')
+          },indent=2,default=str)[:90000])
+          PY
+      - name: Same-seed 5000-draw ATS cover sensitivity at current and alternative prices
+        run: |
+          python - <<'PY'
+          import os,json
+          import pandas as pd
+          from pathlib import Path
+          from cfb.pipeline import verify,iso_utc
+          from cfb.fresh_matchup import histories_asof
+          from cfb.failure1_learned_shadow import correction
+          from cfb.mechanism_build16 import simulate_build16
+          root=Path('cfb_artifacts/airforce_wyoming_snapshot')
+          captured=iso_utc(verify(root)['captured_at_utc'])
+          sched=pd.read_parquet(root/'schedule.parquet')
+          pbp=pd.read_parquet(root/'pbp.parquet')
+          roster=pd.read_parquet(root/'roster.parquet')
+          future,_,histories,_=histories_asof(sched,pbp,roster,captured)
+          rows=future.loc[future.game_id.astype(str).eq(os.environ['GAME_ID'])]
+          if len(rows)!=1:raise ValueError('Pregame fixture was not uniquely found')
+          g=rows.iloc[0];h,a=int(g.home_id),int(g.away_id)
+          rush=correction(h,a,histories)
+          args=dict(home_id=h,away_id=a,histories=histories,neutral=bool(g.neutral_site),
+            runs=5000,seed=int(g.game_id)%(2**32),
+            failure1_fit_margin_delta=rush['margin_delta_points'])
+          out={'fixture':os.environ['GAME_ID'],'capture':str(captured),
+            'market_spreads_external_not_timestampped_by_native_archive':True,
+            'raw_cover_frequencies_uncalibrated':True,'scenarios':[]}
+          for spread in (4.5,5.5,6.5):
+            sim=simulate_build16(spread_home=spread,**args).get('simulation')
+            if not sim:raise RuntimeError('No simulation at Wyoming spread +'+str(spread))
+            out['scenarios'].append({'wyoming_spread':spread,'airforce_favorite_spread':-spread,
+              'airforce_cover_raw':sim['away_cover_probability_raw'],
+              'wyoming_cover_raw':sim['home_cover_probability_raw'],
+              'airforce_win_raw':1.-sim['home_win_probability_raw'],
+              'wyoming_mean_score':sim['mean_score_home'],
+              'airforce_mean_score':sim['mean_score_away'],
+              'wyoming_mean_margin':sim['mean_margin_home'],
+              'total':sim['mean_total'],'margin_percentiles':sim['margin_p10_p50_p90'],
+              'runs':sim['simulations'],'seed':sim['seed']})
+          print('AIRFORCE_WYOMING_ATS_5000')
+          print(json.dumps(out,indent=2))
+          Path('cfb_artifacts/airforce_wyoming_ats.json').write_text(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-airforce-wyoming-frozen-${{ github.run_id }}
+          path: |
+            cfb_artifacts/airforce_wyoming_pregame.json
+            cfb_artifacts/airforce_wyoming_pregame.md
+            cfb_artifacts/airforce_wyoming_stdout.log
+            cfb_artifacts/airforce_wyoming_ats.json
+          if-no-files-found: warn
