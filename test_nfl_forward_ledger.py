@@ -71,10 +71,10 @@ class ArchivedForecastTests(unittest.TestCase):
             }), Path(d), 123)
             x = evaluate(paths, finals)
             self.assertEqual(x["completed_games"], 1)
-            self.assertEqual(x["current_challenger"]["challenger_games"], 1)
+            self.assertEqual(x["current_challenger"]["challenger_games"], 0)
             self.assertEqual(x["all_baseline"]["baseline_mae_margin"], 0)
-            self.assertEqual(x["current_challenger"]["challenger_mae_margin"], .3)
-            self.assertEqual(x["archived_challenger_versions"], {})
+            self.assertEqual(x["archived_challenger_versions"]["0.10.0"]["challenger_mae_margin"], .3)
+            self.assertEqual(list(x["archived_challenger_versions"]), ["0.10.0"])
             self.assertEqual(x["ats_record"], "NOT_MEASURED_NO_VALIDATED_PRICED_SIGNED_LINES")
 
 
