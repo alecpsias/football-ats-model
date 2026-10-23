@@ -37,6 +37,8 @@ def observed_chain(plays,team,opponent):
     out={}
     def side(rows):
         early_good=early_total=early_rush=early_all=0
+        early_down1_good=early_down1_n=early_down2_good=early_down2_n=0
+        third_short_yes=third_short_n=third_medium_yes=third_medium_n=third_long_yes=third_long_n=0
         third_manage=third_total=third_yes=third_n=0
         third_official_yes=0
         terminal_unresolved=0
@@ -60,6 +62,13 @@ def observed_chain(plays,team,opponent):
                 if not 1<=dist<=60 or not -60<=gain<=110:continue
                 if down<=2:
                     early_all+=1
+                    # Standard early-down success: >=50% on first, >=70% on second.
+                    good=gain >= (.5 if down==1 else .7)*dist
+                    early_good+=int(good);early_total+=1
+                    if down==1:
+                        early_down1_good+=int(good);early_down1_n+=1
+                    else:
+                        early_down2_good+=int(good);early_down2_n+=1
                     if bool(z.rush):
                         early_rush+=1;early_run_success_n+=1
                         thresh=(.5 if down==1 else .7)*dist
@@ -90,7 +99,19 @@ def observed_chain(plays,team,opponent):
                 else:
                     third_n+=1
                     third_yes+=int(converted)
-        return {'early_rush_success_yes':early_run_success_good,
+                    if dist<=3:
+                        third_short_n+=1;third_short_yes+=int(converted)
+                    elif dist<=6:
+                        third_medium_n+=1;third_medium_yes+=int(converted)
+                    else:
+                        third_long_n+=1;third_long_yes+=int(converted)
+        return {'early_success_yes':early_good,'early_success_n':early_total,
+                'first_down_success_yes':early_down1_good,'first_down_success_n':early_down1_n,
+                'second_down_success_yes':early_down2_good,'second_down_success_n':early_down2_n,
+                'third_short_yes':third_short_yes,'third_short_n':third_short_n,
+                'third_medium_yes':third_medium_yes,'third_medium_n':third_medium_n,
+                'third_long_yes':third_long_yes,'third_long_n':third_long_n,
+                'early_rush_success_yes':early_run_success_good,
                 'early_rush_success_n':early_run_success_n,
                 'early_rush_plays':early_rush,'early_offense_plays':early_all,
                 'third_manageable_yes':third_manage,'third_attempts':third_total,
