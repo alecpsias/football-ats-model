@@ -108,7 +108,7 @@ def _team(team_rows,opp_rows,mode):
              'medium':round(new_medium,6),'long':round(new_long,6)},
           'method':'Resolved earlier-game conversions only; prior opponent defensive rates'}
     applied=(dist_ppd if mode=='distance' else sustain_ppd if mode=='sustain'
-             else situational_ppd if mode=='situational' else dist_ppd+sustain_ppd
+             else situational_ppd if mode=='situational' else dist_ppd+sustain_ppd)
     return {'status':'AVAILABLE_UNFITTED','prior_off_early_rush_success':round(r[0],5),
         'opponent_allowed_early_rush_success':round(d[0],5),
         'own_prior_early_rush_share':round(m[0],5),
