@@ -1,0 +1,44 @@
+{
+  "coefficients": [
+    1.2857965357,
+    0.6883757423,
+    1.3272244532,
+    3.1529972857,
+    0.8977076591
+  ],
+  "cross_season_ATS_validated": false,
+  "feature_names": [
+    "matched_early_rush_advantage",
+    "matched_negative_run_avoidance",
+    "opponent_adjusted_rush_epa",
+    "opponent_adjusted_total_margin_feature",
+    "matched_rush_advantage_x_expected_run_share"
+  ],
+  "fitted_after_existing_build16_reference": true,
+  "margin_adjustment_cap_points": 6,
+  "no_2025_or_2026_outcomes_in_fit": true,
+  "promotion_authorized": false,
+  "ridge_regularization": 150,
+  "scale": [
+    0.16,
+    0.11,
+    0.2,
+    12,
+    0.12
+  ],
+  "training_game_ids_sha256": "4f9d35e22b9ae99f820d52c531736ea391f0086717763abd6059f51629f921b2",
+  "training_games": 226,
+  "training_residual_MAE_after": 12.63572,
+  "training_residual_MAE_before": 13.17088,
+  "training_retrospective_source_timestamps_unverified": true,
+  "training_season": 2024,
+  "version": "cfb-continuous-rush-sos-residual-v1",
+  "promoted_into_build16": true,
+  "user_requested_activation": true,
+  "source_training_workflow_run_id": "39894108075",
+  "source_training_commit": "c04fd1131edee403ad3a7f9dd2d7448a147d3b74",
+  "activation_policy": "USER_REQUESTED_EXPERIMENTAL_AUTOMATIC_BUILD16",
+  "holdout_margin_improvement_unverified": true,
+  "holdout_ATS_accuracy_unverified": true,
+  "training_reference": "2024 retrospective actual earlier-game-only 5,000-draw Build16 frozen baseline, 226 selected fixtures"
+}
