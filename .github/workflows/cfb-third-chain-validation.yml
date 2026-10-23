@@ -5,6 +5,10 @@ on:
   push:
     paths:
       - '.github/workflows/cfb-third-chain-validation.yml'
+      - 'cfb/chain_interaction_research.py'
+      - 'cfb/chain_source.py'
+      - 'cfb/chain_study.py'
+      - 'cfb/test_cfb_situational_chain.py'
 
 permissions:
   contents: read
