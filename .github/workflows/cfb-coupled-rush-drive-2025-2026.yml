@@ -1,0 +1,70 @@
+name: CFB Build16 coupled rushing and stalled-drive validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-coupled-rush-drive-2025-2026.yml'
+      - 'cfb/coupled_rush_possessions.py'
+      - 'cfb/coupled_rush_paired.py'
+      - 'cfb/test_cfb_coupled_rush_possessions.py'
+
+permissions:
+  contents: read
+
+jobs:
+  paired:
+    runs-on: ubuntu-latest
+    timeout-minutes: 85
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: New mechanics regression and complete CFB suite
+        run: |
+          python -m unittest cfb.test_cfb_coupled_rush_possessions -v
+          python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Verified 2025 free football source
+        run: |
+          mkdir -p cfb_artifacts/coupled_rush
+          python -m cfb.pipeline collect --season 2025 --out cfb_artifacts/coupled_rush/snapshot2025
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/coupled_rush/snapshot2025
+      - name: 2025 5000-draw same-seed historical validation
+        run: |
+          python -u -m cfb.coupled_rush_paired \
+            --year 2025 --max-games 120 \
+            --snapshot cfb_artifacts/coupled_rush/snapshot2025 \
+            --out cfb_artifacts/coupled_rush/eval2025.json
+      - name: Verified 2026 free football source
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/coupled_rush/snapshot2026
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/coupled_rush/snapshot2026
+      - name: 2026 5000-draw same-seed historical validation
+        run: |
+          python -u -m cfb.coupled_rush_paired \
+            --year 2026 --max-games 120 \
+            --snapshot cfb_artifacts/coupled_rush/snapshot2026 \
+            --out cfb_artifacts/coupled_rush/eval2026.json
+      - name: Surface no unverifiable ATS assertions
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          for y in (2025,2026):
+              x=json.load(open(f'cfb_artifacts/coupled_rush/eval{y}.json'))
+              assert x['historical_ATS_accuracy'] is None
+              assert x['motivating_game_excluded_from_comparison']
+              print('CFB_COUPLED_RUSH_VALIDATION',y,
+                    json.dumps({k:x[k] for k in ('all','strongest_rushing_mismatch_quartile','MAE_delta_bootstrap_95','insufficient_or_excluded')},sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build16-coupled-rush-drive-5000-${{ github.run_id }}
+          path: |
+            cfb_artifacts/coupled_rush/eval2025.json
+            cfb_artifacts/coupled_rush/eval2026.json
+          if-no-files-found: warn
