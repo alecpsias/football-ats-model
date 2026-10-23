@@ -1,0 +1,137 @@
+{
+  "schema": "cfb_build16_frozen_personnel_refreshed_pregame_v1",
+  "fixture": {
+    "game_id": "401858271",
+    "date": "2026-10-23",
+    "home": "Virginia",
+    "away": "Duke",
+    "kickoff_utc": "2026-10-23T23:00:00+00:00"
+  },
+  "provenance": {
+    "github_run_id": 40021841340,
+    "url": "https://github.com/alecpsias/football-ats-model/actions/runs/40021841340",
+    "commit": "21e892e3736b84e9fff05c843bdcc2b58216e760",
+    "source_snapshot_utc": "2026-10-23T20:47:24.304654+00:00",
+    "analysis_timestamp_recorded_utc": "2026-10-23T20:47:25.835058+00:00",
+    "live_availability_captured_at_utc": "2026-10-23T20:52:07.591017+00:00",
+    "time_provenance_warning": "forecast-generated timestamp in primary report precedes completion of live availability capture and must not be treated as the actual completed forecast timestamp",
+    "run_success": true,
+    "regression_suite_passed": true,
+    "same_seed": 401858271,
+    "sample_size_each": 5000
+  },
+  "original_frozen_pregame": {
+    "url": "https://github.com/alecpsias/football-ats-model/actions/runs/39983208687",
+    "score_duke": 24.307,
+    "score_virginia": 23.635,
+    "margin_duke": 0.672,
+    "duke_cover_raw_plus_2_5": 0.54,
+    "duke_cover_raw_plus_1_5": 0.5278,
+    "immutable_past_forecast": true
+  },
+  "refreshed_baseline": {
+    "duke": 23.808,
+    "virginia": 24.579,
+    "virginia_margin": 0.77,
+    "virginia_win_raw": 0.5212
+  },
+  "refreshed_challenger": {
+    "duke": 24.451,
+    "virginia": 23.705,
+    "duke_margin": 0.747,
+    "total": 48.156,
+    "duke_win_raw": 0.5254,
+    "virginia_win_raw": 0.4746,
+    "virginia_margin_sd": 18.027,
+    "virginia_margin_p10_p50_p90": [
+      -24,
+      -2,
+      24
+    ],
+    "regulation_duke_margin": 0.753,
+    "duke_cover_plus_2_5_raw": 0.5556,
+    "duke_cover_plus_1_5_raw": 0.5464,
+    "models_unfitted_and_cover_rates_not_calibrated": true
+  },
+  "paired_personnel_off": {
+    "duke": 24.307,
+    "virginia": 23.635,
+    "duke_margin": 0.672,
+    "total": 47.941,
+    "duke_cover_plus_2_5_raw": 0.54,
+    "duke_win_raw": 0.5132
+  },
+  "personnel": {
+    "source": "https://kickoffstatus.com/games/2026-10-23-duke-at-virginia/",
+    "source_type": "third_party_community_transcription_ACC_link",
+    "source_verified_as_official": false,
+    "captured_at_utc": "2026-10-23T20:52:07.591017+00:00",
+    "raw_report_players": 39,
+    "duke_reported_out": 12,
+    "duke_questionable": 2,
+    "virginia_reported_out": 20,
+    "virginia_doubtful": 4,
+    "duke_offense_ppd_delta_from_skill": 0,
+    "virginia_offense_ppd_delta_from_skill": -0.004114,
+    "virginia_scored_receiver": "Rico Flores Jr.",
+    "duke_out_receivers_unadjusted_due_to_no_recent_role": "Jamien Little / Qeanu Johnson",
+    "duke_kicker": "Cosme Salas",
+    "duke_kicker_id_historically_majority_attributed": true,
+    "duke_kicker_fallback_ppd_delta": 0.021351,
+    "duke_kicker_fallback_is_unobserved_replacement_skill": true,
+    "duke_kicker_warning": "Neutral league fallback raised expected PPD despite reported starter absence; this must NOT be read as causal improvement from the injury; model source and fallback direction require prospective audit",
+    "virginia_kicker": "Tim Hamann",
+    "virginia_kicker_numeric_adjustment": false,
+    "offensive_line_and_defense_individual_loss_effects_unavailable": true,
+    "qb_starting_lineup_unverified": true
+  },
+  "model_integrations": {
+    "matched_early_third_chain": true,
+    "redzone_probability_adjusted": true,
+    "fg_distance_adjusted": true,
+    "verified_drive_clock": true,
+    "rush_severe_trigger": false,
+    "matched_early_rush_success_duke": 0.394244,
+    "matched_early_rush_success_virginia": 0.394538
+  },
+  "market": {
+    "observed_spread_virginia": -2.5,
+    "alternative_spread_virginia": -1.5,
+    "total_range": [
+      46.5,
+      47.5
+    ],
+    "sources": [
+      "https://www.sharpdataos.com/cfb/games/2026-w8-duke-blue-devils-at-virginia-cavaliers",
+      "https://www.actionnetwork.com/ncaaf-game/duke-virginia-score-odds-october-23-2026/289604"
+    ],
+    "primary_calibrated_market_probabilities": false
+  },
+  "scenarios": {
+    "duke_offense_stall_share": 0.2448,
+    "virginia_margin_conditional_duke_stall": 16.142,
+    "virginia_offense_stall_share": 0.2736,
+    "duke_margin_conditional_virginia_stall": 16.7,
+    "duke_two_more_turnovers_share": 0.1346,
+    "virginia_margin_conditional_duke_turnover_script": 6.982,
+    "virginia_two_more_turnovers_share": 0.1058,
+    "duke_margin_conditional_virginia_turnover_script": 7.172,
+    "all_conditional_scenarios_overlap": true
+  },
+  "assessment": {
+    "ats_side": "Duke +2.5",
+    "grade": "C",
+    "confidence_out_of_10": 5.5,
+    "side_at_plus_1_5": "marginal; pass if strict edge threshold",
+    "representative_score": "Duke 24 Virginia 23",
+    "total": "pass",
+    "reason": "Opponent-adjusted advantages remain but measured personnel impact tiny, OL/DB injuries not quantified, baseline favors Virginia, book splits do not confirm a high-grade Duke edge"
+  },
+  "integrity": {
+    "baseline_unchanged": true,
+    "one_challenger": true,
+    "pregame_data_only": true,
+    "no_target_result_leakage": true,
+    "previous_frozen_forecast_not_overwritten": true
+  }
+}
