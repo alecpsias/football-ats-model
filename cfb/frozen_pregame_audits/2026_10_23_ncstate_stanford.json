@@ -1,0 +1,143 @@
+{
+  "schema": "cfb_frozen_pregame_build16_ats_v1",
+  "fixture": {
+    "game_id": "401858272",
+    "date_local": "2026-10-23",
+    "away": "NC State",
+    "home": "Stanford",
+    "kickoff_utc": "2026-10-24T02:30:00+00:00",
+    "kickoff_cdt": "2026-10-23 21:30"
+  },
+  "provenance": {
+    "github_run_id": 40001520869,
+    "github_run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/40001520869",
+    "head_sha": "136a92163fe711b2036d3cffd7fc89f310c21366",
+    "source_snapshot_utc": "2026-10-23T18:13:54.791720+00:00",
+    "forecast_generated_at_utc": "2026-10-23T18:13:55.881840+00:00",
+    "regression_suite_passed": true,
+    "workflow_completed_successfully": true,
+    "draws": 5000,
+    "seed": 401858272,
+    "historical_games_ncstate": 6,
+    "historical_games_stanford": 7
+  },
+  "baseline": {
+    "ncstate_score": 31.48,
+    "stanford_score": 25.017,
+    "ncstate_margin": 6.462,
+    "total": 56.497,
+    "ncstate_win_raw": 0.668
+  },
+  "challenger": {
+    "ncstate_score": 32.59,
+    "stanford_score": 23.721,
+    "ncstate_margin": 8.869,
+    "total": 56.311,
+    "ncstate_win_raw": 0.6798,
+    "margin_sd": 19.286,
+    "stanford_home_margin_p10_p50_p90": [
+      -33,
+      -10,
+      16
+    ],
+    "regulation_ncstate_margin": 8.851,
+    "regressed_field_goals_active": true,
+    "opponent_matched_rz_active": true,
+    "situational_early_third_distance_active": true,
+    "verified_clock_active": true,
+    "nonoffensive_return_model_active": true
+  },
+  "spreads": [
+    {
+      "ncstate_spread": -5.5,
+      "ncstate_cover_raw": 0.589,
+      "stanford_cover_raw": 0.411
+    },
+    {
+      "ncstate_spread": -6.5,
+      "ncstate_cover_raw": 0.5658,
+      "stanford_cover_raw": 0.4342
+    },
+    {
+      "ncstate_spread": -7.5,
+      "ncstate_cover_raw": 0.526,
+      "stanford_cover_raw": 0.474
+    }
+  ],
+  "matchup": {
+    "rushing_sos_epa_differential_from_stanford_perspective": -0.21813193053017782,
+    "severe_rush_stress_triggered": true,
+    "matched_early_rush_success_ncstate": 0.427993,
+    "matched_early_rush_success_stanford": 0.389242,
+    "ncstate_early_third_chain_ppd": 0.00098,
+    "stanford_early_third_chain_ppd": -0.000862,
+    "ncstate_redzone_td_probability_matched": 0.67243,
+    "stanford_redzone_td_probability_matched": 0.557018,
+    "ncstate_kicker_prior_made_7_of_7": 0.807513,
+    "stanford_kicker_prior_made_5_of_8": 0.771421
+  },
+  "stress": {
+    "draws_per_scenario": 5000,
+    "nsct_margin_in_adverse_ncstate_scoring_stall": 4.968,
+    "nsct_margin_in_adverse_ncstate_turnover_swing": 8.304,
+    "nsct_margin_fewer_possessions": 8.237,
+    "nsct_margin_stanford_scoring_stall": 12.591,
+    "nsct_margin_stanford_turnover_swing": 9.008,
+    "nsct_margin_more_possessions": 8.848,
+    "scenarios_are_not_calibrated_probabilities": true,
+    "sim_conditional_ncstate_scoring_stall_share": 0.1992,
+    "sim_conditional_ncstate_scoring_stall_stanford_margin": 11.605
+  },
+  "external_market": {
+    "ncstate_spread": -6.5,
+    "opening_spread": -7.5,
+    "total": 55.5,
+    "dk_moneyline_ncstate": -265,
+    "dk_spread_price_ncstate": -122,
+    "first_source": "https://collegefootballdata.com/games/401858272/preview",
+    "earlier_split_snapshot": "https://wiseguyteam.com/cfb-betting-splits",
+    "earlier_spread_ncstate_tickets_dk": 0.79,
+    "earlier_stanford_spread_handle_circa": 0.69,
+    "split_disagreement_across_providers_and_refreshes": true,
+    "independent_havoc_line_ncstate": -9,
+    "independent_cfb_lab_lean_stanford_at_plus_7": true
+  },
+  "verified_personnel": {
+    "source": "https://accsports.com/news/acc-injury-report-week-8/",
+    "out_ncstate": 14,
+    "out_stanford": 12,
+    "ncstate_leading_rb_duke_scott_out": true,
+    "ncstate_receiver_jojo_trader_out": true,
+    "ncstate_several_original_ol_out": true,
+    "ncstate_kicker_nick_konieczynski_out": true,
+    "stanford_lb_matt_rose_out": true,
+    "stanford_secondary_multiple_out": true,
+    "personnel_numerically_applied_in_engine": false,
+    "status": "EXTERNAL_CONFIRMED_NOT_ENGINE_FITTED"
+  },
+  "missing_inputs": [
+    "accurate historical opponent pass/rush EPA team schedule decomposition",
+    "full QB pressure/protection rates",
+    "penalty EPA",
+    "special teams EPA",
+    "verified source-backed game-day lineup effect on current QB/OL/kicker"
+  ],
+  "decision": {
+    "directional_ats_pick": "NC State -6.5",
+    "group": "C",
+    "confidence_out_of_10": 5.5,
+    "representative_score": "NC State 33 Stanford 24",
+    "fair_spread_from_challenger": "NC State -8.9",
+    "fair_spread_from_baseline": "NC State -6.5",
+    "price_notes": "NC State -5.5 better; NC State -6.5 at -122 leaves very little margin for uncalibrated model error; pass at -7.5",
+    "total_pick": "PASS",
+    "why_not_upgrade": "Baseline agrees with market, injuries not adjusted, home/travel context and Circa split, broad margins; raw covers not calibrated"
+  },
+  "integrity": {
+    "model_baseline_retained": true,
+    "challenger_single": true,
+    "target_game_final_never_read": true,
+    "pregame_history_24h_cutoff": true,
+    "code_label_note": "Runner output field airforce_mean_score is a carryover label from workflow template; interpreted by away_id verified as NC State; substantive score value verified. Renaming workflow label will not alter model forecast."
+  }
+}
