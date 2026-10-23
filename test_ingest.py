@@ -84,6 +84,20 @@ class TestIngest(unittest.TestCase):
         g,a=build(pbp,schedule,cfg,None,roster)
         self.assertTrue(any(s.endswith('pressure_allowed') for s in a['missing_fields']))
         self.assertNotEqual(a['status'],'READY_FOR_MODEL_UNCALIBRATED')
+    def test_verified_zero_qb_designed_rushes_has_structural_zero(self):
+        pbp, schedule, part, roster, cfg = fake_data()
+        # Verified HOU rushers are all running backs; no QB rushing attempts.
+        selected = pbp.posteam.eq("HOU") & pbp.rush.eq(1)
+        pbp.loc[selected, "rusher_player_id"] = "HOU_RB"
+        game, audit = build(pbp, schedule, cfg, part, roster)
+        self.assertEqual(audit["status"], "READY_FOR_MODEL_UNCALIBRATED")
+        self.assertEqual(game["away"]["offense"]["qb_rushes_per_game"], 0)
+        self.assertEqual(game["away"]["offense"]["qb_rush_epa"], 0)
+        self.assertEqual(game["away"]["offense"]["qb_rush_sample_count"], 0)
+        self.assertEqual(game["away"]["offense"]["qb_rush_epa_provenance"],
+                         "ZERO_OBSERVED_QB_RUSHES_STRUCTURAL_NEUTRAL")
+        validate_game(game)
+
     def test_qb_rush_not_made_up(self):
         pbp,schedule,part,roster,cfg=fake_data()
         g,a=build(pbp,schedule,cfg,part,None)

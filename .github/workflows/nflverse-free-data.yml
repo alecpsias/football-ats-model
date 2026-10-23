@@ -9,6 +9,8 @@ on:
       - '.github/workflows/nflverse-free-data.yml'
       - 'model.py'
       - 'forecast_upcoming_core.py'
+      - 'ingest.py'
+      - 'test_ingest.py'
       - 'collect_injury_reports.py'
       - 'test_future_core.py'
       - 'measure_player_availability.py'
