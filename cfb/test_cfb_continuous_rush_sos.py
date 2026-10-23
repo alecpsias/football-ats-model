@@ -92,10 +92,13 @@ class ContinuousRushSOSTests(unittest.TestCase):
     def test_same_seed_real_sim_changes_margin_without_changing_reference(self):
         hist=decorated()
         copy_before=copy.deepcopy(hist)
-        original=simulate_build16(1,2,hist,False,runs=5000,seed=2026)
+        original=simulate_build16(1,2,hist,False,runs=5000,seed=2026,
+            continuous_rush_sos_enabled=False)
         alt=simulate_build16(1,2,hist,False,runs=5000,seed=2026,
+            continuous_rush_sos_enabled=False,
             continuous_rush_sos_residual_delta=3.4)
-        repeated=simulate_build16(1,2,hist,False,runs=5000,seed=2026)
+        repeated=simulate_build16(1,2,hist,False,runs=5000,seed=2026,
+            continuous_rush_sos_enabled=False)
         self.assertEqual(original,repeated)
         self.assertEqual(alt['simulation']['simulations'],5000)
         self.assertGreater(alt['simulation']['mean_margin_home'],
