@@ -1,0 +1,173 @@
+{
+  "schema": "cfb_postgame_locked_before_game_v1",
+  "fixture": {
+    "game_id": "401871056",
+    "date": "2026-10-22",
+    "home": "Kennesaw State",
+    "away": "Liberty"
+  },
+  "frozen_prediction": {
+    "source_run": "https://github.com/alecpsias/football-ats-model/actions/runs/39863128567",
+    "source_generated_utc": "2026-10-22T22:12:00Z",
+    "estimated_official_kickoff_utc": "2026-10-22T23:03:00Z",
+    "build16": {
+      "margin_liberty": 2.833,
+      "score_liberty": 25.746,
+      "score_kennesaw": 22.913,
+      "total": 48.659,
+      "margin_kennesaw_p10_p50_p90": [
+        -23,
+        -3,
+        17
+      ],
+      "simulations": 5000,
+      "kennesaw_plus_10_5_cover_share_raw": 0.6972
+    },
+    "baseline": {
+      "margin_liberty": 3.437,
+      "score_liberty": 25.439,
+      "score_kennesaw": 22.002,
+      "total": 47.441,
+      "simulations": 5000
+    },
+    "reference_market_kennesaw_plus": 10.5,
+    "ats_recommendation": "Kennesaw State +10.5 Group C confidence 5.7/10",
+    "source_information": {
+      "sos_margin_feature_home": -9.51803,
+      "sos_rush_epa_difference_home": -0.06270074265454241,
+      "sos_rush_epa_severe_threshold": 0.085,
+      "rush_joint_severity_away": 0.01645,
+      "rush_joint_trigger": 0.04,
+      "rush_away_early_success": 0.5073170731707317,
+      "rush_home_defense_allowed_early_success": 0.39644970414201186,
+      "full_5000_rush_stress_triggered": false,
+      "nonsevere_stress_runs_per_counterfactual": 400,
+      "pre_game_rush_warning_status": "SCREENED_NO_SEVERE_TRIGGER",
+      "failure2_status": "ACTIVE_LINKED_DEFENSE_AND_SPECIAL_TEAMS_SCORING",
+      "failure3_clock_status": "FALLBACK_LEGACY_BUILD16_NO_VERIFIED_CLOCKS"
+    }
+  },
+  "observed": {
+    "source": "https://libertyflames.com/sports/football/stats/2026/kennesaw-state/boxscore/15414",
+    "score_liberty": 34,
+    "score_kennesaw": 6,
+    "margin_liberty": 28,
+    "total": 40,
+    "first_downs": {
+      "liberty": 21,
+      "kennesaw": 15,
+      "rushing_liberty": 12,
+      "rushing_kennesaw": 4
+    },
+    "rush_attempts": {
+      "liberty": 41,
+      "kennesaw": 27
+    },
+    "rush_yards": {
+      "liberty": 215,
+      "kennesaw": 62
+    },
+    "passing_yards": {
+      "liberty": 187,
+      "kennesaw": 235
+    },
+    "turnovers_lost": {
+      "liberty": 0,
+      "kennesaw": 2
+    },
+    "failed_fourth_downs_kennesaw": 2,
+    "third_down": {
+      "liberty": "3/10",
+      "kennesaw": "6/17"
+    },
+    "redzone_scoring": {
+      "liberty": "4/4",
+      "kennesaw": "2/2"
+    },
+    "redzone_tds": {
+      "liberty": 3,
+      "kennesaw": 0
+    },
+    "possession_seconds": {
+      "liberty": 2225,
+      "kennesaw": 1375
+    },
+    "no_nonoffensive_td_either_team": true,
+    "liberty_points_on_four_next_possessions_after_kennesaw_lost_possessions": 20,
+    "point_sequences_after_lost_possessions": [
+      7,
+      3,
+      7,
+      3
+    ],
+    "kennesaw_pass_td": 0,
+    "kennesaw_interceptions": 2
+  },
+  "evaluation": {
+    "ats_direction_correct": false,
+    "ats_cover_margin_error_at_kennesaw_plus_10_5": 17.5,
+    "build16_liberty_margin_underprediction": 25.167,
+    "baseline_liberty_margin_underprediction": 24.563,
+    "build16_liberty_score_underprediction": 8.254,
+    "build16_kennesaw_score_overprediction": 16.913,
+    "build16_total_overprediction": 8.659,
+    "actual_margin_outside_pregame_build16_10th_90th_interval": true
+  },
+  "diagnosis": [
+    {
+      "code": "F1_RUSH_SCREEN_FALSE_NEGATIVE",
+      "status": "observed in this case",
+      "evidence": "0.01645 below 0.04 severe threshold and absolute opponent-adjusted rush EPA 0.0627 below 0.085; final rushing +153 Liberty yards, TOP +850 seconds; do not retrospectively tune thresholds from target outcome"
+    },
+    {
+      "code": "OPPONENT_EFFICIENCY_SCORE_DIVERGENCE",
+      "status": "observed",
+      "evidence": "Kennesaw passed for 235 yards yet had no offensive TDs and two interceptions; only 2 FGs; inflated forecast points from drive/success translation"
+    },
+    {
+      "code": "SOS_VS_MODEL_CONFLICT_NOT_VETOED",
+      "status": "observed in frozen pregame",
+      "evidence": "prior SOS margin indicator favoring Liberty 9.518 points and market Liberty favored roughly 10, versus Build16 Liberty 2.833; independent feature not an ATS-calibrated fair spread"
+    },
+    {
+      "code": "DEPENDENT_SCORING_SHORTFIELD_GAME_SCRIPT",
+      "status": "causal research hypothesis",
+      "evidence": "four Kennesaw lost possessions (two interceptions, two failed fourth downs) followed by Liberty scores totaling 20 points; avoid interpreting all as incremental or double credit"
+    },
+    {
+      "code": "FAILURE3_VERIFIED_CLOCK_FALLBACK",
+      "status": "verified",
+      "evidence": "historical opponent-matched verified clock samples insufficient; no empirical drive clock used on pregame Build16"
+    },
+    {
+      "code": "FAILURE2_NOT_PRINCIPAL",
+      "status": "verified",
+      "evidence": "neither team recorded defensive-return or special-teams TD; active pregame mechanism expected <0.5 pts such categories per team"
+    }
+  ],
+  "research_actions": [
+    {
+      "priority": 1,
+      "action": "Validate rush mismatch gate false negatives using all chronological eligible games, plus spread accuracy on observed market quotes. No tuning on Liberty-Kennesaw alone."
+    },
+    {
+      "priority": 2,
+      "action": "Test joint tail risk of dominant rush first-downs plus repeated opposing stalled drives and scoring-opportunity conversion without duplicating EPA or turnover/short-field scoring."
+    },
+    {
+      "priority": 3,
+      "action": "Test rating/model/market divergence as veto or abstention criterion on frozen pregame historical holdouts; do not assert SOS signal itself calibrated."
+    },
+    {
+      "priority": 4,
+      "action": "Expand independently verified drive-clock historical coverage without inventing absent source durations."
+    }
+  ],
+  "guardrails": {
+    "dont_leak_target_result_into_model_features": true,
+    "one_CFB_challenger_only": true,
+    "baseline_preserved": true,
+    "no_scoring_coefficients_tuned_by_this_postmortem": true,
+    "do_not_claim_validated_improvement": true
+  }
+}
