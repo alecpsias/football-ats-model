@@ -1,0 +1,85 @@
+{
+  "schema": "cfb_personnel_activation_paired_5000_v1",
+  "fixture": {
+    "game_id": "401858272",
+    "home": "Stanford",
+    "away": "NC State",
+    "kickoff_utc": "2026-10-24T02:30:00+00:00"
+  },
+  "generated_from": {
+    "github_run_id": 40005452879,
+    "run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/40005452879",
+    "artifact_id": 12525105747,
+    "artifact_name": "cfb-build16-personnel-default-40005452879",
+    "run_status": "success",
+    "full_cfb_regression_suite": "passed",
+    "samples_per_mode": 5000,
+    "same_seed": 401858272,
+    "snapshot_input": "2026 source PBP, prior games only",
+    "actual_target_result_used": false
+  },
+  "source": {
+    "report_url": "https://kickoffstatus.com/games/2026-10-23-nc-state-at-stanford/",
+    "official_link": "https://theacc.com/sports/2025/8/28/availability-reporting-football.aspx",
+    "capture_at_utc": "2026-10-23T18:47:16.728519+00:00",
+    "status": "PREGAME_SECONDARY_CONFERENCE_TRANSCRIPTION_CAPTURED",
+    "observed_players": 30,
+    "official_source_directly_attested": false,
+    "reported_ncsu_out": 14,
+    "reported_stanford_out": 12,
+    "verified_starters": false
+  },
+  "computed_effect": {
+    "ncsu_incremental_offense_ppd": -0.020326,
+    "stanford_incremental_offense_ppd": 0,
+    "affected_ncsu": [
+      {
+        "name": "Dylan McCoy",
+        "position": "RB",
+        "bounded_ppd": -0.002659,
+        "observed_events": 7,
+        "recent_events": 3
+      },
+      {
+        "name": "Jayden Duke Scott",
+        "position": "RB",
+        "bounded_ppd": -0.009685,
+        "observed_events": 60,
+        "recent_events": 29
+      },
+      {
+        "name": "Joshisa Jojo Trader",
+        "position": "WR",
+        "bounded_ppd": -0.007982,
+        "observed_events": 25,
+        "recent_events": 13
+      }
+    ],
+    "qb_replacement_numeric_used": false,
+    "ncsu_kicker_out_reported": true,
+    "ncsu_kicker_numeric_adjusted": false,
+    "kicker_reason": "Individual PBP kicker ID not linked to named reported-out kicker; team FG rate insufficient",
+    "ncsu_ol_defense_unmodeled": true,
+    "stanford_ol_defense_unmodeled": true,
+    "no_flat_injury_points": true,
+    "conditional_not_causally_fitted": true
+  },
+  "five_thousand_run_paired": {
+    "without_personnel": {
+      "ncsu_score": 32.59,
+      "stanford_score": 23.721,
+      "ncsu_margin": 8.869
+    },
+    "with_personnel": {
+      "ncsu_score": 32.364,
+      "stanford_score": 24.062,
+      "ncsu_margin": 8.302
+    },
+    "ncstate_margin_change": -0.567,
+    "stanford_home_margin_change": 0.567,
+    "ats_cover_probabilities_recalculated": false,
+    "model_ats_probabilities_not_calibrated": true
+  },
+  "historical_frozen_original_pregame_untouched": true,
+  "development_process": "single evolving challenger: feature activated without long history gate; assess prospective ATS and margin/total after actual game"
+}
