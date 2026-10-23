@@ -549,9 +549,11 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         for side,proj in (('home',h),('away',a)):
             payload=applied_personnel.get(side) or {}
             delta=payload.get('applied_ppd',0.)
-            if (type(delta) not in (float,int) or not math.isfinite(delta)
-                    or abs(delta)>.361):
+            if (isinstance(delta,bool) or
+                    not isinstance(delta,(int,float,np.number)) or
+                    not math.isfinite(float(delta)) or abs(float(delta))>.361):
                 raise ValueError('Invalid unbounded personnel PPD')
+            delta=float(delta)
             # Score effect is incremental to historical team efficiency, not
             # subtraction of all historical yards earned by an absent player.
             proj['_ppd']=float(np.clip(proj['_ppd']+delta,.35,5.5))
