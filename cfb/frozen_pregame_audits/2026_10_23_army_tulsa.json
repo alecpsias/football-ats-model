@@ -1,0 +1,141 @@
+{
+  "schema": "cfb_frozen_pregame_build16_ats_v1",
+  "fixture": {
+    "game_id": "401862808",
+    "local_date": "2026-10-23",
+    "away": "Army",
+    "home": "Tulsa",
+    "kickoff_utc": "2026-10-24T00:30:00+00:00"
+  },
+  "provenance": {
+    "run_id": 39996327165,
+    "run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39996327165",
+    "source_snapshot_utc": "2026-10-23T17:36:04.414064+00:00",
+    "generated_at_utc": "2026-10-23T17:36:05.770585+00:00",
+    "runs_per_spread": 5000,
+    "seed": 401862808,
+    "completed_regression_suite": true,
+    "github_conclusion": "success",
+    "github_sha": "21d612e926deaa9756b626dbeca91489196a03c3"
+  },
+  "baseline": {
+    "army_score": 26.157,
+    "tulsa_score": 25.123,
+    "army_margin": 1.035,
+    "total": 51.28,
+    "army_win_raw": 0.5326
+  },
+  "challenger": {
+    "army_score": 27.134,
+    "tulsa_score": 24.237,
+    "army_margin": 2.897,
+    "total": 51.371,
+    "army_win_raw": 0.5702,
+    "margin_standard_deviation": 17.812,
+    "tulsa_margin_p10_p50_p90": [
+      -25,
+      -4,
+      20
+    ],
+    "army_chain_ppd_delta": -0.005874,
+    "tulsa_chain_ppd_delta": 0.004037,
+    "redzone_prob_army": 0.647815,
+    "redzone_prob_tulsa": 0.639243,
+    "kick_prob_army": 0.746834,
+    "kick_prob_tulsa": 0.768329,
+    "verified_historical_clocks_active": true,
+    "nonoffensive_turnover_td_model_active": true,
+    "rush_sos_epa_diff_tulsa_minus_army": -0.06212292456,
+    "mandatory_rushing_screen": "SCREENED_NO_SEVERE_TRIGGER",
+    "severe_rushing_stress_required": false,
+    "injury_effects_in_numerical_projection": false
+  },
+  "spread_sensitivity": [
+    {
+      "tulsa_spread": -1.5,
+      "army_cover_raw": 0.5886,
+      "tulsa_cover_raw": 0.4114
+    },
+    {
+      "tulsa_spread": -2.5,
+      "army_cover_raw": 0.6018,
+      "tulsa_cover_raw": 0.3982
+    },
+    {
+      "tulsa_spread": 1.5,
+      "army_cover_raw": 0.5562,
+      "tulsa_cover_raw": 0.4438
+    }
+  ],
+  "adverse_scripts": {
+    "army_scoring_stall": {
+      "sim_share": 0.2376,
+      "tulsa_mean_margin": 14.048
+    },
+    "tulsa_scoring_stall": {
+      "sim_share": 0.2612,
+      "tulsa_mean_margin": -18.263
+    },
+    "army_two_more_turnovers": {
+      "sim_share": 0.1442,
+      "tulsa_mean_margin": 5.599
+    },
+    "tulsa_two_more_turnovers": {
+      "sim_share": 0.0878,
+      "tulsa_mean_margin": -10.333
+    }
+  },
+  "observed_pregame_external": {
+    "line": "Tulsa -1.5",
+    "total_market": "53.5 to 54.5",
+    "market_source": "https://www.actionnetwork.com/ncaaf/army-black-knights-vs-tulsa-golden-hurricane-prediction-pick-odds-ncaaf-friday-october-23",
+    "circa_splits_source": "https://wiseguyteam.com/cfb-betting-splits",
+    "splits_observed_oct23_1201pm_CDT": {
+      "army_spread_dk_handle": 0.78,
+      "army_spread_circa_handle": 0.61,
+      "tulsa_ml_dk_handle": 0.9,
+      "tulsa_ml_circa_handle": 1,
+      "under_total_circa_handle": 0.9
+    },
+    "service_offense_same_scheme_evidence": {
+      "source": "https://navysports.com/news/2026/10/10/football-gutierrez-rushes-for-232-yards-leads-navy-to-34-26-comeback-win-over-tulsa.aspx",
+      "navy_rushing_yards_allowed_by_tulsa": 386,
+      "navy_third_down": "8/11",
+      "navy_punts": 0
+    },
+    "fresh_tulsa_signal": {
+      "takeaways": 15,
+      "turnover_margin": 11,
+      "hayes_passing_three_recent_games": 728,
+      "hayes_pass_td_three_recent_games": 7,
+      "source": "https://tulsahurricane.com/news/2026/10/21/football-tulsa-welcomes-army-to-h-a-chapman-stadium-friday-night"
+    },
+    "independent_tempo": {
+      "margin_tulsa": 0.1,
+      "total": 50.9,
+      "source": "https://tempocfb.net/games/2026/8/army-at-tulsa"
+    }
+  },
+  "decision": {
+    "ats_side": "Army +1.5",
+    "group": "B",
+    "confidence_out_of_10": 6.2,
+    "estimated_model_fair_spread": "Army -2.9",
+    "representative_score": "Army 27 Tulsa 24",
+    "lean_total": "Under 54.5 weaker than ATS lean",
+    "market_not_confirmed_by_native_quote_archive": true,
+    "raw_sim_frequency_not_calibrated": true,
+    "situational_failure_modes": [
+      "Tulsa passing attack vs vulnerable Army defense",
+      "Tulsa takeaway short fields",
+      "Army rushing advantage fails to sustain chains",
+      "Army low game-volume variability"
+    ]
+  },
+  "integrity": {
+    "actual_target_game_never_used": true,
+    "source_24hour_history_embargo": true,
+    "baseline_unchanged": true,
+    "only_one_challenger": true
+  }
+}
