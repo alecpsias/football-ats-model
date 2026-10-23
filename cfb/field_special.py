@@ -68,7 +68,7 @@ def observed_special_teams(raw, team, opponent):
     default={k:None for k in ('fg_made','fg_attempts','fg_short_made',
         'fg_short_attempts','fg_medium_made','fg_medium_attempts',
         'fg_long_made','fg_long_attempts','punt_net_sum','punt_net_n',
-        'kick_return_sum','kick_return_n')}
+        'kick_return_sum','kick_return_n','fg_distance_events')}
     if not isinstance(raw,pd.DataFrame) or raw.empty:
         return default
     if 'game_id' not in raw or raw['game_id'].nunique()!=1:
@@ -82,12 +82,19 @@ def observed_special_teams(raw, team, opponent):
         if len(fg) and 'yds_fg' in fg:
             distances=pd.to_numeric(fg['yds_fg'],errors='coerce')
             if distances.notna().all() and distances.between(15,75).all():
+                # Preserve exact verified yardage and result, never backsolve
+                # distance from spot, kick text, or an offense's points.
+                result['fg_distance_events']=[
+                    [float(d),int(m)] for d,m in zip(distances.to_list(),
+                                                  fg['fg_made'].eq(True).astype(int).to_list())]
                 for name,mask in (('short',distances.lt(40)),
                                   ('medium',distances.between(40,49)),
                                   ('long',distances.ge(50))):
                     subset=fg.loc[mask]
                     result['fg_'+name+'_attempts']=int(len(subset))
                     result['fg_'+name+'_made']=int(subset['fg_made'].eq(True).sum())
+        if len(fg)==0:
+            result['fg_distance_events']=[]
     else:
         result=dict(default)
     punts=_attributed(_selected(raw,('punt','punt_play')),
