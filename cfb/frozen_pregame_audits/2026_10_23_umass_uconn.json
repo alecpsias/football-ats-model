@@ -1,0 +1,108 @@
+{
+  "schema": "cfb_frozen_pregame_build16_ats_v1",
+  "fixture": {
+    "game_id": "401861965",
+    "date": "2026-10-23",
+    "home": "UConn",
+    "away": "Massachusetts",
+    "kickoff_utc": "2026-10-23T23:00:00+00:00",
+    "neutral": false
+  },
+  "provenance": {
+    "run_id": 39985734998,
+    "run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39985734998",
+    "git_sha": "32863b44609d5ea03e4c63378e82ba6fa7537c30",
+    "snapshot_at_utc": "2026-10-23T16:19:17.814654+00:00",
+    "generated_at_utc": "2026-10-23T16:19:18.935182+00:00",
+    "runs": 5000,
+    "seed": 401861965,
+    "prior_games_home": 6,
+    "prior_games_away": 7,
+    "regression_tests_passed": true,
+    "action_conclusion": "success"
+  },
+  "baseline": {
+    "uconn_points": 28.022,
+    "umass_points": 25.742,
+    "uconn_margin": 2.28,
+    "total": 53.763,
+    "uconn_win_raw": 0.5598
+  },
+  "challenger": {
+    "uconn_points": 28.888,
+    "umass_points": 23.451,
+    "uconn_margin": 5.436,
+    "total": 52.339,
+    "uconn_win_raw": 0.6218,
+    "uconn_margin_sd": 17.984,
+    "uconn_margin_p10_p50_p90": [
+      -18,
+      6,
+      28
+    ],
+    "uconn_regulation_margin": 5.395,
+    "field_goal_distance_regression_active": true,
+    "chain_situational_active": true,
+    "qualified_nonoff_scoring": "ACTIVE_PARTIAL_VERIFIED_SCORING_ONLY",
+    "verified_historical_clocks_active": true,
+    "rushing_screen": "SEVERE_RUSH_MISMATCH_REQUIRES_5000_RUN_STRESS",
+    "rush_sos_epa_diff_uconn_plus": 0.1732958810031984,
+    "mandatory_adverse_stress_runs_per_scenario": 5000,
+    "raw_scenarios": {
+      "uconn_margin_given_umass_scoring_stall": 20.581,
+      "umass_stall_share": 0.279,
+      "uconn_margin_given_uconn_scoring_stall": -11.681,
+      "uconn_stall_share": 0.2388,
+      "uconn_margin_given_umass_two_more_turnovers": 14.065,
+      "umass_two_more_turnovers_share": 0.0926,
+      "uconn_margin_given_uconn_two_more_turnovers": -2.753,
+      "uconn_two_more_turnovers_share": 0.1714
+    }
+  },
+  "spreads": [
+    {
+      "uconn_spread": -14.5,
+      "umass_cover_raw": 0.7016,
+      "uconn_cover_raw": 0.2984
+    },
+    {
+      "uconn_spread": -16.5,
+      "umass_cover_raw": 0.7232,
+      "uconn_cover_raw": 0.2768
+    }
+  ],
+  "external_market": {
+    "source": "https://www.actionnetwork.com/ncaaf-game/umass-uconn-score-odds-october-23-2026/289630",
+    "observed_spread_uconn": -14.5,
+    "opening_uconn": -16.5,
+    "current_total_range": [
+      49.5,
+      50.5
+    ],
+    "independent_original_quote_timestamp_not_verified": true
+  },
+  "personnel": {
+    "umass_watson_questionable": true,
+    "umass_aedan_mccarthy_questionable": true,
+    "umass_logan_inagawa_recent_pass_epa": 0.0638,
+    "umass_watson_pass_epa": 0.2476,
+    "umass_watson_qb_rush_epa": 0.3839,
+    "uconn_qb_osborne_pass_epa": 0.145,
+    "actual_starter_verified": false,
+    "personnel_effects_applied_to_score": false
+  },
+  "decision": {
+    "ats_side": "UMass +14.5",
+    "grade": "B",
+    "confidence_out_of_10": 6.2,
+    "description": "Strong model spread cushion but QB/injury status and severe opponent-adjusted rush disadvantage risk, no calibrated cover probability",
+    "score_scenario": "UConn 29 Massachusetts 23",
+    "ats_not_a_model_calibrated_probability": true
+  },
+  "leakage_guard": {
+    "source_prior_games_only": true,
+    "target_game_final_used": false,
+    "earliest_pregame_saved": true,
+    "model_baseline_unchanged": true
+  }
+}
