@@ -54,7 +54,7 @@ def feature_vector(home_id,away_id,histories):
         _rate(a,"offense_negative_run_rate"),
         _rate(a,"opponent_negative_run_rate_allowed"),
         signals.get("sos_rush_epa_differential"),
-        signals.get("sos_margin_feature"),
+        signals.get("sos_pass_epa_differential"),
         _mix(histories.get(home_id,())),
         _mix(histories.get(away_id,()))
     )
@@ -62,7 +62,7 @@ def feature_vector(home_id,away_id,histories):
         or rushing["status"]=="REQUIRES_HUMAN_REVIEW_INCOMPLETE_RUSH_EVIDENCE"):
         return {"status":"UNAVAILABLE_PREGAME_RUSH_OR_OPPONENT_QUALITY",
                 "features":None,"missing_instead_of_zero":True}
-    oh,dh,oa,da,nh,ndh,na,nda,sos_rush,sos_margin,mixh,mixa=required
+    oh,dh,oa,da,nh,ndh,na,nda,sos_rush,sos_pass,mixh,mixa=required
     # Opponent's allowed success/negative-run rates are DEFENSE observations
     # of opponent-designed runs. Both sides enter symmetrically; no threshold.
     home_success=.5*(oh+dh)
@@ -72,6 +72,11 @@ def feature_vector(home_id,away_id,histories):
     continuous_adv=home_success-away_success
     avoidance=away_negative-home_negative
     expected_share=.5*(mixh+mixa)
+    # The existing descriptive SOS margin uses ONLY the home team's pass
+    # share; reversing home/away otherwise does not reverse the signal.
+    # Use the symmetric two-team pass mix to define one signed matchup
+    # strength residual (still NOT fitted points).
+    sos_margin=64.*((1.-expected_share)*sos_rush+expected_share*sos_pass)
     raw=np.array((continuous_adv,avoidance,sos_rush,sos_margin,
                   continuous_adv*expected_share),dtype=float)
     v=np.clip(raw/SCALES,-3.,3.)
