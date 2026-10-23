@@ -93,9 +93,9 @@
   },
   "decision": {
     "ats_side": "UMass +14.5",
-    "grade": "B",
-    "confidence_out_of_10": 6.2,
-    "description": "Strong model spread cushion but QB/injury status and severe opponent-adjusted rush disadvantage risk, no calibrated cover probability",
+    "grade": "C",
+    "confidence_out_of_10": 5.9,
+    "description": "Large uncalibrated underdog ATS simulation cushion, downgraded because UConn's moneyline (~-700) implies ~87.5% before vig versus Build16 only 62.18%, showing material market/model disagreement; unavailable confirmed UMass QB and severe +0.173 opponent-adjusted UConn rush EPA risk. UMass is lean, not high-confidence recommendation.",
     "score_scenario": "UConn 29 Massachusetts 23",
     "ats_not_a_model_calibrated_probability": true
   },
@@ -104,5 +104,13 @@
     "target_game_final_used": false,
     "earliest_pregame_saved": true,
     "model_baseline_unchanged": true
+  },
+  "risk_check": {
+    "market_uconn_moneyline_example": -700,
+    "market_implied_uconn_win_before_vig": 0.875,
+    "build16_uconn_win_raw": 0.6218,
+    "large_probability_disagreement": true,
+    "avoid_treating_raw_cover_as_validated_win_probability": true,
+    "source": "https://www.actionnetwork.com/ncaaf-game/umass-uconn-score-odds-october-23-2026/289630"
   }
 }
