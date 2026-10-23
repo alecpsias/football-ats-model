@@ -64,7 +64,15 @@ jobs:
           model['holdout_ATS_accuracy_unverified']=True
           dest=Path('cfb/frozen_models/continuous_rush_sos_2024.json')
           dest.parent.mkdir(parents=True,exist_ok=True)
-          dest.write_text(json.dumps(model,sort_keys=True,indent=2)+'\n')
+          if dest.exists():
+              # A documented earlier 226-game fit has already been
+              # intentionally activated. Do not silently overwrite its
+              # coefficients with a different 160-game training sample.
+              current=json.loads(dest.read_text())
+              assert current['promoted_into_build16'] is True
+              print('KEEP_EXISTING_APPROVED_FROZEN_2024_MODEL',current['source_training_workflow_run_id'])
+          else:
+              dest.write_text(json.dumps(model,sort_keys=True,indent=2)+'\n')
           print('ACTIVATED_COEFFICIENT_MODEL',json.dumps(model,sort_keys=True))
           PY
       - name: Commit frozen artifact to main for every subsequent Build16 prediction
