@@ -26,6 +26,7 @@ from cfb.research_backtest import observed_game, project
 from cfb.failure1_shadow import include_prior_game
 from cfb.failure1_learned_shadow import shadow as fitted_rush_shadow, correction as fitted_rush_correction
 from cfb.mandatory_rushing_audit import audit as rushing_audit, gate as rushing_gate
+from cfb.chain_source import observed_chain, append_historical_chain
 
 
 def _json_bytes(obj):
@@ -75,6 +76,11 @@ def freeze(snapshot, out, runs=5000, days=7, min_games=3, now=None,
         # at the currently observed snapshot, never from target-game rows.
         # The new features do not affect existing baseline or Build16.
         include_prior_game(ho,aw,part,h,a)
+        for rec,tid,enemy in ((ho,h,a),(aw,a,h)):
+            observed=observed_chain(part,tid,enemy)
+            if observed.get('status')=='OBSERVED_QUALIFIED':
+                append_historical_chain(rec,observed,'offense')
+                append_historical_chain(rec,observed,'opponent')
         ho['opponent_id']=a
         aw['opponent_id']=h
         histories[h].append(ho);histories[a].append(aw)
