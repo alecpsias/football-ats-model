@@ -1,0 +1,101 @@
+{
+  "schema": "cfb_frozen_pregame_manual_ats_audit_v1",
+  "fixture": {
+    "game_id": "401858271",
+    "date": "2026-10-23",
+    "away": "Duke",
+    "home": "Virginia",
+    "scheduled_kickoff_utc": "2026-10-23T23:00:00+00:00"
+  },
+  "snapshot_utc": "2026-10-23T16:01:37.186981+00:00",
+  "projection_utc": "2026-10-23T16:01:38.548547+00:00",
+  "verified_github_run": {
+    "id": 39983208687,
+    "head_sha": "d56f285f9bf8003a5119cc88675b0c426d6d2e10",
+    "url": "https://github.com/alecpsias/football-ats-model/actions/runs/39983208687",
+    "conclusion": "success",
+    "simulations_per_forecast": 5000,
+    "simulations_per_quoted_spread": 5000,
+    "seed": 401858271
+  },
+  "source": "Free prior-game SportsDataverse 2026 PBP, only games eligible 24h before snapshot",
+  "frozen_baseline": {
+    "virginia": 24.579,
+    "duke": 23.808,
+    "margin_virginia": 0.77,
+    "total": 48.387
+  },
+  "frozen_challenger_build16": {
+    "virginia": 23.635,
+    "duke": 24.307,
+    "margin_virginia": -0.672,
+    "total": 47.941,
+    "duke_win_probability_raw": 0.5132,
+    "margin_sd": 18.214,
+    "virginia_margin_p10_p50_p90": [
+      -24,
+      -1,
+      22
+    ],
+    "redzone_fg_distance_active": true,
+    "matched_third_down_chain_source_active": true,
+    "third_down_chain_ppd_home": -0.001252,
+    "third_down_chain_ppd_away": -0.001908,
+    "qualified_clocks_active": true,
+    "failure1_severe_rushing_stress_required": false,
+    "observed_official_personnel_applied_to_score": false
+  },
+  "sensitivity": [
+    {
+      "virginia_spread": -1.5,
+      "duke_cover_raw": 0.5278
+    },
+    {
+      "virginia_spread": -2.5,
+      "duke_cover_raw": 0.54
+    }
+  ],
+  "market": {
+    "verified_independent_urls": [
+      "https://www.actionnetwork.com/ncaaf-game/duke-blue-devils-virginia-cavaliers/289604",
+      "https://www.sharpdataos.com/cfb/games/2026-w8-duke-blue-devils-at-virginia-cavaliers",
+      "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/"
+    ],
+    "range_virginia_spread": [
+      -2.5,
+      -1.5
+    ],
+    "total_range": [
+      46.5,
+      47.5
+    ],
+    "quotes_not_source_timestamp_attested": true
+  },
+  "decision": {
+    "ats_side": "Duke +2.5",
+    "group": "C",
+    "confidence_out_of_10": 5.3,
+    "ats_side_if_only_duke_plus_1_5": "PASS",
+    "favored_to_win": "Duke very slightly",
+    "rounded_score_scenario": "Duke 24 Virginia 23",
+    "ats_pick_is_calibrated": false
+  },
+  "personnel_qualifications": [
+    "Duke OL Matt Craycraft out; true freshman replacement center Sean Stover indicated by reporting; not numerically adjusted",
+    "Virginia 20 listed out and four doubtful, Duke 12 listed out; verify starters and do not count indiscriminately",
+    "Duke kicker Cosme Salas out, Virginia kicker Tim Hamann out; team-level regressed FG model does not use replacement kicker ability"
+  ],
+  "model_missing": [
+    "QB rushing EPA",
+    "pressure generated and allowed",
+    "penalty EPA",
+    "special teams EPA",
+    "official captured player status"
+  ],
+  "provenance_corrections": [
+    "97320c5671fda10189376d017379a85117125de4",
+    "9470e5783720fab78533fa90f17698f30f98f725"
+  ],
+  "model_baseline_not_modified": true,
+  "retroactive_postgame_updates_prohibited": true
+}
