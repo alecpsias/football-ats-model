@@ -297,7 +297,7 @@ def _failure2_verified_scoring_histories(home_id,away_id,histories):
 
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None,continuous_rush_sos_enabled=True,coupled_rush_possessions=True,situational_chain_enabled=True,redzone_kicking_enabled=True,personnel_evidence=None,personnel_enabled=True):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None,continuous_rush_sos_enabled=True,coupled_rush_possessions=True,situational_chain_enabled=True,redzone_kicking_enabled=True):
     if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
@@ -533,59 +533,6 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
          coupled_config is not None and sustainability_process is not None
          and failure3_clock_mode=='empirical')
     coupled_evidence['clock_effect_requires_verified_source_clocks']=True
-    # Permanently available live personnel layer: applied only when a
-    # qualified, contemporaneously captured report and sufficient PRIOR player
-    # evidence were supplied. An ordinary model call without report remains
-    # strictly equivalent to the prior Build16 scoring path.
-    if type(personnel_enabled) is not bool:
-        raise ValueError('Personnel layer toggle must be boolean')
-    applied_personnel={'status':'DISABLED_OR_NO_CURRENT_REPORT',
-                       'ppd_home':0.,'ppd_away':0.,
-                       'home':{'applied_ppd':0.},'away':{'applied_ppd':0.}}
-    if personnel_enabled and personnel_evidence is not None:
-        if not isinstance(personnel_evidence,dict):
-            raise ValueError('Personnel evidence must be a validated mapping')
-        applied_personnel=personnel_evidence
-        for side,proj in (('home',h),('away',a)):
-            payload=applied_personnel.get(side) or {}
-            delta=payload.get('applied_ppd',0.)
-            if (isinstance(delta,bool) or
-                    not isinstance(delta,(int,float,np.number)) or
-                    not math.isfinite(float(delta)) or abs(float(delta))>.361):
-                raise ValueError('Invalid unbounded personnel PPD')
-            delta=float(delta)
-            # Score effect is incremental to historical team efficiency, not
-            # subtraction of all historical yards earned by an absent player.
-            proj['_ppd']=float(np.clip(proj['_ppd']+delta,.35,5.5))
-        # A historically identified majority FG kicker is out: replace the
-        # previous kicker's team success by a league distance prior. If
-        # individual FG attribution is missing, preserve the regressed team FG.
-        if redzone_kicking_enabled:
-            from cfb.redzone_kicking import _prior_make
-            for side in ('home','away'):
-                evidence=(applied_personnel.get(side) or {}).get('kicker') or {}
-                fg=(redzone_kicking.get(side) or {}).get('field_goals')
-                if not evidence.get('override') or not fg:continue
-                old_rate=float(fg['predicted_make_rate'])
-                mix=fg['distance_bins']
-                for band in mix:
-                    band['probability']=float(np.clip(
-                        _prior_make(float(band['distance'])),.05,.99))
-                new_rate=sum(float(x['weight'])*float(x['probability']) for x in mix)
-                fg['predicted_make_rate']=round(new_rate,6)
-                fg['replaced_kicker_distribution_with_league_prior']=True
-                prior_ppd=float(redzone_kicking[side]['fg_regression_ppd_delta'])
-                delta_fg=3.*(new_rate-old_rate)*float(fg['attempts_per_drive'])
-                delta_fg=float(np.clip(delta_fg,-.12,.12))
-                redzone_kicking[side]['fg_regression_ppd_delta']=round(prior_ppd+delta_fg,6)
-                redzone_kicking[side]['delta_ppd']=round(
-                    redzone_kicking[side]['delta_ppd']+delta_fg,6)
-                (h if side=='home' else a)['_ppd']=float(np.clip(
-                    (h if side=='home' else a)['_ppd']+delta_fg,.35,5.5))
-                applied_personnel[side]['kicker']['applied_delta_ppd']=round(delta_fg,6)
-    # Because the site report may be a secondary transcription, never
-    # describe these estimates as certified active starters or fitted causal
-    # player values.
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
     out=simulate_script(h,a,histories[home_id],histories[away_id],runs=runs,seed=seed,
@@ -648,11 +595,7 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
            situational_chain_evidence.get('active_in_default_build16')),
        'situational_chain_evidence':situational_chain_evidence,
        'redzone_kicking_active_by_default':redzone_kicking_enabled,
-       'redzone_kicking_evidence':redzone_kicking,
-       'personnel_default_enabled':personnel_enabled,
-       'personnel_impact_active':bool(personnel_enabled and
-           applied_personnel.get('status')=='ACTIVE'),
-       'personnel_evidence':applied_personnel}
+       'redzone_kicking_evidence':redzone_kicking}
     if rush_evidence is not None:
         answer['rush_research']=rush_evidence
         answer['not_deployed']=True

@@ -68,7 +68,7 @@ def observed_special_teams(raw, team, opponent):
     default={k:None for k in ('fg_made','fg_attempts','fg_short_made',
         'fg_short_attempts','fg_medium_made','fg_medium_attempts',
         'fg_long_made','fg_long_attempts','punt_net_sum','punt_net_n',
-        'kick_return_sum','kick_return_n','fg_distance_events','fg_kicker_ids')}
+        'kick_return_sum','kick_return_n','fg_distance_events')}
     if not isinstance(raw,pd.DataFrame) or raw.empty:
         return default
     if 'game_id' not in raw or raw['game_id'].nunique()!=1:
@@ -79,15 +79,6 @@ def observed_special_teams(raw, team, opponent):
         result=dict(default)
         result['fg_attempts']=int(len(fg))
         result['fg_made']=int(fg['fg_made'].eq(True).sum())
-        # Only attach individual kicker IDs if the provider explicitly records
-        # an athlete ID on EVERY observed attempt. Team kicking stats alone
-        # cannot prove the injured player was the prior kicker.
-        for kicker_col in ('kicker_player_id','fg_kicker_player_id'):
-            if kicker_col in fg and len(fg)>0:
-                source_ids=fg[kicker_col].map(_id)
-                if source_ids.notna().all():
-                    result['fg_kicker_ids']=list(source_ids.astype(str))
-                    break
         if len(fg) and 'yds_fg' in fg:
             distances=pd.to_numeric(fg['yds_fg'],errors='coerce')
             if distances.notna().all() and distances.between(15,75).all():
