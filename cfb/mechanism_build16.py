@@ -297,7 +297,7 @@ def _failure2_verified_scoring_histories(home_id,away_id,histories):
 
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None,continuous_rush_sos_enabled=True,coupled_rush_possessions=True,situational_chain_enabled=True):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None,continuous_rush_sos_enabled=True,coupled_rush_possessions=True,situational_chain_enabled=True,redzone_kicking_enabled=True):
     if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
@@ -317,16 +317,32 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                 'simulation':None,'not_primary':True,'home':home,'away':away}
     h=home['projection'].copy();a=away['projection'].copy()
     profile=mechanism_profile(home_id,away_id,histories,h,a)
+    if type(redzone_kicking_enabled) is not bool:
+        raise ValueError('Red-zone and kicking toggle must be boolean')
+    redzone_kicking={}
+    if redzone_kicking_enabled:
+        from cfb.redzone_kicking import matchup as redzone_kicking_matchup
+        redzone_kicking={
+            'home':redzone_kicking_matchup(home_id,away_id,histories),
+            'away':redzone_kicking_matchup(away_id,home_id,histories)}
     for side,proj in (('home',h),('away',a)):
         so=profile[side]['situational_scoring']
         # Apply finishing as an expected point shift, not just a changed
         # TD/FG conditional share that the PPD normalizer cancels.
         scoring_rate=float(np.clip(proj['_ppd']/(3.0+3.965*proj['_td']),.01,.8))
-        finish_ppd=float(3.965*scoring_rate*so['delta_td_share'])
+        rz=redzone_kicking.get(side)
+        active_rz=rz is not None and rz['redzone'] is not None
+        # Existing <=40-yard finishing proxy overlaps actual red-zone events:
+        # use ONE source-backed route, never apply both effects together.
+        finish_ppd=(0. if active_rz else
+                    float(3.965*scoring_rate*so['delta_td_share']))
         so['applied_finishing_delta_ppd']=round(finish_ppd,6)
+        so['superseded_by_verified_redzone']=active_rz
+        extra_ppd=(rz['delta_ppd'] if rz is not None else 0.)
+        td_delta=(rz['td_share_delta'] if active_rz else so['delta_td_share'])
         proj['_ppd']=float(np.clip(proj['_ppd']+profile[side]['third']['residual_ppd']+
-                                  so['delta_ppd']+finish_ppd,.35,5.5))
-        proj['_td']=float(np.clip(proj['_td']+so['delta_td_share'],.35,.9))
+                                  so['delta_ppd']+finish_ppd+extra_ppd,.35,5.5))
+        proj['_td']=float(np.clip(proj['_td']+td_delta,.35,.9))
     # Optional, explicit ABlation of one challenger. Never active on production
     # paths without caller selecting a research mode. No published second model.
     rush_evidence=None
@@ -526,7 +542,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                           'nonoffensive_scoring':nonoff_samples,
                           'failure3_score_process':sustainability_process,
                           'failure3_clock_pools':clock_evidence if sustainability_process is not None and failure3_clock_mode=='empirical' else None,
-                          'coupled_rush_chain':coupled_config})
+                          'coupled_rush_chain':coupled_config,
+                          'redzone_kicking':redzone_kicking})
     stress={}
     if stress_runs:
         shocks={'fewer_possessions':{'tempo_shift':-1.5},
@@ -546,7 +563,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
             'nonoffensive_scoring':nonoff_samples,
             'failure3_score_process':sustainability_process,
             'failure3_clock_pools':clock_evidence if sustainability_process is not None and failure3_clock_mode=='empirical' else None,
-            'coupled_rush_chain':coupled_config}
+            'coupled_rush_chain':coupled_config,
+            'redzone_kicking':redzone_kicking}
         for label,change in shocks.items():
             r=simulate_script(h,a,histories[home_id],histories[away_id],
                     runs=stress_runs,seed=seed,mechanisms=mech,**change)
@@ -566,7 +584,9 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
        'failure3_sustainability':sustain_evidence,
        'coupled_rush_possession_interaction':coupled_evidence,
        'situational_chain_active_by_default':situational_chain_enabled,
-       'situational_chain_evidence':situational_chain_evidence}
+       'situational_chain_evidence':situational_chain_evidence,
+       'redzone_kicking_active_by_default':redzone_kicking_enabled,
+       'redzone_kicking_evidence':redzone_kicking}
     if rush_evidence is not None:
         answer['rush_research']=rush_evidence
         answer['not_deployed']=True
