@@ -19,7 +19,7 @@ from cfb.research_backtest import observed_game
 from cfb.mechanism_build16 import simulate_build16, _failure2_verified_scoring_histories
 from cfb.failure1_learned_shadow import correction as frozen_failure1_correction
 
-def cohort(snapshot,max_games=120):
+def cohort(snapshot,max_games=120,*,enrich_rush=False):
     root=Path(snapshot)
     manifest=verify(snapshot)
     cutoff=iso_utc(manifest['captured_at_utc'])
@@ -59,6 +59,13 @@ def cohort(snapshot,max_games=120):
             a=observed_game(plays,away,home,g.away_points,g.home_points,
                 qb_ids.get(away,set()),special_plays=raw_by_game.get(g.game_id),home_id=home)
             if h is None or a is None:continue
+            # Research cohorts can explicitly request exactly the same raw
+            # early-down success / negative-run histories as live pregame
+            # projections, WITHOUT deriving them from score margins.
+            if enrich_rush:
+                from cfb.rush_severity_source import extract,append_training_record
+                append_training_record(h,extract(plays,home,away))
+                append_training_record(a,extract(plays,away,home))
             if len(historical[home])>=3 and len(historical[away])>=3:
                 target_counts['pregame_prior_games_eligible']+=1
                 # Histories frozen at this kickoff; no same-game outcomes.
