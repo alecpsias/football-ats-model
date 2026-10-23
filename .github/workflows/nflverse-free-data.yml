@@ -98,7 +98,7 @@ jobs:
             --metrics-dir "$EXTRA" \
             --injuries-dir "$INJURIES" \
             --out "$PREDICTIONS" \
-            --window-hours 48 --runs 5000
+            --window-hours ${{ github.event_name == 'issues' && '96' || '48' }} --runs 5000
       - name: Create fail-closed five-thousand-run receipts for projected NFL games
         shell: bash
         run: |
@@ -154,7 +154,7 @@ jobs:
           out=Path('run-metadata/one-challenger-summary.json')
           pred=Path(os.environ.get('PREDICTIONS','unavailable'))/'index.json'
           injury=Path(os.environ.get('INJURIES','unavailable'))/'injury_manifest.json'
-          summary={'version':'0.10.0','status':'DONE' if pred.exists() else 'NO_FORECAST_INDEX',
+          summary={'version':'0.11.0','status':'DONE' if pred.exists() else 'NO_FORECAST_INDEX',
                    'predictions':json.loads(pred.read_text()) if pred.exists() else None,
                    'injuries':json.loads(injury.read_text()) if injury.exists() else None,
                    'note':'The established NFL baseline is unchanged; only one active, evolving challenger; uncalibrated and not an ATS bet'}
