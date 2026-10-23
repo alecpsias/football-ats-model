@@ -240,10 +240,11 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
         'skill_player_availability_exposure':skill_exposures,
         'other_position_availability':other_availability,
         'conditional_personnel_scenarios':None,
-        'personnel_adjustment_to_model_points':{
+        'personnel_adjustment_to_model_points':({
             'ppd_home':active_personnel['ppd_home'],
             'ppd_away':active_personnel['ppd_away'],
-            'team_expected_points_not_invented':True},
+            'team_expected_points_not_invented':True}
+            if active_personnel.get('status')=='ACTIVE' else None),
         'build16_active_personnel_evidence':active_personnel,
         'market':{'status':'NO_SOURCE_OBSERVED_PREKICKOFF_SPREAD','ats_research_side':None},
         'mandatory_rushing_audit':None,'rushing_ats_risk_gate':None,
