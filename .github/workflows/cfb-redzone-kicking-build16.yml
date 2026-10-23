@@ -1,0 +1,42 @@
+name: CFB Build16 red-zone and kicking regression
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/cfb-redzone-kicking-build16.yml'
+      - 'cfb/redzone_kicking.py'
+      - 'cfb/redzone_kicking_paired.py'
+      - 'cfb/test_cfb_redzone_kicking.py'
+      - 'cfb/game_script.py'
+      - 'cfb/engine.py'
+      - 'cfb/mechanism_build16.py'
+      - 'cfb/field_special.py'
+permissions:
+  contents: read
+jobs:
+  build16-redzone-kicking:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Full independent CFB regression suite
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Capture free source PBP and kicking data
+        run: python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/rz_fg_snapshot
+      - name: Paired 5000-run historical validation without JMU App State leakage
+        run: |
+          python -m cfb.redzone_kicking_paired \
+            --snapshot cfb_artifacts/rz_fg_snapshot \
+            --out cfb_artifacts/redzone_kicking_paired.json \
+            --runs 5000 --max-games 160
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-build16-rz-fg-validation
+          path: cfb_artifacts/redzone_kicking_paired.json
+          if-no-files-found: warn
