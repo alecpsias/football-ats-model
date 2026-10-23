@@ -1,0 +1,38 @@
+name: CFB Build16 active rushing and SOS frozen-model smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-rush-sos-activation-smoke.yml'
+      - 'cfb/continuous_rush_sos_active.py'
+      - 'cfb/test_cfb_continuous_rush_sos.py'
+      - 'cfb/mechanism_build16.py'
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Prove default applies signed fitted shift to genuine same-seed 5000-draw games
+        run: |
+          python -m unittest cfb.test_cfb_continuous_rush_sos -v
+          python -m unittest cfb.test_cfb_failure1_ridge -v
+          python -m unittest cfb.test_cfb_failure3_sustainability -v
+      - name: Print missing-artifact fallback until fitted training file is installed
+        run: |
+          python - <<'PY'
+          from cfb.continuous_rush_sos_active import read_model
+          model,audit=read_model()
+          print('BUILD16_AUTO_MODEL_LOAD_STATUS',audit)
+          if model is not None:
+              assert model['promoted_into_build16'] is True
+              assert model['training_season']==2024
+          PY
