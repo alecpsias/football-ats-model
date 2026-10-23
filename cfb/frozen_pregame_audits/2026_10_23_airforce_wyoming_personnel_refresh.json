@@ -1,0 +1,182 @@
+{
+  "schema": "cfb_build16_personnel_refresh_frozen_pregame_v1",
+  "fixture": {
+    "game_id": "401864525",
+    "date_local": "2026-10-23",
+    "away": "Air Force",
+    "home": "Wyoming",
+    "kickoff_utc": "2026-10-24T01:00:00+00:00"
+  },
+  "provenance": {
+    "paired_github_run_id": 40027159634,
+    "paired_github_run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/40027159634",
+    "primary_run_id": 40027115195,
+    "git_commit": "449c629a5aa4e255e02b303e27232881157c14f3",
+    "source_snapshot_at_utc": "2026-10-23T21:30:06.050111+00:00",
+    "pregame_model_label_at_utc": "2026-10-23T21:30:06.768330+00:00",
+    "availability_capture_at_utc": "2026-10-23T21:32:54.374324+00:00",
+    "actual_completed_forecast_at_must_be_after_capture": true,
+    "paired_workflow_conclusion": "success",
+    "regression_suite_passed": true,
+    "simulations_per_variant": 5000,
+    "matched_seed": 401864525,
+    "pregame_only": true,
+    "original_prediction_retained": true
+  },
+  "previous_frozen": {
+    "source": "https://github.com/alecpsias/football-ats-model/blob/main/cfb/frozen_pregame_audits/2026_10_23_airforce_wyoming.json",
+    "away_airforce_score": 24.959,
+    "home_wyoming_score": 17.602,
+    "airforce_margin": 7.357,
+    "airforce_cover_minus_5_5": 0.58,
+    "previous_group": "C",
+    "previous_confidence_out_of_10": 5.7
+  },
+  "baseline_frozen": {
+    "airforce_score": 24.218,
+    "wyoming_score": 20.954,
+    "airforce_margin": 3.264,
+    "total": 45.172,
+    "raw_airforce_win_frequency": 0.593
+  },
+  "refreshed_build16": {
+    "airforce_score": 24.959,
+    "wyoming_score": 17.602,
+    "airforce_margin": 7.357,
+    "total": 42.562,
+    "raw_airforce_win_frequency": 0.6854,
+    "margin_sd": 16.121,
+    "wyoming_home_margin_p10_p50_p90": [
+      -28,
+      -8,
+      14
+    ],
+    "source_verified_regulation_clock": true,
+    "turnover_tied_defensive_returns": true,
+    "regressed_distance_based_fg": true,
+    "opponent_adjusted_redzone": true,
+    "matched_early_third_chain": true,
+    "opponent_adjusted_rush_severe_gate": "SEVERE_RUSH_MISMATCH_REQUIRES_5000_RUN_STRESS"
+  },
+  "paired_at_same_seed": [
+    {
+      "wyoming_spread": 4.5,
+      "airforce_favorite_spread": -4.5,
+      "personnel_enabled": true,
+      "airforce_raw_cover": 0.59,
+      "mean_margin_airforce": 7.357
+    },
+    {
+      "wyoming_spread": 5.5,
+      "airforce_favorite_spread": -5.5,
+      "personnel_enabled": false,
+      "airforce_raw_cover": 0.58,
+      "mean_margin_airforce": 7.357
+    },
+    {
+      "wyoming_spread": 5.5,
+      "airforce_favorite_spread": -5.5,
+      "personnel_enabled": true,
+      "airforce_raw_cover": 0.58,
+      "mean_margin_airforce": 7.357
+    },
+    {
+      "wyoming_spread": 6.5,
+      "airforce_favorite_spread": -6.5,
+      "personnel_enabled": true,
+      "airforce_raw_cover": 0.554,
+      "mean_margin_airforce": 7.357
+    }
+  ],
+  "personnel": {
+    "source_report_url": "https://kickoffstatus.com/games/2026-10-23-air-force-at-wyoming/",
+    "report_original_reference": "https://themw.com",
+    "source_kind": "third-party Mountain West availability transcription linked to official source, not directly authenticated official download",
+    "report_status": "PREGAME_SECONDARY_CONFERENCE_TRANSCRIPTION_CAPTURED",
+    "captured_at_utc": "2026-10-23T21:32:54.374324+00:00",
+    "total_players_in_report": 19,
+    "airforce_out": 5,
+    "airforce_questionable": 4,
+    "wyoming_out": 7,
+    "wyoming_questionable": 3,
+    "airforce_qb_szarka_reported_out": true,
+    "airforce_qb_medders_has_recent_starts": true,
+    "airforce_rb_rocco_conti_questionable_not_automatically_out": true,
+    "wyoming_ol_davies_maciejczak_geiger_out": true,
+    "wyoming_db_bell_griffin_out": true,
+    "ppd_delta_airforce": 0,
+    "ppd_delta_wyoming": 0,
+    "numeric_impact_active": false,
+    "zero_numeric_impact_is_not_zero_football_effect": true,
+    "unmodeled": [
+      "Air Force DL Chaz Barnett",
+      "Air Force DB Ehimen Oyamendan",
+      "Air Force DB Houston Hendrix",
+      "Air Force DB Jordan Elie-Stuart",
+      "Wyoming DT Caleb Robinson",
+      "Wyoming CB Ian Bell",
+      "Wyoming OT Jake Davies",
+      "Wyoming OL Jason Maciejczak",
+      "Wyoming CB Kendall Griffin",
+      "Wyoming OL Nathan Geiger"
+    ],
+    "gaps": "No identifiable, qualified individual QB sampled substitute adjustment; no individual snap/coverage/blocking modeled for DL, DB, OL"
+  },
+  "additional_external_notes": {
+    "wyoming_rusher_samuel_harris_available_per_fox_mw_report": "https://www.foxsports.com/college-football/air-force-falcons-vs-wyoming-cowboys-oct-23-2026-game-boxscore-43773?tab=news"
+  },
+  "market": {
+    "primary_observed_airforce_spread": -5.5,
+    "alt_prices": [
+      -4.5,
+      -6.5
+    ],
+    "published_total": 45.5,
+    "selected_book_price_airforce_minus_5_5": "-105",
+    "opening_variability": "WagerTalk cites -4.5, AP cites -6.5; not a standardized same-book opener",
+    "source": "https://www.wagertalk.com/news/college-football/air-force-vs-wyoming-prediction-picks-odds-october-23-2026/",
+    "splits_snapshot_datetime": "2026-10-22 17:07 ET",
+    "splits_source": "https://wiseguyteam.com/cfb-betting-splits",
+    "wyoming_spread_handle_draftkings": 0.99,
+    "wyoming_spread_handle_circa": 0.95,
+    "not_proof_of_sharp_selection": true
+  },
+  "matchup": {
+    "rushing_edge_raw_airforce": "343.0 rush yards/game vs Wyoming 172.1 allowed",
+    "third_down_airforce_conversion": 0.529,
+    "wyoming_def_third_allowed": 0.376,
+    "wyoming_offensive_ppg": 18.3,
+    "airforce_defensive_ppg_allowed": 19.7,
+    "wyoming_turnover_margin": -7,
+    "airforce_turnover_margin": 3,
+    "airforce_fourth_down_conv": "13/15",
+    "coaches": "Troy Calhoun vs Jay Sawvel"
+  },
+  "risks": {
+    "baseline_at_market_prefers_wyoming": true,
+    "margin_advantage_only": 1.857,
+    "margin_standard_deviation": 16.121,
+    "conti_unknowable_play_level_status": true,
+    "wyoming_qb_tyler_hughes_dual_threat": true,
+    "airforce_ol_def_scenarios_not_fully_player_fitted": true,
+    "simulated_cover_rates_not_calibrated": true
+  },
+  "decision": {
+    "ats_direction": "Air Force -5.5",
+    "group": "C",
+    "confidence_out_of_10": 5.6,
+    "representative_score": "Air Force 25 Wyoming 18",
+    "better_number": "Air Force -4.5",
+    "price_sensitivity": "At -6.5 raw cover only 55.4%, pass or substantially lower confidence",
+    "total_lean": "Under 45.5 weaker, no formal bet",
+    "rationale": "Matched rushing mismatch/chain advantage remains, but baseline opposite side and heavy Wyoming money, no quantified OL/DB effects, 58% raw cover not calibrated"
+  },
+  "integrity": {
+    "single_challenger": true,
+    "baseline_unchanged": true,
+    "original_frozen_not_revised": true,
+    "target_game_result_not_used": true,
+    "pre_kickoff_report_read": true,
+    "personnel_missing_effects_disclosed": true
+  }
+}
