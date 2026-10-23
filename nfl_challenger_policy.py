@@ -6,7 +6,7 @@ forecast files remain immutable evidence but are NOT active models.
 The CFB engine is independent and outside this contract.
 """
 BASELINE_VERSION = "0.8.1"
-ACTIVE_CHALLENGER_VERSION = "0.10.0"
+ACTIVE_CHALLENGER_VERSION = "0.11.0"
 
 def require_single_active_challenger(record: dict) -> None:
     """Fail closed if a NEW forecast contains more than one live candidate."""

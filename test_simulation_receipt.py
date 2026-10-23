@@ -4,6 +4,7 @@ import copy
 import unittest
 
 from simulation_receipt import verify
+from nfl_challenger_policy import ACTIVE_CHALLENGER_VERSION
 
 SHA = "a" * 40
 DIGEST = "f" * 64
@@ -43,8 +44,8 @@ def nfl():
         "projected_home_margin": 4.02,
         "audit": {"simulation_runs": 5000,
                   "source_sha256": {"pbp": DIGEST},
-                  "model_version": "0.8.1+single_challenger_0.10.0"},
-        "challenger": {"version": "0.10.0", "candidate": {
+                  "model_version": "0.8.1+single_challenger_"+ACTIVE_CHALLENGER_VERSION},
+        "challenger": {"version": ACTIVE_CHALLENGER_VERSION, "candidate": {
             "n": 5000, "promoted_to_primary": False,
             "mean_margin_home": 3.7}}
     }

@@ -9,6 +9,7 @@ on:
       - 'nfl/**'
     paths:
       - 'nfl_forward_ledger.py'
+      - 'nfl_qb_adjustments.py'
       - 'evaluate_locked_forecasts.py'
       - 'nfl_challenger_policy.py'
       - 'test_nfl_forward_ledger.py'

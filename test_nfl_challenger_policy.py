@@ -73,6 +73,7 @@ class ChallengerPolicyTests(unittest.TestCase):
                   projected_home, projected_away]),
               patch("forecast_upcoming_core.simulate", return_value=baseline),
               patch("forecast_upcoming_core.extract_mechanisms", return_value=profiles),
+              patch("forecast_upcoming_core.estimate_qb_adjustments", return_value={"SF":{"status":"NOT_APPLIED","adjusted_ppd_residual":0},"WAS":{"status":"NOT_APPLIED","adjusted_ppd_residual":0}}),
               patch("forecast_upcoming_core.stateful_candidate_simulation",
                     return_value=stateful) as challenger_call,
               patch("forecast_upcoming_core.measure", return_value=people),
@@ -115,9 +116,9 @@ class ChallengerPolicyTests(unittest.TestCase):
             }])
             result = evaluate([f], actual)
             self.assertEqual(result["completed_games"], 1)
-            self.assertEqual(result["current_challenger"]["challenger_games"], 1)
+            self.assertEqual(result["current_challenger"]["challenger_games"], 0)
             self.assertEqual(result["games"][0]["challenger_margin_home"], 5.)
-            self.assertEqual(result["archived_challenger_versions"], {})
+            self.assertEqual(result["archived_challenger_versions"]["0.10.0"]["challenger_games"], 1)
 
 
 if __name__ == "__main__":

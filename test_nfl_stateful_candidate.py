@@ -1,4 +1,4 @@
-"""NFL-only v0.10 research invariant and forward-evaluator tests."""
+"""NFL-only v0.11 research invariant and forward-evaluator tests."""
 import copy
 import json
 import tempfile
@@ -69,7 +69,7 @@ class StatefulCandidateTests(unittest.TestCase):
         self.assertEqual((h, a, self.profile), original)
         self.assertTrue(x["research_only"])
         self.assertFalse(x["promoted_to_primary"])
-        self.assertEqual(x["schema"], "nfl_stateful_challenger_v0.10")
+        self.assertEqual(x["schema"], "nfl_stateful_challenger_v0.11")
         self.assertTrue(0 < x["score_home"] < 60)
         self.assertTrue(0 < x["score_away"] < 60)
         self.assertIn("in-game injuries", " ".join(x["limitations"]).lower())
@@ -98,7 +98,7 @@ class StatefulCandidateTests(unittest.TestCase):
                 kickoff_utc="2026-10-18T20:00:00Z",
                 data_as_of_utc="2026-10-18T17:00:00Z",
                 projected_home_margin=4.0, score_home=24, score_away=20,
-                challenger={"version":"0.10.0","candidate": dict(
+                challenger={"version":"0.11.0","candidate": dict(
                     mean_margin_home=5., score_home=23., score_away=18.,
                     promoted_to_primary=False)},
             )

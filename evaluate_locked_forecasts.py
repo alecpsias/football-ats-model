@@ -25,8 +25,20 @@ from nfl_challenger_policy import ACTIVE_CHALLENGER_VERSION, require_single_acti
 def _pick_one_challenger(data: dict):
     """Return (version, candidate); never return two competing forecasts."""
     if "challenger" in data:
-        require_single_active_challenger(data)
-        return data["challenger"]["version"], data["challenger"].get("candidate")
+        item = data["challenger"]
+        version = item.get("version") if isinstance(item, dict) else None
+        if version == ACTIVE_CHALLENGER_VERSION:
+            require_single_active_challenger(data)
+        elif version == "0.10.0":
+            # Immutable earlier sole-challenger forecasts are archive entries,
+            # not runnable alternatives to today's active challenger.
+            if "mechanism_research" in data or "stateful_research" in data:
+                raise InputError("Multiple NFL challenger sections prohibited")
+            if item.get("candidate") is not None and item["candidate"].get("promoted_to_primary") is not False:
+                raise InputError("Archived candidate must never silently replace baseline")
+        else:
+            raise InputError("Unknown archived NFL challenger version")
+        return version, item.get("candidate")
     # Read-only migration: never edit or rerun historical frozen predictions.
     stateful = data.get("stateful_research") or {}
     earlier = data.get("mechanism_research") or {}

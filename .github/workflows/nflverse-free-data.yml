@@ -17,6 +17,8 @@ on:
       - 'test_mechanism_research.py'
       - 'evaluate_locked_forecasts.py'
       - 'nfl_stateful_candidate.py'
+      - 'nfl_qb_adjustments.py'
+      - 'test_nfl_qb_adjustments.py'
       - 'nfl_challenger_policy.py'
       - 'test_nfl_stateful_candidate.py'
       - 'test_nfl_forward_ledger.py'
@@ -175,7 +177,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: football-ats-v10-${{ github.run_id }}
+          name: football-ats-v11-${{ github.run_id }}
           path: |
             snapshots/
             derived-metrics/
