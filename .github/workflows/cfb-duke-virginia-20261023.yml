@@ -1,0 +1,119 @@
+name: CFB Duke at Virginia 2026-10-23 frozen Build16 ATS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-duke-virginia-20261023.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  pregame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free CFB dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Collect source data for matchup
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/duke_virginia_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/duke_virginia_snapshot
+      - name: Verify pregame game identifier
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          d=pd.read_parquet('cfb_artifacts/duke_virginia_snapshot/schedule.parquet')
+          r=d.loc[d.game_id.astype(str).eq('401858271')]
+          if len(r)!=1:raise RuntimeError('Game id missing/ambiguous')
+          g=r.iloc[0]
+          print('GAME',g[['game_id','away_team','home_team','start_date','completed']].to_dict())
+          if bool(g.completed):raise RuntimeError('Cannot create a pregame forecast after completed final')
+          if 'Duke' not in str(g.away_team) or 'Virginia' not in str(g.home_team):
+              raise RuntimeError('Incorrect fixture')
+          PY
+      - name: Freeze pregame statistics and 5000 Build16 simulations
+        run: |
+          python -m cfb.fresh_matchup --mode pregame \
+            --team-a "Duke" --team-b "Virginia" --game-id 401858271 \
+            --snapshot cfb_artifacts/duke_virginia_snapshot \
+            --odds cfb/_market_disabled --availability-dir cfb/availability \
+            --runs 5000 --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
+            --out cfb_artifacts/duke_virginia_pregame.json > cfb_artifacts/duke_virginia_stdout.log
+          python - <<'PY'
+          import json
+          x=json.load(open('cfb_artifacts/duke_virginia_pregame.json'))
+          b=x.get('build16_challenger') or {}
+          print('DUKE_VIRGINIA_FROZEN_5000')
+          print(json.dumps({'status':x.get('status'),'home':x.get('home'),'away':x.get('away'),
+          'game_id':x.get('game_id'),'kickoff':x.get('kickoff_utc'),
+          'generated_at':x.get('prediction_generated_at_utc'),'source_at':x.get('source_snapshot_at_utc'),
+          'games_home':x.get('completed_prior_games_home'),'games_away':x.get('completed_prior_games_away'),
+          'baseline':x.get('simulation'),'challenger_status':b.get('status'),
+          'build16':b.get('simulation'),'rush':x.get('mandatory_rushing_audit'),
+          'matchup':x.get('matchup_evidence'),'qb':x.get('quarterback_participation'),
+          'availability':x.get('availability_evidence'),
+          'new_third_chain':b.get('situational_chain_evidence'),
+          'new_redzone_kicking':b.get('redzone_kicking_evidence'),
+          'missing':x.get('missing_statistical_fields')},indent=2,default=str)[:60000])
+          PY
+      - name: Same seed spread sensitivity for quoted minus 1.5 and minus 2.5
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          from cfb.pipeline import verify,iso_utc
+          from cfb.fresh_matchup import histories_asof
+          from cfb.mechanism_build16 import simulate_build16
+          from cfb.failure1_learned_shadow import correction
+          root=Path('cfb_artifacts/duke_virginia_snapshot')
+          manifest=verify(root)
+          cutoff=iso_utc(manifest['captured_at_utc'])
+          s=pd.read_parquet(root/'schedule.parquet')
+          p=pd.read_parquet(root/'pbp.parquet')
+          r=pd.read_parquet(root/'roster.parquet')
+          future,_,hist,_=histories_asof(s,p,r,cutoff)
+          rows=future.loc[future.game_id.astype(str).eq('401858271')]
+          if len(rows)!=1:raise ValueError('No pregame fixture in as-of source')
+          g=rows.iloc[0]
+          h,a=int(g.home_id),int(g.away_id)
+          rush=correction(h,a,hist)
+          args=dict(home_id=h,away_id=a,histories=hist,neutral=bool(g.neutral_site),
+                    runs=5000,seed=int(g.game_id)%(2**32),
+                    failure1_fit_margin_delta=rush['margin_delta_points'])
+          result={'game_id':'401858271','snapshot_at_utc':str(cutoff),
+                  'market_quotes_observed_outside_repository':True,
+                  'estimated_probabilities_not_calibrated':True,'lines':[]}
+          for line in (-1.5,-2.5):
+              sim=simulate_build16(spread_home=line,**args)
+              if sim.get('simulation') is None:raise RuntimeError('Build16 simulation missing: '+str(sim))
+              x=sim['simulation']
+              result['lines'].append({'virginia_spread':line,
+                'duke_cover_raw':x['away_cover_probability_raw'],
+                'virginia_cover_raw':x['home_cover_probability_raw'],
+                'virginia_win_raw':x['home_win_probability_raw'],
+                'margin_home':x['mean_margin_home'],'score_virginia':x['mean_score_home'],
+                'score_duke':x['mean_score_away'],'total':x['mean_total'],
+                'simulations':x['simulations'],'seed':x['seed'],
+                'margin_p10_p50_p90':x['margin_p10_p50_p90']})
+          print('DUKE_VIRGINIA_ATS')
+          print(json.dumps(result,indent=2))
+          Path('cfb_artifacts/duke_virginia_ats.json').write_text(json.dumps(result,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-duke-virginia-frozen-5000-${{ github.run_id }}
+          path: |
+            cfb_artifacts/duke_virginia_pregame.json
+            cfb_artifacts/duke_virginia_pregame.md
+            cfb_artifacts/duke_virginia_stdout.log
+            cfb_artifacts/duke_virginia_ats.json
+          if-no-files-found: warn
