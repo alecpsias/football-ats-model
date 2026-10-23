@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/cfb-airforce-stanford-20261023.yml'
+      - '.github/workflows/cfb-ncstate-stanford-20261023.yml'
 permissions:
   contents: read
 jobs:
