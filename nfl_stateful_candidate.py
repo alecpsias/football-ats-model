@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NFL v0.10 STATEFUL RESEARCH CHALLENGER; never a production ATS forecast.
+"""NFL v0.11 STATEFUL + QB-FORM RESEARCH CHALLENGER; never a production ATS forecast.
 
 Uses only pre-cutoff drive outcomes extracted by mechanism_research.py. The
 v0.8.1 production remains fixed; v0.9 mechanisms have been incorporated\ninto this SOLE evolving challenger rather than retained as a second model.
@@ -74,7 +74,8 @@ def _fourth_failure_rate(profile, offense, defense):
 
 
 def stateful_candidate_simulation(
-    home: dict, away: dict, profile: dict, rules: dict, runs: int, seed: int
+    home: dict, away: dict, profile: dict, rules: dict, runs: int, seed: int,
+    qb_adjustments: dict | None = None,
 ) -> dict:
     """Joint possession generator with persistent game scoring shocks.
 
@@ -125,6 +126,18 @@ def stateful_candidate_simulation(
         p_def = (y["qb_hit_dropbacks"] + 80 * hit_prior) / (y["dropbacks"] + 80)
         return clip(((p_off + p_def) / 2 - hit_prior) * hit_assoc, -.004, .004)
 
+    qb_adjustments = qb_adjustments or {}
+    def qb_residual(team):
+        data = qb_adjustments.get(team)
+        if data is None:
+            return 0.0
+        if data.get("status") != "APPLIED":
+            return 0.0
+        amount = float(data["adjusted_ppd_residual"])
+        if not math.isfinite(amount) or abs(amount) > .400001:
+            raise InputError("Invalid QB residual supplied to challenger")
+        return amount
+
     def prepare(p, states, situ, third, opp):
         for k in ("_ppd", "_td", "_to", "expected_drives", "pass_rate",
                   "plays_per_drive", "interception_rate_per_dropback",
@@ -132,7 +145,7 @@ def stateful_candidate_simulation(
             if k not in p or not math.isfinite(float(p[k])):
                 raise InputError("Missing numeric projection." + k)
         return {
-            "base_ppd": float(p["_ppd"]) + situ["total_delta_ppd"],
+            "base_ppd": float(p["_ppd"]) + situ["total_delta_ppd"] + qb_residual(str(p["team"])),
             "td_share": clip(float(p["_td"]) + situ["total_delta_td_share"], .10, .95),
             "base_turnover": clip(float(p["_to"]), .005, .42),
             "drives": float(p["expected_drives"]),
@@ -149,6 +162,7 @@ def stateful_candidate_simulation(
                 for s in STATES
             },
             "fourth_fail": _fourth_failure_rate(profile, p["team"], opp),
+            "qb_form_ppd_residual": qb_residual(str(p["team"])),
         }
     hp = prepare(home, hstates, h_situ, hthird, teams[1])
     ap = prepare(away, astates, a_situ, athird, teams[0])
@@ -229,8 +243,12 @@ def stateful_candidate_simulation(
                 one(hp, 0, i)
     margins = home_scores - away_scores
     return {
-        "schema": "nfl_stateful_challenger_v0.10",
+        "schema": "nfl_stateful_challenger_v0.11",
         "research_only": True, "promoted_to_primary": False,
+        "qb_form_ppd_adjustments": {"home": hp["qb_form_ppd_residual"],
+                                    "away": ap["qb_form_ppd_residual"]},
+        "qb_form_estimation": {"home": qb_adjustments.get(teams[0]),
+                               "away": qb_adjustments.get(teams[1])},
         "score_home": round(float(np.mean(home_scores)), 3),
         "score_away": round(float(np.mean(away_scores)), 3),
         "mean_margin_home": round(float(np.mean(margins)), 3),
@@ -265,6 +283,7 @@ def stateful_candidate_simulation(
         "limitations": [
             "Research only; no ATS calibration, calibrated coverage, or EV.",
             "7/3 drive points are TD/FG proxies, not play-level EPA.",
+            "Shrunk QB form is based on inferred incumbent, not verified game-day starter; no ATS calibration.",
             "State PPD and game shocks are shrunken observational proxies; coefficients not fitted.",
             "Fourth-down labels reclassify empty drives; no extra independent penalty applied.",
             "In-game injuries, changes to roster depth and precise running clock not inferred.",
