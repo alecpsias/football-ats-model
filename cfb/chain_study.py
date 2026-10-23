@@ -93,18 +93,20 @@ def study(snapshot,out,*,runs=5000,max_games=160,min_prior_games=3):
             if len(chosen)<max_games and min(len(history[hid]),len(history[aid]))>=min_prior_games:
                 seed=int(g.game_id)%2**32
                 simulations={}
-                ref=simulate_build16(hid,aid,history,bool(g.neutral_site),runs=runs,seed=seed)
+                ref=simulate_build16(hid,aid,history,bool(g.neutral_site),runs=runs,seed=seed,situational_chain_enabled=False)
                 if ref.get('simulation') is None:
                     excluded['reference_not_available']+=1
                 else:
                     simulations['reference']=mini(ref)
                     for mode in MODES[1:]:
                         result=simulate_build16(hid,aid,history,bool(g.neutral_site),
-                               runs=runs,seed=seed,chain_research=mode)
+                               runs=runs,seed=seed,situational_chain_enabled=(mode=='situational'),
+                               chain_research=(None if mode=='situational' else mode))
                         if result.get('simulation') is None:
                             excluded[mode+'_missing_history']+=1;break
                         simulations[mode]=mini(result)
-                        simulations[mode]['evidence']=result['chain_research']
+                        simulations[mode]['evidence']=(result.get('situational_chain_evidence')
+                            if mode=='situational' else result['chain_research'])
                     if len(simulations)==len(MODES):
                         chosen.append({'game_id':str(g.game_id),'kickoff':kickoff.isoformat(),
                             'home':str(g.home_team),'away':str(g.away_team),
