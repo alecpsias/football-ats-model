@@ -189,7 +189,16 @@ def _team_stats(pbp: pd.DataFrame, team: str, is_offense: bool) -> dict:
             fumble_lost_rate=fumble_lost, redzone_td_rate=rz_p, redzone_trips=rz_n,
             third_down_rate=_third(sub), drives_per_game=safe_ratio(dcount,games),
             plays_per_drive=safe_ratio(n,dcount), qb_rushes_per_game=safe_ratio(len(qbr),games) if qbr is not None else None,
-            qb_rush_epa=mean_or_none(qbr,"epa") if qbr is not None and not qbr.empty else None,
+            # A *verified* QB-position join with zero QB-designed rushing attempts
+            # has zero contribution to the QB-rush scoring term. Assign the
+            # structural neutral value 0, not a fabricated per-carry estimate.
+            # Unknown roster/position joins STILL leave the input unavailable.
+            qb_rush_epa=(mean_or_none(qbr,"epa") if qbr is not None and not qbr.empty
+                         else 0.0 if qbr is not None else None),
+            qb_rush_sample_count=(len(qbr) if qbr is not None else None),
+            qb_rush_epa_provenance=("OBSERVED_QB_RUSH_MEAN" if qbr is not None and not qbr.empty
+                                    else "ZERO_OBSERVED_QB_RUSHES_STRUCTURAL_NEUTRAL"
+                                    if qbr is not None else "UNKNOWN_QB_POSITION_NO_ESTIMATE"),
         )
     return dict(
         plays=n, epa_pass_allowed=mean_or_none(p,"epa"), epa_rush_allowed=mean_or_none(r,"epa"),
