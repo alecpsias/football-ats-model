@@ -297,7 +297,7 @@ def _failure2_verified_scoring_histories(home_id,away_id,histories):
 
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None,continuous_rush_sos_enabled=True,coupled_rush_possessions=True):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None,continuous_rush_sos_enabled=True,coupled_rush_possessions=True,situational_chain_enabled=True):
     if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
@@ -360,6 +360,15 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
             d=rush_evidence['shared_tempo_delta']
             for proj in (h,a):
                 proj['expected_drives']=float(np.clip(proj['expected_drives']+d,6,19))
+    # Historical source-grounded situational chain: active by default when qualified.
+    # Missing source observations fail CLOSED to a zero increment, not a fabricated rate.
+    situational_chain_evidence=None
+    if situational_chain_enabled and chain_research is None:
+        from cfb.chain_interaction_research import experiment as chain_experiment
+        situational_chain_evidence=chain_experiment(home_id,away_id,histories,'situational')
+        if situational_chain_evidence['status']=='UNFITTED_SCENARIO_READY':
+            h['_ppd']=float(np.clip(h['_ppd']+situational_chain_evidence['ppd_home_delta'],.35,5.5))
+            a['_ppd']=float(np.clip(a['_ppd']+situational_chain_evidence['ppd_away_delta'],.35,5.5))
     # Experimental chain mechanism: opt-in only, no default impact. The
     # original third-down success and rushing EPA are already in Build16;
     # apply only a bounded *relative-to-own-history* interaction residual.
@@ -555,7 +564,9 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
        'not_primary':True,'fitted':False,'ATS_calibrated':False,
        'failure2_scoring_attribution':scoring_audit,
        'failure3_sustainability':sustain_evidence,
-       'coupled_rush_possession_interaction':coupled_evidence}
+       'coupled_rush_possession_interaction':coupled_evidence,
+       'situational_chain_active_by_default':situational_chain_enabled,
+       'situational_chain_evidence':situational_chain_evidence}
     if rush_evidence is not None:
         answer['rush_research']=rush_evidence
         answer['not_deployed']=True
