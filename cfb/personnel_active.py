@@ -73,7 +73,7 @@ def _bounded_skill_delta(plays,players,category,last):
     # True prior drive count, never assume 12 possessions by fiat.
     ndrives=plays.loc[plays.drive_id.notna()].groupby('game_id').drive_id.nunique().sum()
     if ndrives<=0:return [],0.,['MISSING_PRIOR_DRIVE_DENOMINATOR']
-    mode_plays_per_drive=len(frame)/ndrives
+    mode_plays_per_drive=float(len(frame)/ndrives)
     pool_epa=float(pool.EPA_num.mean())
     total=0.;events=[];gaps=[]
     for p in players:
@@ -105,7 +105,7 @@ def _bounded_skill_delta(plays,players,category,last):
           'sample_reliability':round(shrink,6),
           'bounded_ppd_delta':round(delta,6),
           'no_imputed_snap_counts':True})
-    return events,round(max(-MAX_SKILL_DELTA_PPD,min(0.,total)),6),gaps
+    return events,round(float(max(-MAX_SKILL_DELTA_PPD,min(0.,total))),6),gaps
 
 def _qb_delta(players,qb_evidence):
     qb_out={p['athlete_id'] for p in players
@@ -192,7 +192,7 @@ def estimate(mapped,eligible,roster,home_id,away_id,statuses,qb_effects,historie
             for p in players if p['status']=='OUT'
             and _position(p) in ('OL','DEFENSE_OR_OTHER','SPECIAL')]
         audit['kicker']=_kicker_flag(players,histories,tid)
-        ppd=round(max(-MAX_TEAM_DELTA_PPD,min(MAX_QB_DELTA_PPD,ppd)),6)
+        ppd=round(float(max(-MAX_TEAM_DELTA_PPD,min(MAX_QB_DELTA_PPD,ppd))),6)
         audit['applied_ppd']=ppd
         audit['status']=('ACTIVE_SOURCE_BACKED_PROVISIONAL_PERSONNEL'
                          if ppd or audit['kicker'].get('override')
