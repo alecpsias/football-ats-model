@@ -1,0 +1,25 @@
+name: CFB Liberty Kennesaw frozen postgame audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-postgame-liberty-kennesaw-audit.yml'
+      - 'cfb/postgame_audits/2026_10_22_liberty_kennesaw.json'
+      - 'cfb/test_cfb_postgame_liberty_kennesaw.py'
+
+permissions:
+  contents: read
+
+jobs:
+  official_postmortem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify frozen pregame prediction versus independent official box
+        run: python -m unittest cfb.test_cfb_postgame_liberty_kennesaw -v
