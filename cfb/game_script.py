@@ -346,9 +346,10 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                     prop=state_propensity('home',to_h,hs-ass)
                     if sustain_config is not None:
                         pts,to,exp_td,chain_score=draw_possession(
-                            h,rng,prop,latent_h+global_env+rush_home_ppd_shift+
+                            h,rng,prop,latent_h+global_env+
                             trailing_rush_resilience_ppd('home',hs-ass),
-                            short_h,mask,sustain_config['home'],sustain_factor['home'])
+                            short_h,mask,sustain_config['home'],sustain_factor['home'],
+                            rush_chain_extra_ppd=rush_home_ppd_shift)
                         elapsed_sec+=(verified_duration('home',pts,to,exp_td,mask)
                             if clock_pools is not None else np.where(mask,base_sec*
                             duration_multiplier(pts,to,exp_td),0.))
@@ -377,9 +378,10 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                     prop=state_propensity('away',to_a,ass-hs)
                     if sustain_config is not None:
                         pts,to,exp_td,chain_score=draw_possession(
-                            a,rng,prop,latent_a+global_env+rush_away_ppd_shift+
+                            a,rng,prop,latent_a+global_env+
                             trailing_rush_resilience_ppd('away',ass-hs),
-                            short_a,mask,sustain_config['away'],sustain_factor['away'])
+                            short_a,mask,sustain_config['away'],sustain_factor['away'],
+                            rush_chain_extra_ppd=rush_away_ppd_shift)
                         elapsed_sec+=(verified_duration('away',pts,to,exp_td,mask)
                             if clock_pools is not None else np.where(mask,base_sec*
                             duration_multiplier(pts,to,exp_td),0.))
