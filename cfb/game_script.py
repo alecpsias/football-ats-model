@@ -214,6 +214,21 @@ def simulate_script(home_projection, away_projection, home_history, away_history
     sustain_rng=np.random.default_rng(seed ^ 0xF333ACE)
     sustain_factor={side:chain_draws(sustain_config[side],sustain_rng,n)
         for side in ('home','away')} if sustain_config is not None else None
+    # Improvements 2+4. A shared conditional opponent-rush/chain state
+    # varies both sides' drive-scoring opportunities together. Preserve
+    # original random draws when evidence is missing or switch disabled.
+    rush_chain_config=(mechanisms.get('coupled_rush_chain')
+        if mechanisms is not None else None)
+    if rush_chain_config is not None:
+        from cfb.coupled_rush_possessions import draw_coupled_state
+        rush_rng=np.random.default_rng(seed ^ 0x4C91C0DE)
+        rush_chain_state=draw_coupled_state(rush_chain_config,rush_rng,n)
+        rush_home_ppd_shift=rush_chain_state['home_ppd_fraction']*h['_ppd']
+        rush_away_ppd_shift=rush_chain_state['away_ppd_fraction']*a['_ppd']
+    else:
+        rush_chain_state=None
+        rush_home_ppd_shift=0.
+        rush_away_ppd_shift=0.
     clock_pools=mechanisms.get('failure3_clock_pools') if mechanisms is not None else None
     if clock_pools is not None and (
             sustain_config is None or not isinstance(clock_pools,dict)
@@ -331,7 +346,7 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                     prop=state_propensity('home',to_h,hs-ass)
                     if sustain_config is not None:
                         pts,to,exp_td,chain_score=draw_possession(
-                            h,rng,prop,latent_h+global_env+
+                            h,rng,prop,latent_h+global_env+rush_home_ppd_shift+
                             trailing_rush_resilience_ppd('home',hs-ass),
                             short_h,mask,sustain_config['home'],sustain_factor['home'])
                         elapsed_sec+=(verified_duration('home',pts,to,exp_td,mask)
@@ -341,7 +356,7 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                         chain_scores_h+=chain_score.astype(np.int16)
                         possessions_h+=mask.astype(np.int16)
                     else:
-                        pts,to=_regulation_draw(h,rng,prop,latent_h+global_env+
+                        pts,to=_regulation_draw(h,rng,prop,latent_h+global_env+rush_home_ppd_shift+
                             trailing_rush_resilience_ppd('home',hs-ass),short_h,mask)
                     hs+=pts;turnovers_h+=to.astype(np.int16)
                     short_h=np.where(mask,0.,short_h)
@@ -362,7 +377,7 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                     prop=state_propensity('away',to_a,ass-hs)
                     if sustain_config is not None:
                         pts,to,exp_td,chain_score=draw_possession(
-                            a,rng,prop,latent_a+global_env+
+                            a,rng,prop,latent_a+global_env+rush_away_ppd_shift+
                             trailing_rush_resilience_ppd('away',ass-hs),
                             short_a,mask,sustain_config['away'],sustain_factor['away'])
                         elapsed_sec+=(verified_duration('away',pts,to,exp_td,mask)
@@ -372,7 +387,7 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                         chain_scores_a+=chain_score.astype(np.int16)
                         possessions_a+=mask.astype(np.int16)
                     else:
-                        pts,to=_regulation_draw(a,rng,prop,latent_a+global_env+
+                        pts,to=_regulation_draw(a,rng,prop,latent_a+global_env+rush_away_ppd_shift+
                             trailing_rush_resilience_ppd('away',ass-hs),short_a,mask)
                     ass+=pts;turnovers_a+=to.astype(np.int16)
                     short_a=np.where(mask,0.,short_a)
@@ -427,6 +442,14 @@ def simulate_script(home_projection, away_projection, home_history, away_history
        'home_scoring_stall':_scenario_summary(h_stall,margin,hs,ass),
        'away_scoring_stall':_scenario_summary(a_stall,margin,hs,ass),
        'runaway_clock_sensitivity_triggered':_scenario_summary(burn,margin,hs,ass)}
+    if rush_chain_state is not None:
+        sample=rush_chain_state['shared_rush_control_sample']
+        scripts['home_rushing_control_tail']=_scenario_summary(
+            sample>=np.quantile(sample,.8),margin,hs,ass)
+        scripts['away_rushing_control_tail']=_scenario_summary(
+            sample<=np.quantile(sample,.2),margin,hs,ass)
+        # Overlap with scoring stalls/turnovers is deliberately retained.
+        # These are conditional samples, NOT independent wagers.
     return {'version':VERSION,'status':'UNFITTED_GAME_SCRIPT_CHALLENGER_NOT_PRIMARY',
        'mean_score_home':round(float(hs.mean()),3),
        'mean_score_away':round(float(ass.mean()),3),
@@ -447,6 +470,20 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                                  else 'BOUNDED_UNFITTED_EVENT_DURATION_PROXIES' if sustain_config is not None
                                  else 'OFF'),
        'failure3_source_clock_verified':clock_pools is not None,
+       'coupled_rush_chain_active':rush_chain_state is not None,
+       'coupled_rush_chain_mean_signed_ppd_home':(
+           round(float(np.mean(rush_home_ppd_shift)),6)
+           if rush_chain_state is not None else None),
+       'coupled_rush_chain_game_sd_ppd_home':(
+           round(float(np.std(rush_home_ppd_shift)),6)
+           if rush_chain_state is not None else None),
+       'coupled_rush_chain_mean_abs_ppd_shift_home':(
+           round(float(np.mean(np.abs(rush_home_ppd_shift))),6)
+           if rush_chain_state is not None else None),
+       'coupled_rush_chain_empirical_clock_compounding':(
+           rush_chain_state is not None and clock_pools is not None),
+       'coupled_rush_chain_clock_unverified_fallback':(
+           rush_chain_state is not None and clock_pools is None),
        'failure3_official_box_top_verified':False,
        'failure3_mean_elapsed_seconds':round(float(elapsed_sec.mean()),2) if sustain_config is not None else None,
        'failure3_fraction_with_extra_possessions':round(float(np.mean((possessions_h>draws)|(possessions_a>draws))),5) if sustain_config is not None else None,
