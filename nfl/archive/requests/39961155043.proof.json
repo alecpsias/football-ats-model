@@ -1,0 +1,29 @@
+{
+  "ats_calibrated": false,
+  "away": "NYG",
+  "challenger_home_margin": 3.756,
+  "challenger_model_version": "0.11.0",
+  "challenger_runs": 5000,
+  "forecast_at_or_after_source_utc": "2026-10-23T13:26:48.505592+00:00",
+  "game_id": "2026_07_NYG_HOU",
+  "git_commit_sha": "72de6137cc57b6de5deb1e9d2fc79644dd7c92ee",
+  "github_actions_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39961155043",
+  "github_run_id": "39961155043",
+  "home": "HOU",
+  "kickoff_utc": "2026-10-25T17:00:00+00:00",
+  "league": "NFL",
+  "market_quote_verified": false,
+  "primary_home_margin": 3.64,
+  "primary_model_version": "0.8.1+single_challenger_0.11.0",
+  "primary_runs": 5000,
+  "result_sha256": "a7f95a2e6bb265433107b4b5531018cd9269fa5e1b0dfb769dc926ee15b124d6",
+  "schema": "simulation_execution_receipt_v1",
+  "source_as_of_utc": "2026-10-23T13:26:30.962433+00:00",
+  "source_fingerprint": {
+    "derived": "1d18f882b364fe988f875b0605c8f0ddbd55dabee943d7a3696d5f780f5b9116",
+    "pbp": "7bb8684d4a970e19a73a04a71b90cb3ece40393989102358265b3a916f042af6",
+    "pfr_pass": "bfe8e5ab8d076d21c01e1f273f64b6fb4288da8138f69f0e5f3d5fec415f41a4"
+  },
+  "status": "VERIFIED_5000_SIMULATIONS_RESEARCH_ONLY",
+  "warning": "This verifies execution, not an empirically validated ATS edge."
+}
