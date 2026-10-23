@@ -262,6 +262,7 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
                     runs=max(100,min(600,runs//5)),seed=int(g.game_id)%(2**32))
         result.update({'status':'FRESH_PREGAME_PROJECTION_LOCKED',
                        'build16_challenger':challenger,
+                       'build16_fitted_rushing_and_sos_activation':challenger.get('continuous_rush_sos_residual_research'),
                        'build16_active_failure1_rushing_correction':rushing_correction,
                        'build16_not_primary':True,
                        'conditional_personnel_scenarios':personnel,
