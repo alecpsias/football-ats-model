@@ -28,6 +28,7 @@ def check_year(path,year):
 def _sim(g,extra=None):
     h,a=g['home_id'],g['away_id']
     kwargs=dict(runs=5000,seed=int(g['game_id'])%(2**32),
+         continuous_rush_sos_enabled=False, # fixed Build16 reference: NEVER auto-load candidate
          failure1_fit_margin_delta=earlier_f1(h,a,g['historical'])['margin_delta_points'])
     if extra is not None:
         kwargs['continuous_rush_sos_residual_delta']=extra
