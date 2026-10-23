@@ -56,8 +56,8 @@ def chain_draws(rate,rng,n):
     return np.clip(multiplier,.40,1.60)
 
 
-def draw_possession(projection, rng, propensity, extra_ppd, short_field, active, 
-                    process, chain_multiplier):
+def draw_possession(projection, rng, propensity, extra_ppd, short_field, active,
+                    process, chain_multiplier, rush_chain_extra_ppd=0.0):
     """Generate mutually exclusive turnover, explosive TD, chain score, stall.
 
     Base PPD is preserved in expectation before bounds and game-level variance:
@@ -75,15 +75,21 @@ def draw_possession(projection, rng, propensity, extra_ppd, short_field, active,
     share=process["explosive_td_share"]
     base_explosive=pscore*p["_td"]*share
     base_chain=pscore-base_explosive
-    p_chain=np.minimum(np.maximum(0.,1.-propensity-base_explosive),
-                       base_chain*chain_multiplier)
+    # Improvement 2: a source-observed rushing-chain state changes ONLY the
+    # sustainable possession-scoring route. Explosive-only TD probability is
+    # unchanged. This avoids rewarding an isolated long pass for more rush
+    # control and preserves turnover/return short-field exclusivity.
+    nonexp_td_share=(p["_td"]*(1.-share))/(1.-p["_td"]*share)
+    chain_points_per_score=3.+3.965*nonexp_td_share
+    chain_shift=np.asarray(rush_chain_extra_ppd,dtype=float)/chain_points_per_score
+    p_chain=np.clip(base_chain*chain_multiplier+chain_shift,
+                    0.,np.maximum(0.,1.-propensity-base_explosive))
     draw=rng.random(n)
     turnover=active & (draw<propensity)
     explosive=active & (draw>=propensity) & (draw<propensity+base_explosive)
     chained=active & (draw>=propensity+base_explosive) & (
         draw<propensity+base_explosive+p_chain)
     # Remaining nonexplosive scoring still has the correct TD/FG mix.
-    nonexp_td_share=(p["_td"]*(1.-share))/(1.-p["_td"]*share)
     chain_td=chained & (rng.random(n)<nonexp_td_share)
     td=explosive | chain_td
     xp=(rng.random(n)<.965).astype(np.int16)
