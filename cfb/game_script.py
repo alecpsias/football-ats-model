@@ -453,7 +453,12 @@ def simulate_script(home_projection, away_projection, home_history, away_history
             score+=values
     nonoff_home=def_pts_home+st_pts_home
     nonoff_away=def_pts_away+st_pts_away
+    # Preserve the pre-overtime scoring state for honest margin diagnostics.
+    # OT points can create a 7/8-point final margin out of a tied regulation.
+    # These are diagnostics ONLY: no extra scoring or spread adjustment.
     regulation_margin=hs.astype(float)-ass
+    regulation_home_points=hs.copy()
+    regulation_away_points=ass.copy()
     reg_ties=int(np.count_nonzero(hs==ass))
     if allow_overtime:
         ot=_resolve_overtime(h,a,dict(CFB_RULES),rng,hs,ass,
@@ -487,6 +492,13 @@ def simulate_script(home_projection, away_projection, home_history, away_history
        'mean_score_home':round(float(hs.mean()),3),
        'mean_score_away':round(float(ass.mean()),3),
        'mean_margin_home':round(float(margin.mean()),3),
+       'regulation_mean_margin_home':round(float(regulation_margin.mean()),3),
+       'regulation_mean_score_home':round(float(regulation_home_points.mean()),3),
+       'regulation_mean_score_away':round(float(regulation_away_points.mean()),3),
+       'regulation_mean_total':round(float((regulation_home_points+regulation_away_points).mean()),3),
+       'regulation_tie_probability_raw':round(float(reg_ties/n),5),
+       'mean_overtime_points_added':round(float(
+           (hs+ass-regulation_home_points-regulation_away_points).mean()),3),
        'median_margin_home':float(np.median(margin)),
        'margin_standard_deviation':round(float(np.std(margin)),3),
        'margin_p10_p50_p90':[float(v) for v in np.quantile(margin,[.1,.5,.9])],
