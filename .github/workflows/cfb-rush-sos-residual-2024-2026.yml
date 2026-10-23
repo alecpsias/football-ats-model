@@ -1,0 +1,96 @@
+name: CFB continuous rushing + SOS residual 2024 fit 2025-2026 paired holdouts
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-rush-sos-residual-2024-2026.yml'
+      - 'cfb/continuous_rush_sos_residual.py'
+      - 'cfb/continuous_rush_sos_study.py'
+      - 'cfb/test_cfb_continuous_rush_sos.py'
+
+permissions:
+  contents: read
+
+jobs:
+  historical_fit_and_validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free CFB source and model dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Regress actual 5000-run residual and unchanged reference paths
+        run: |
+          python -m unittest cfb.test_cfb_continuous_rush_sos -v
+          python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: 2024 earlier-year fit source — no access to 2025/2026 game outcomes
+        run: |
+          mkdir -p cfb_artifacts/rush_sos
+          python -m cfb.pipeline collect --season 2024 --out cfb_artifacts/rush_sos/snapshot_2024
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/rush_sos/snapshot_2024
+          python -u -m cfb.continuous_rush_sos_study --mode fit \
+            --snapshot cfb_artifacts/rush_sos/snapshot_2024 \
+            --max-games 230 --out cfb_artifacts/rush_sos/fit_2024.json
+          python - <<'PY'
+          import json
+          x=json.load(open('cfb_artifacts/rush_sos/fit_2024.json'))
+          model=x['frozen_model']
+          assert model['training_season']==2024 and model['training_games']>=80
+          assert not model['promotion_authorized']
+          print('FROZEN_2024_COEFFICIENTS',json.dumps(model,indent=2))
+          PY
+      - name: 2025 independent later-year margin/distribution test
+        run: |
+          python -m cfb.pipeline collect --season 2025 --out cfb_artifacts/rush_sos/snapshot_2025
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/rush_sos/snapshot_2025
+          python -u -m cfb.continuous_rush_sos_study --mode evaluate \
+            --snapshot cfb_artifacts/rush_sos/snapshot_2025 \
+            --model cfb_artifacts/rush_sos/fit_2024.json \
+            --max-games 145 --year 2025 \
+            --out cfb_artifacts/rush_sos/holdout_2025.json
+      - name: 2026 additional later-year untouched historical matchup check
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/rush_sos/snapshot_2026
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/rush_sos/snapshot_2026
+          python -u -m cfb.continuous_rush_sos_study --mode evaluate \
+            --snapshot cfb_artifacts/rush_sos/snapshot_2026 \
+            --model cfb_artifacts/rush_sos/fit_2024.json \
+            --max-games 140 --year 2026 \
+            --out cfb_artifacts/rush_sos/holdout_2026.json
+      - name: Print paired evaluation and preserve unpromoted one-model policy
+        if: success()
+        run: |
+          python - <<'PY'
+          import json
+          root='cfb_artifacts/rush_sos/'
+          for label,path in (('2024 fit','fit_2024.json'),
+                             ('2025 holdout','holdout_2025.json'),
+                             ('2026 holdout','holdout_2026.json')):
+              j=json.load(open(root+path))
+              print('FINAL_CFB_RUSH_SOS_'+label.replace(' ','_').upper())
+              if 'frozen_model' in j:
+                  print(json.dumps({'n':j['qualified_5000_draw_training_games'],
+                                    'model':j['frozen_model']},indent=2))
+              else:
+                  print(json.dumps({'qualified':j['paired_games'],
+                     'metrics':j['all'],
+                     'severe_rush_quartile':j['strongest_rush_advantage_quartile'],
+                     'sos_divergence_quartile':j['most_divergent_sos_vs_build16_quartile'],
+                     'bootstrap95':j['MAE_improvement_paired_bootstrap95'],
+                     'missing':j['missing'],'historical_ats':j['historical_ats_hit_rate']},indent=2))
+          print('PROMOTION_STATUS=NOT_PROMOTED_VALIDATION_REQUIRES_EXPLICIT_EVIDENCE')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-rush-sos-frozen-2024-fit-and-paired-holdouts-${{ github.run_id }}
+          path: |
+            cfb_artifacts/rush_sos/fit_2024.json
+            cfb_artifacts/rush_sos/holdout_2025.json
+            cfb_artifacts/rush_sos/holdout_2026.json
+          if-no-files-found: warn
