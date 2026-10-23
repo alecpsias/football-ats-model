@@ -8,7 +8,7 @@
   },
   "frozen_prediction": {
     "source_run": "https://github.com/alecpsias/football-ats-model/actions/runs/39863128567",
-    "source_generated_utc": "2026-10-22T22:12:00Z",
+    "source_generated_utc": "2026-10-22T22:12:06.719252+00:00",
     "estimated_official_kickoff_utc": "2026-10-22T23:03:00Z",
     "build16": {
       "margin_liberty": 2.833,
