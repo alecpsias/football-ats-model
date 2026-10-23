@@ -1,0 +1,30 @@
+name: Air Force Wyoming Build16 personnel refresh
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-airforce-wyoming-personnel-refresh-20261023.yml'
+permissions:
+  contents: read
+jobs:
+  pregame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - run: |
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/airforce_wyoming_personnel_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/airforce_wyoming_personnel_snapshot
+      - run: |
+          python -m cfb.fresh_matchup --mode pregame --team-a "Air Force" --team-b Wyoming --game-id 401864525 --snapshot cfb_artifacts/airforce_wyoming_personnel_snapshot --odds cfb/_market_disabled --availability-dir cfb/availability --runs 5000 --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" --out cfb_artifacts/airforce_wyoming_personnel_pregame.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: airforce-wyoming-personnel-${{ github.run_id }}
+          path: cfb_artifacts/airforce_wyoming_personnel_pregame.json
