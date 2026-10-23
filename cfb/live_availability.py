@@ -128,6 +128,12 @@ def fetch_matchup(away,home,away_id,home_id,kickoff,*,roster=None,
     except (HTTPError,URLError,OSError,TimeoutError,ValueError) as e:
         return {**unavailable,'reason':'LIVE_SOURCE_UNAVAILABLE',
                 'source_url':url,'exception_class':type(e).__name__}
+    # The capture timestamp is the actual read completion in production, not
+    # an analysis-start timestamp carried forward by the caller.
+    captured=(datetime.now(timezone.utc) if opener is None else now)
+    if captured>=start:
+        return {**unavailable,'reason':'SOURCE_RETURNED_AT_OR_AFTER_KICKOFF',
+                'source_url':url}
     if len(data)>MAX_BYTES:
         return {**unavailable,'reason':'SOURCE_SIZE_LIMIT', 'source_url':url}
     html=data.decode('utf-8','replace')
@@ -147,7 +153,7 @@ def fetch_matchup(away,home,away_id,home_id,kickoff,*,roster=None,
             'is_reported_out':x['status']=='OUT','is_confirmed_out':False})
     return {'status':'PREGAME_SECONDARY_CONFERENCE_TRANSCRIPTION_CAPTURED',
         'players':players,'source_url':url,
-        'captured_at_utc':now.isoformat(),
+        'captured_at_utc':captured.isoformat(),
         'source_sha256':hashlib.sha256(data).hexdigest(),
         'source_verified':False,'secondary_report_captured':True,
         'source_captured_during_forecast':True,
