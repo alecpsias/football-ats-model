@@ -10,7 +10,15 @@ from cfb.mechanism_build16 import simulate_build16
 def qualified():
     hist=decorated()
     for tid,rows in hist.items():
-        for r in rows:
+        for i,r in enumerate(rows):
+            # Real games have distinct rushing success rates; avoid an
+            # artificial zero-variance fixture that cannot exercise the
+            # coupled scoring draw.
+            swing=(-7,0,6)[i%3]
+            r['mismatch_off_early_rush_success_yes']=max(0,min(35,
+                r['mismatch_off_early_rush_success_yes']+swing))
+            r['mismatch_def_early_rush_success_yes']=max(0,min(35,
+                r['mismatch_def_early_rush_success_yes']-swing))
             # Synthetic *prior* source records test mechanics only. Real
             # GitHub pairing must obtain these from actual source PBP.
             home=tid==1
