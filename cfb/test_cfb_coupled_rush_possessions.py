@@ -71,6 +71,23 @@ class CoupledRushTests(unittest.TestCase):
         self.assertLessEqual(float(np.max(np.abs(h))),MAX_SCORING_FRACTION)
         self.assertFalse(draw['fitted_coefficient'])
 
+    def test_rushing_control_changes_chain_but_not_explosive_or_turnover_route(self):
+        from cfb.drive_sustainability_process import draw_possession
+        n=5000
+        projection={'_ppd':2.0,'_td':.62}
+        args=(projection,np.full(n,.08),np.zeros(n),np.zeros(n),
+              np.ones(n,dtype=bool),{'explosive_td_share':.2},
+              np.ones(n))
+        def run(shift):
+            return draw_possession(args[0],np.random.default_rng(2026),*args[1:],
+                    rush_chain_extra_ppd=shift)
+        base=run(0.)
+        more=run(.5)
+        self.assertTrue(np.array_equal(base[1],more[1]))
+        self.assertTrue(np.array_equal(base[2],more[2]))
+        self.assertGreater(int(more[3].sum()),int(base[3].sum()))
+        self.assertGreater(float(more[0].mean()),float(base[0].mean()))
+
     def test_default_build16_actual_same_seed_5000_has_coupled_results(self):
         hist=qualified();snapshot=copy.deepcopy(hist)
         old=simulate_build16(1,2,hist,False,runs=5000,seed=11571,
