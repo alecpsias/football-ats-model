@@ -1,0 +1,84 @@
+name: Verify real 2026 standard Build16 auto-rush SOS scoring
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-rush-sos-live-activation-verify.yml'
+      - 'cfb/frozen_models/continuous_rush_sos_2024.json'
+      - 'cfb/continuous_rush_sos_active.py'
+      - 'cfb/mechanism_build16.py'
+
+permissions:
+  contents: read
+jobs:
+  real_source_fitted_activation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Collect verified free 2026 prior-game features
+        run: |
+          mkdir -p cfb_artifacts
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/build16_activation_source
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/build16_activation_source
+      - name: Prove next default Build16 5000 genuine simulations consume real frozen 2024 fit
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from cfb.continuous_rush_sos_active import read_model
+          from cfb.failure2_paired import cohort
+          from cfb.failure1_learned_shadow import correction
+          from cfb.mechanism_build16 import simulate_build16
+          model,audit=read_model()
+          assert model is not None and audit['status']=='FROZEN_2024_RESIDUAL_MODEL_LOADED'
+          assert model['training_games']==226 and model['training_season']==2024
+          targets,_=cohort('cfb_artifacts/build16_activation_source',max_games=90,enrich_rush=True)
+          verified=None
+          for g in targets:
+              h,a=g['home_id'],g['away_id']
+              f1=correction(h,a,g['historical'])
+              kw=dict(runs=5000,seed=int(g['game_id'])%(2**32),
+                failure1_fit_margin_delta=f1['margin_delta_points'],
+                failure2_attribution=True,failure3_sustainability=True)
+              active=simulate_build16(h,a,g['historical'],g['neutral'],**kw)
+              z=active.get('continuous_rush_sos_residual_research',{})
+              if z.get('status')!='ACTIVE_2024_FITTED_RUSH_SOS_RESIDUAL':
+                  continue
+              if abs(z['margin_delta_points_home'])<.10:
+                  continue
+              ref=simulate_build16(h,a,g['historical'],g['neutral'],
+                  continuous_rush_sos_enabled=False,**kw)
+              if ref['simulation'] is None or active['simulation'] is None:continue
+              verified={'historical_game_id':g['game_id'],'home':g['home'],'away':g['away'],
+                  'fitted_model_training_games':model['training_games'],
+                  'resolved_delta_home':z['margin_delta_points_home'],
+                  'baseline_5000_margin':ref['simulation']['mean_margin_home'],
+                  'active_5000_margin':active['simulation']['mean_margin_home'],
+                  'baseline_5000_total':ref['simulation']['mean_total'],
+                  'active_5000_total':active['simulation']['mean_total'],
+                  'active_status':z['status'],
+                  'automatic_in_standard_build16':True,
+                  'unchanged_original_baseline':True,
+                  'ATS_calibrated':False,
+                  'not_a_pregame_prediction':'Retrospective source snapshot with only prior games as history'}
+              break
+          if verified is None:
+              raise RuntimeError('No qualified nonzero real 2026 pregame feature activation')
+          assert verified['baseline_5000_margin']!=verified['active_5000_margin']
+          Path('cfb_artifacts/active_rush_sos_proof_5000.json').write_text(json.dumps(verified,indent=2))
+          print('LIVE_FROZEN_BUILD16_ACTIVATION_VERIFIED')
+          print(json.dumps(verified,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: verified-live-build16-fitted-rush-sos-${{ github.run_id }}
+          path: cfb_artifacts/active_rush_sos_proof_5000.json
+          if-no-files-found: warn
