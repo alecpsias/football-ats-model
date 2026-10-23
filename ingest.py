@@ -180,7 +180,11 @@ def _team_stats(pbp: pd.DataFrame, team: str, is_offense: bool) -> dict:
     if is_offense:
         # QB rushing requires a verified QB position mapping, or complete labeled
         # qb_designed_run + qb_scramble fields. Scrambles are rushes for this count.
-        qbr = r[r.qb_rush.eq(1)] if "qb_rush" in r else None
+        # Missing QB-position attribution is NOT a verified zero. A zero
+        # QB-rush count is meaningful only when every team designed rush was
+        # position-classified by the trusted roster join.
+        qbr = (r[r.qb_rush.eq(1)] if "qb_rush" in r
+               and r.qb_rush.notna().all() else None)
         return dict(
             games=games, plays=n, epa_pass=mean_or_none(p,"epa"), epa_rush=mean_or_none(r,"epa"),
             pass_rate=safe_ratio(pass_n,n), success_pass=rate(p,"success"), success_rush=rate(r,"success"),
