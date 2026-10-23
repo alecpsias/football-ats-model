@@ -17,6 +17,7 @@ from cfb.market import _date
 
 OFFICIAL_DOMAINS=(
     'secsports.com', 'bigten.org', 'big12sports.com', 'pac-12.com',
+    'theacc.com', 'admin.theacc.com',
 )
 STATUSES={'AVAILABLE','PROBABLE','QUESTIONABLE','DOUBTFUL','OUT','OUT_1ST_HALF','GAME_TIME_DECISION'}
 SCHEMA='cfb_official_availability_evidence_v1'
