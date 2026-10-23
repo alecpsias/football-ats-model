@@ -6,6 +6,8 @@ on:
       - 'nfl/**'
     paths:
       - 'nfl_stateful_candidate.py'
+      - 'nfl_qb_adjustments.py'
+      - 'test_nfl_qb_adjustments.py'
       - 'nfl_challenger_policy.py'
       - 'nfl_situational_scoring.py'
       - 'test_nfl_challenger_policy.py'
@@ -50,7 +52,7 @@ jobs:
         run: pip install -r requirements-nflverse.txt
       - name: Syntax check
         run: |
-          python -m py_compile nfl_stateful_candidate.py mechanism_research.py forecast_upcoming_core.py evaluate_locked_forecasts.py test_nfl_stateful_candidate.py nfl_challenger_policy.py nfl_forward_ledger.py test_nfl_challenger_policy.py test_nfl_forward_ledger.py
+          python -m py_compile nfl_qb_adjustments.py test_nfl_qb_adjustments.py nfl_stateful_candidate.py mechanism_research.py forecast_upcoming_core.py evaluate_locked_forecasts.py test_nfl_stateful_candidate.py nfl_challenger_policy.py nfl_forward_ledger.py test_nfl_challenger_policy.py test_nfl_forward_ledger.py
       - name: Run entire NFL root test suite (CFB suite remains independent)
         run: |
           mkdir -p ../examples
