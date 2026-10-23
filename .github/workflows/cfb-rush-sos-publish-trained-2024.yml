@@ -1,0 +1,44 @@
+name: Publish fixed 2024 rushing SOS fit for standard Build16
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-rush-sos-publish-trained-2024.yml'
+permissions:
+  contents: read
+
+jobs:
+  train_artifact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Collect and verify older 2024 season
+        run: |
+          python -m cfb.pipeline collect --season 2024 --out cfb_artifacts/fit_snapshot_2024
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/fit_snapshot_2024
+      - name: Fit only from actual 2024 games, fixed baseline and 5000 draws
+        run: |
+          python -u -m cfb.continuous_rush_sos_study --mode fit \
+            --snapshot cfb_artifacts/fit_snapshot_2024 --max-games 160 \
+            --out cfb_artifacts/fit_rush_sos_2024.json
+          python - <<'PY'
+          import json
+          j=json.load(open('cfb_artifacts/fit_rush_sos_2024.json'))
+          m=j['frozen_model']
+          assert m['training_season']==2024 and m['training_games']>=80
+          assert m['cross_season_ATS_validated'] is False
+          print('VERIFIED_FROZEN_MODEL_2024')
+          print(json.dumps(m,sort_keys=True,indent=2))
+          PY
+      - name: Publish independently retrievable immutable fitted coefficients
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-verified-2024-fit-${{ github.run_id }}
+          path: cfb_artifacts/fit_rush_sos_2024.json
