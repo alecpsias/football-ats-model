@@ -1,0 +1,241 @@
+{
+  "schema": "nfl_postgame_frozen_four_way_qb_comparison_v1",
+  "game_id": "2026_07_NE_CHI",
+  "game_date": "2026-10-22",
+  "actual_final": {
+    "home": "CHI",
+    "home_score": 30,
+    "away": "NE",
+    "away_score": 24,
+    "margin_home": 6,
+    "total": 54
+  },
+  "market": {
+    "reviewed_line": "CHI -3",
+    "settlement_at_reviewed_line": "CHI_COVERS_BY_3",
+    "is_prelock_executable_book_quote_verified": false,
+    "notes": "ATS direction versus public reported -3, not a timestamp-verified bet or priced EV"
+  },
+  "projections": [
+    {
+      "name": "baseline_original",
+      "model_version": "0.8.1",
+      "mode": "unadjusted",
+      "source_github_run_id": "39536346206",
+      "forecast_chi": 25.01,
+      "forecast_ne": 20.98,
+      "forecast_chi_margin": 4.03,
+      "actual_chi_margin": 6,
+      "absolute_margin_error": 1.97,
+      "absolute_chi_score_error": 4.99,
+      "absolute_ne_score_error": 3.02,
+      "absolute_total_error": 8.01,
+      "individual_score_absolute_error_sum": 8.01,
+      "chi_minus_3_direction_correct": true,
+      "actual_chi_minus_3_result": "COVER_BY_3_POINTS"
+    },
+    {
+      "name": "challenger_original",
+      "model_version": "0.10.0",
+      "mode": "unadjusted",
+      "source_github_run_id": "39536346206",
+      "forecast_chi": 25.195,
+      "forecast_ne": 21.433,
+      "forecast_chi_margin": 3.762,
+      "actual_chi_margin": 6,
+      "absolute_margin_error": 2.238,
+      "absolute_chi_score_error": 4.805,
+      "absolute_ne_score_error": 2.567,
+      "absolute_total_error": 7.372,
+      "individual_score_absolute_error_sum": 7.372,
+      "chi_minus_3_direction_correct": true,
+      "actual_chi_minus_3_result": "COVER_BY_3_POINTS"
+    },
+    {
+      "name": "baseline_qb_fit",
+      "model_version": "0.8.1",
+      "mode": "qb_adjusted_research",
+      "source_github_run_id": "39539266671",
+      "forecast_chi": 27.98,
+      "forecast_ne": 21.8,
+      "forecast_chi_margin": 6.17,
+      "actual_chi_margin": 6,
+      "absolute_margin_error": 0.17,
+      "absolute_chi_score_error": 2.02,
+      "absolute_ne_score_error": 2.2,
+      "absolute_total_error": 4.22,
+      "individual_score_absolute_error_sum": 4.22,
+      "chi_minus_3_direction_correct": true,
+      "actual_chi_minus_3_result": "COVER_BY_3_POINTS"
+    },
+    {
+      "name": "challenger_qb_fit",
+      "model_version": "0.10.0",
+      "mode": "qb_adjusted_research",
+      "source_github_run_id": "39539266671",
+      "forecast_chi": 28.131,
+      "forecast_ne": 22.369,
+      "forecast_chi_margin": 5.762,
+      "actual_chi_margin": 6,
+      "absolute_margin_error": 0.238,
+      "absolute_chi_score_error": 1.869,
+      "absolute_ne_score_error": 1.631,
+      "absolute_total_error": 3.5,
+      "individual_score_absolute_error_sum": 3.5,
+      "chi_minus_3_direction_correct": true,
+      "actual_chi_minus_3_result": "COVER_BY_3_POINTS"
+    },
+    {
+      "name": "baseline_refreshed",
+      "model_version": "0.8.1",
+      "mode": "unadjusted_refreshed",
+      "source_github_run_id": "39676660380",
+      "forecast_chi": 25,
+      "forecast_ne": 20.99,
+      "forecast_chi_margin": 4.02,
+      "actual_chi_margin": 6,
+      "absolute_margin_error": 1.98,
+      "absolute_chi_score_error": 5,
+      "absolute_ne_score_error": 3.01,
+      "absolute_total_error": 8.01,
+      "individual_score_absolute_error_sum": 8.01,
+      "chi_minus_3_direction_correct": true,
+      "actual_chi_minus_3_result": "COVER_BY_3_POINTS"
+    },
+    {
+      "name": "challenger_refreshed",
+      "model_version": "0.10.0",
+      "mode": "unadjusted_refreshed",
+      "source_github_run_id": "39676660380",
+      "forecast_chi": 25.068,
+      "forecast_ne": 21.368,
+      "forecast_chi_margin": 3.7,
+      "actual_chi_margin": 6,
+      "absolute_margin_error": 2.3,
+      "absolute_chi_score_error": 4.932,
+      "absolute_ne_score_error": 2.632,
+      "absolute_total_error": 7.564,
+      "individual_score_absolute_error_sum": 7.564,
+      "chi_minus_3_direction_correct": true,
+      "actual_chi_minus_3_result": "COVER_BY_3_POINTS"
+    }
+  ],
+  "pairing_policy": "Only same earlier Oct 20 pregame snapshot is comparable for the primary paired QB-fit study; Oct 21 refreshed unadjusted forecasts are reported separately, not paired to the Oct 20 QB-fit replay.",
+  "observed_game": {
+    "quarter_scores": {
+      "NE": [
+        0,
+        14,
+        7,
+        3
+      ],
+      "CHI": [
+        10,
+        10,
+        7,
+        3
+      ]
+    },
+    "passing": {
+      "CHI": {
+        "passer": "C.Williams",
+        "completions": 22,
+        "attempts": 33,
+        "gross_yards": 308,
+        "td": 2,
+        "interceptions": 0
+      },
+      "NE": {
+        "passer": "D.Maye",
+        "completions": 24,
+        "attempts": 31,
+        "gross_yards": 321,
+        "td": 2,
+        "interceptions": 1
+      }
+    },
+    "rushing_yards": {
+      "CHI": 116,
+      "NE": 70
+    },
+    "gross_passing_plus_rushing_yards": {
+      "CHI": 424,
+      "NE": 391
+    },
+    "estimated_official_net_yards_using_sack_losses": {
+      "CHI": 405,
+      "NE": 380
+    },
+    "third_down": {
+      "CHI": "4/12",
+      "NE": "2/7"
+    },
+    "redzone_source_report": {
+      "CHI": "3/4",
+      "NE": "1/2"
+    },
+    "penalties": {
+      "CHI": {
+        "count": 9,
+        "yards": 69
+      },
+      "NE": {
+        "count": 10,
+        "yards": 71
+      }
+    },
+    "turnovers": {
+      "CHI": 0,
+      "NE": 1
+    },
+    "time_of_possession": {
+      "CHI": "32:24",
+      "NE": "27:36"
+    },
+    "notable_events": [
+      "NE opening possession failed fourth-down conversion following Maye sack; CHI began in plus territory and kicked 43-yard FG",
+      "CHI Burden 58-yard catch-and-run sets up Swift TD",
+      "NE Maye intercepted in end zone while driving in red zone",
+      "CHI Burden 24-yard catch-and-run TD on third-and-17",
+      "NE Stevenson 48-yard reception TD as first half expired",
+      "CHI Loveland 12-yard TD on first second-half possession",
+      "NE Raridon 30-yard TD after second-half scoring response",
+      "NE fourth-quarter false start changed fourth-and-2 decision to punt",
+      "CHI misses 53-yard FG but later makes 58-yard FG",
+      "NE late FG and unsuccessful onside kick"
+    ]
+  },
+  "analysis": {
+    "paired_qb_adjustment_reduced_baseline_margin_abs_error_from": 1.97,
+    "paired_qb_adjustment_reduced_baseline_margin_abs_error_to": 0.17,
+    "paired_qb_adjustment_reduced_challenger_margin_abs_error_from": 2.238,
+    "paired_qb_adjustment_reduced_challenger_margin_abs_error_to": 0.238,
+    "paired_qb_adjustment_reduced_challenger_total_abs_error_from": 7.372,
+    "paired_qb_adjustment_reduced_challenger_total_abs_error_to": 3.5,
+    "key_observation": "Both unadjusted models underestimated both team scores; QB-fit corrected most of shared underprediction; winner and ATS direction were the same in every forecast.",
+    "cannot_infer": [
+      "One game is not out-of-sample ATS validation of new coefficients",
+      "Defense/receiver/line/situational effects confound individual QB causal impact",
+      "The QB fitting hyperparameters were selected on 2026 Weeks 4–6 validation weeks, not independent multi-season holdout",
+      "Single turnover cannot be assigned a deterministic 3 or 7 points counterfactual",
+      "Scoreboard margin closeness does not independently confirm calibrated win or cover probabilities"
+    ]
+  },
+  "candidate_hypotheses_to_test_in_existing_v010": [
+    "Pre-cutoff available-starter QB baseline with shrinkage and recency; compare next-week QB EPA and full-game ATS paired against frozen baseline",
+    "Explicit QB scramble and designed rush frequency in the sole challenger rather than treating them as average offensive runs",
+    "Condition explosive-pass scoring tails on matched play-action/coverage and opponent quality; prevent double counting existing EPA",
+    "Model fourth-down failure as possession and field-position event, not duplicate scoring penalty; include line injury effects conditional on confirmed pre-lock reports",
+    "Compare score and margin residuals separately to prevent equal underpredictions on both teams masking shared model bias"
+  ],
+  "model_promoted": false,
+  "retired_challenger_added": false,
+  "model_weights_changed": false,
+  "data_sources": [
+    "https://www.si.com/nfl/scoreboard/patriots-vs-bears-10-22-2026-477",
+    "https://www.reuters.com/sports/nfl/caleb-williams-luther-burden-iii-help-bears-end-pats-winning-streak--flm-2026-10-23/",
+    "https://www.patspulpit.com/new-england-patriots-news/141757/patriots-vs-bears-nfl-week-7-final-score-live-updates-news-recap-discussion",
+    "https://github.com/alecpsias/football-ats-model/actions/runs/39539266671",
+    "https://github.com/alecpsias/football-ats-model/blob/main/nfl/archive/requests/39676660380.proof.json"
+  ]
+}
