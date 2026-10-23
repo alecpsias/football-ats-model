@@ -1,6 +1,6 @@
 """Chronological, paired CFB rush -> third-down -> sustained-drives pilot.
 
-One unchanged Build16 reference plus three opt-in scenarios within that
+One unchanged Build16 reference plus four opt-in scenarios within that
 challenger. Every *actual* model invocation uses 5,000 draws and the same
 fixture seed. Never fit on NM State v Sam Houston, never touch NFL/baseline.
 The retrospective release is NOT a timestamp-authenticated as-of archive.
@@ -17,7 +17,7 @@ from cfb.research_backtest import observed_game
 from cfb.mechanism_build16 import simulate_build16
 from cfb.chain_source import observed_chain,append_historical_chain
 
-MODES=('reference','distance','sustain','combined')
+MODES=('reference','distance','sustain','combined','situational')
 EXCLUDE_GAME_ID=401871070
 
 def mini(value):
@@ -160,6 +160,7 @@ def study(snapshot,out,*,runs=5000,max_games=160,min_prior_games=3):
            'Third-down terminal plays may be unresolved; source counts are audited',
            'Drive chains are operationally >=3 first-down series, not possession seconds',
            'Existing challenger already includes rush EPA and third-down conversion residuals',
+           'Situational mode uses earlier-game resolved third-down successes by distance and early-down success',
            'No timestamped odds / no ATS validation; no forward untouched confirmation']}
     dst=Path(out);dst.parent.mkdir(parents=True,exist_ok=True)
     if dst.exists():raise FileExistsError('Research output immutable')
