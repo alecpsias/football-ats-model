@@ -10,11 +10,13 @@ from __future__ import annotations
 import math
 
 VERSION='cfb-rush-third-chain-ablation-v1'
-MODES=('distance','sustain','combined')
+MODES=('distance','sustain','combined','situational')
 RUSH_PRIOR=150.
 THIRD_PRIOR=120.
 CHAIN_PRIOR=45.
 CAP_PPD=.10
+EARLY_PRIOR=160.
+THIRD_BUCKET_PRIOR=90.
 
 def _clamp(x,lo,hi):return max(lo,min(hi,x))
 
@@ -55,7 +57,58 @@ def _team(team_rows,opp_rows,mode):
                        .35*manageable_delta,-.08,.08)
     dist_ppd=_clamp(.35*manageable_delta,-.035,.035)
     sustain_ppd=_clamp(.65*chain_delta,-.065,.065)
-    applied=dist_ppd if mode=='distance' else sustain_ppd if mode=='sustain' else dist_ppd+sustain_ppd
+    # New contextual mechanism: only resolved historical third-down outcomes
+    # count, stratified by distance. Adjust toward the defense allowed rate,
+    # with the offense's own *observed* distance mix and heavy shrinkage.
+    # Early success supplies the causal path into manageable third downs.
+    situational_ppd=0.
+    situational={}
+    if mode=='situational':
+        early=_rate(team_rows,'chain_off_','early_success_yes','early_success_n',55)
+        allowed_early=_rate(opp_rows,'chain_def_','early_success_yes','early_success_n',55)
+        buckets={}
+        for bucket in ('short','medium','long'):
+            numerator='third_'+bucket+'_yes'
+            denominator='third_'+bucket+'_n'
+            own=_rate(team_rows,'chain_off_',numerator,denominator,5)
+            allowed=_rate(opp_rows,'chain_def_',numerator,denominator,5)
+            if own is None or allowed is None:
+                return {'status':'UNAVAILABLE_VERIFIED_SITUATIONAL_COUNTS'}
+            buckets[bucket]=(own,allowed)
+        if early is None or allowed_early is None:
+            return {'status':'UNAVAILABLE_VERIFIED_SITUATIONAL_COUNTS'}
+        reliability=min(early[1],allowed_early[1])/(min(early[1],allowed_early[1])+EARLY_PRIOR)
+        early_diff=(allowed_early[0]-early[0])*reliability
+        # Shift third-down distance mix, not a second standalone rush-EPA bonus.
+        short_weight=(buckets['short'][0][1]+10.) / (
+            sum(v[0][1] for v in buckets.values())+30.)
+        medium_weight=(buckets['medium'][0][1]+10.) / (
+            sum(v[0][1] for v in buckets.values())+30.)
+        long_weight=1.-short_weight-medium_weight
+        new_short=_clamp(short_weight+.30*early_diff,.02,.90)
+        new_long=_clamp(long_weight-.30*early_diff,.02,.90)
+        new_medium=1.-new_short-new_long
+        if new_medium<0:
+            return {'status':'UNAVAILABLE_INVALID_DISTANCE_MIX'}
+        matched=baseline=0.
+        for bucket,w0,w1 in (
+            ('short',short_weight,new_short),('medium',medium_weight,new_medium),
+            ('long',long_weight,new_long)):
+            own,allowed=buckets[bucket]
+            shrink=min(own[1],allowed[1])/(min(own[1],allowed[1])+THIRD_BUCKET_PRIOR)
+            p=_clamp(own[0]+.5*(allowed[0]-own[0])*shrink,.01,.99)
+            matched+=w1*p;baseline+=w0*own[0]
+        # Increment only the matchup departure from the offense's existing
+        # third-down expectation (already represented by Build16).
+        situational_ppd=_clamp(.32*(matched-baseline),-.055,.055)
+        situational={'early_success_matchup_delta':round(early_diff,6),
+          'third_conversion_baseline':round(baseline,6),
+          'third_conversion_distance_adjusted':round(matched,6),
+          'third_distance_mix':{'short':round(new_short,6),
+             'medium':round(new_medium,6),'long':round(new_long,6)},
+          'method':'Resolved earlier-game conversions only; prior opponent defensive rates'}
+    applied=(dist_ppd if mode=='distance' else sustain_ppd if mode=='sustain'
+             else situational_ppd if mode=='situational' else dist_ppd+sustain_ppd
     return {'status':'AVAILABLE_UNFITTED','prior_off_early_rush_success':round(r[0],5),
         'opponent_allowed_early_rush_success':round(d[0],5),
         'own_prior_early_rush_share':round(m[0],5),
@@ -68,6 +121,7 @@ def _team(team_rows,opp_rows,mode):
         'manageable_third_share_delta':round(manageable_delta,6),
         'sustained_drive_share_delta':round(chain_delta,6),
         'distance_ppd_delta':round(dist_ppd,6),
+        'situational':situational,'situational_ppd_delta':round(situational_ppd,6),
         'chain_ppd_delta':round(sustain_ppd,6),
         'total_ppd_delta':round(_clamp(applied,-CAP_PPD,CAP_PPD),6),
         'effective_drive_samples':min(c[1],dc[1]),
@@ -87,6 +141,7 @@ def experiment(home_id,away_id,histories,mode):
             'does_not_double_count_rush_epa_or_third_conversions':True,
             'assumptions_unfitted':{'early_rush_success_prior':RUSH_PRIOR,
                'third_mix_prior':THIRD_PRIOR,'drive_chain_prior':CHAIN_PRIOR,
+               'early_success_prior':EARLY_PRIOR,'third_bucket_prior':THIRD_BUCKET_PRIOR,
                'maximum_absolute_ppd_increment':CAP_PPD},
             'not_deployed':True,'fitted':False,'ATS_calibrated':False,
             'limitations':['Existing Build16 already includes rush EPA and third conversions',
