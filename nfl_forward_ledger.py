@@ -21,9 +21,9 @@ import requests
 from evaluate_locked_forecasts import evaluate
 from model import InputError
 
-# Read immutable archived v0.9/v0.10 artifacts. Only one candidate from
+# Read immutable archived v0.9/v0.10 and current v0.11 artifacts. Only one candidate from
 # each frozen game is evaluated; historical version is explicitly labeled.
-ARTIFACT_PREFIX = ("football-ats-v09-", "football-ats-v10-")
+ARTIFACT_PREFIX = ("football-ats-v09-", "football-ats-v10-", "football-ats-v11-")
 FORECAST_ROOT = "future-predictions/"
 
 
