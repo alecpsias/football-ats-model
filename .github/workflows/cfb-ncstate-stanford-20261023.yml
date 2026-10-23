@@ -106,7 +106,7 @@ jobs:
               'stanford_cover_raw':sim['home_cover_probability_raw'],
               'ncstate_win_raw':1.-sim['home_win_probability_raw'],
               'stanford_mean_score':sim['mean_score_home'],
-              'airforce_mean_score':sim['mean_score_away'],
+              'ncstate_mean_score':sim['mean_score_away'],
               'stanford_mean_margin':sim['mean_margin_home'],
               'total':sim['mean_total'],'margin_percentiles':sim['margin_p10_p50_p90'],
               'runs':sim['simulations'],'seed':sim['seed']})
