@@ -544,6 +544,11 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
             'double_counting_guard':'FIT_TO_BUILD16_REMAINING_MARGIN_ERROR_NOT_RAW_EPA',
             'not_default':not residual_default_active,'ATS_calibrated':False}
         answer['not_deployed']=not residual_default_active
+        if residual_default_active:
+            answer['status']='AVAILABLE_FITTED_RUSH_SOS_BUILD16_ATS_UNVALIDATED'
+            answer['fitted']=True
+            answer['fitted_component']='2024_continuous_rushing_and_opponent_margin_residual'
+            answer['fitted_component_has_heldout_accuracy_proof']=False
     else:
         answer['continuous_rush_sos_residual_research']={
             **residual_audit,'margin_delta_points_home':None,
