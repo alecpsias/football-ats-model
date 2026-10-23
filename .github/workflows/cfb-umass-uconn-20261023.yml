@@ -1,0 +1,117 @@
+name: CFB UMass at UConn 2026-10-23 Build16 5000 ATS
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-umass-uconn-20261023.yml'
+      - 'cfb/fresh_matchup.py'
+permissions:
+  contents: read
+jobs:
+  pregame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Regression tests before prediction
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Collect timestamped verified 2026 stats
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/umass_uconn_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/umass_uconn_snapshot
+      - name: Resolve target pregame
+        run: |
+          python - <<'PY'
+          import pandas as pd
+          x=pd.read_parquet('cfb_artifacts/umass_uconn_snapshot/schedule.parquet')
+          z=x.loc[x.game_id.astype(str).eq('401861965')]
+          if len(z)!=1: raise RuntimeError('UMass UConn unique fixture missing')
+          g=z.iloc[0]
+          print('MATCHUP',g[['game_id','away_team','home_team','start_date','completed']].to_dict())
+          if 'Massachusetts' not in str(g.away_team) or 'UConn' not in str(g.home_team):
+              raise RuntimeError('Team identifiers unexpected')
+          if bool(g.completed):raise RuntimeError('Pregame data contaminated with final')
+          PY
+      - name: Fresh opponent adjusted Build16 5000 simulations
+        run: |
+          python -m cfb.fresh_matchup --mode pregame \
+            --team-a Massachusetts --team-b UConn --game-id 401861965 \
+            --snapshot cfb_artifacts/umass_uconn_snapshot \
+            --odds cfb/_market_disabled --availability-dir cfb/availability \
+            --runs 5000 --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
+            --out cfb_artifacts/umass_uconn_pregame.json > cfb_artifacts/umass_uconn_stdout.log
+          python - <<'PY'
+          import json
+          x=json.load(open('cfb_artifacts/umass_uconn_pregame.json'))
+          b=x.get('build16_challenger') or {}
+          print('UMASS_UCONN_PREGAME_5000')
+          print(json.dumps({
+              'status':x.get('status'),'fixture':{'home':x.get('home'),'away':x.get('away'),'id':x.get('game_id'),
+              'kickoff':x.get('kickoff_utc'),'generated':x.get('prediction_generated_at_utc'),'snapshot':x.get('source_snapshot_at_utc')},
+              'historical_games_home':x.get('completed_prior_games_home'),'historical_games_away':x.get('completed_prior_games_away'),
+              'baseline':x.get('simulation'),'build16':b.get('simulation'),'build16_status':b.get('status'),
+              'rush_screen':x.get('mandatory_rushing_audit'),'matchup':x.get('matchup_evidence'),
+              'chain':b.get('situational_chain_evidence'),'redzone_kicking':b.get('redzone_kicking_evidence'),
+              'nonoff':b.get('failure2_scoring_attribution'),
+              'qb_usage':x.get('quarterback_participation'),
+              'availability':x.get('availability_evidence'),
+              'missing':x.get('missing_statistical_fields')
+          },indent=2,default=str)[:70000])
+          PY
+      - name: Same-seed quoted spread sensitivity 5000 each
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          from cfb.pipeline import verify, iso_utc
+          from cfb.fresh_matchup import histories_asof
+          from cfb.mechanism_build16 import simulate_build16
+          from cfb.failure1_learned_shadow import correction
+          root=Path('cfb_artifacts/umass_uconn_snapshot')
+          cutoff=iso_utc(verify(root)['captured_at_utc'])
+          s=pd.read_parquet(root/'schedule.parquet')
+          p=pd.read_parquet(root/'pbp.parquet')
+          r=pd.read_parquet(root/'roster.parquet')
+          future,_,hist,_=histories_asof(s,p,r,cutoff)
+          rows=future.loc[future.game_id.astype(str).eq('401861965')]
+          if len(rows)!=1:raise RuntimeError('Missing pregame fixture')
+          g=rows.iloc[0];hid,aid=int(g.home_id),int(g.away_id)
+          rush=correction(hid,aid,hist)
+          args=dict(home_id=hid,away_id=aid,histories=hist,neutral=bool(g.neutral_site),
+              runs=5000,seed=int(g.game_id)%(2**32),
+              failure1_fit_margin_delta=rush['margin_delta_points'])
+          result={'game_id':'401861965','snapshot_at_utc':str(cutoff),
+                 'quoted_spreads_from_external_public_page_not_captured_in_archive':True,
+                 'ATS_probabilities_uncalibrated':True,'lines':[]}
+          for spread in (-14.5,-16.5):
+              z=simulate_build16(spread_home=spread,**args)
+              sim=z.get('simulation')
+              if sim is None:raise RuntimeError('No Build16 simulation: '+str(z))
+              result['lines'].append({'uconn_spread':spread,
+                'umass_cover_raw':sim['away_cover_probability_raw'],
+                'uconn_cover_raw':sim['home_cover_probability_raw'],
+                'uconn_win_raw':sim['home_win_probability_raw'],
+                'margin_uconn':sim['mean_margin_home'],
+                'uconn_score':sim['mean_score_home'],'umass_score':sim['mean_score_away'],
+                'total':sim['mean_total'],'margin_p10_p50_p90':sim['margin_p10_p50_p90'],
+                'simulations':sim['simulations'],'seed':sim['seed']})
+          print('UMASS_UCONN_ATS_5000')
+          print(json.dumps(result,indent=2))
+          Path('cfb_artifacts/umass_uconn_ats.json').write_text(json.dumps(result,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-umass-uconn-frozen-${{ github.run_id }}
+          path: |
+            cfb_artifacts/umass_uconn_pregame.json
+            cfb_artifacts/umass_uconn_pregame.md
+            cfb_artifacts/umass_uconn_stdout.log
+            cfb_artifacts/umass_uconn_ats.json
+          if-no-files-found: warn
