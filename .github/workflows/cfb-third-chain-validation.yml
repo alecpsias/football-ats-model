@@ -2,6 +2,9 @@ name: CFB rush-to-third-down chain research validation
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/cfb-third-chain-validation.yml'
 
 permissions:
   contents: read
