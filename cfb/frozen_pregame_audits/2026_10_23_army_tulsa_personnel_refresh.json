@@ -1,0 +1,139 @@
+{
+  "schema": "cfb_build16_frozen_personnel_refreshed_pregame_v1",
+  "fixture": {
+    "game_id": "401862808",
+    "date_local": "2026-10-23",
+    "away": "Army",
+    "home": "Tulsa",
+    "kickoff_utc": "2026-10-24T00:30:00+00:00"
+  },
+  "provenance": {
+    "github_run_id": 40025762899,
+    "url": "https://github.com/alecpsias/football-ats-model/actions/runs/40025762899",
+    "commit": "7724772dac7243021b3d05da77eba688bf63de99",
+    "source_snapshot_utc": "2026-10-23T21:18:43.540063+00:00",
+    "forecast_generated_label_utc": "2026-10-23T21:18:44.940463+00:00",
+    "run_success": true,
+    "full_regression_suite_passed": true,
+    "runs_per_paired_variant": 5000,
+    "seed": 401862808
+  },
+  "original_frozen_reference": {
+    "source": "https://github.com/alecpsias/football-ats-model/blob/main/cfb/frozen_pregame_audits/2026_10_23_army_tulsa.json",
+    "army_score": 27.134,
+    "tulsa_score": 24.237,
+    "army_margin": 2.897,
+    "army_cover_plus_1_5_raw": 0.5886,
+    "recorded_group": "B",
+    "recorded_confidence": 6.2,
+    "not_overwritten": true
+  },
+  "refreshed_baseline": {
+    "army_score": 26.157,
+    "tulsa_score": 25.123,
+    "army_margin": 1.035,
+    "total": 51.28,
+    "army_win_raw": 0.5326
+  },
+  "refreshed_build16": {
+    "army_score": 27.134,
+    "tulsa_score": 24.237,
+    "army_margin": 2.897,
+    "total": 51.371,
+    "army_win_raw": 0.5702,
+    "army_cover_plus_1_5_raw": 0.5886,
+    "army_cover_plus_2_5_raw": 0.6018,
+    "margin_standard_deviation": 17.812,
+    "home_margin_p10_p50_p90": [
+      -25,
+      -4,
+      20
+    ],
+    "regulation_army_margin": 2.858
+  },
+  "personnel": {
+    "live_capture_attempted": true,
+    "status": "NO_VERIFIED_LIVE_AVAILABILITY",
+    "reason": "NO_PARSEABLE_REPORT_ROWS",
+    "capture_source_url": "https://kickoffstatus.com/games/2026-10-23-army-at-tulsa/",
+    "conference_availability_not_published_yet": true,
+    "source_captured_prior_to_kickoff": true,
+    "numerical_injury_shift_ppd_army": 0,
+    "numerical_injury_shift_ppd_tulsa": 0,
+    "numerical_injury_adjustments_active": false,
+    "report_items_not_treated_as_confirmed_inactives": true,
+    "other_secondary_reports_note": "Army Brady Mott out for season, Anderson/Poloskey/Nwawuihe recently questionable; Tulsa Grayson Tempest, Donnell Gee questionable in some secondaries; no official current game report verified.",
+    "injury_source": "https://www.covers.com/sport/football/ncaaf/matchup/378467"
+  },
+  "same_seed_ablation": {
+    "active_model_army_cover_plus_1_5": 0.5886,
+    "inactive_model_army_cover_plus_1_5": 0.5886,
+    "active_army_margin": 2.897,
+    "inactive_army_margin": 2.897,
+    "delta_margin": 0,
+    "delta_cover": 0,
+    "passed": true
+  },
+  "mechanisms": {
+    "opponent_adjusted_army_early_rush_success": 0.465777,
+    "opponent_adjusted_tulsa_early_rush_success": 0.398666,
+    "army_observed_early_rush_success": 0.528958,
+    "tulsa_observed_early_rush_success": 0.391534,
+    "rushing_screen": "SCREENED_NO_SEVERE_TRIGGER",
+    "severe_rush_stress_required": false,
+    "army_trailing_9_plus_rush_success_missing": true,
+    "army_situational_chain_ppd_delta": -0.005874,
+    "tulsa_situational_chain_ppd_delta": 0.004037,
+    "army_opponent_adjusted_rz_td_probability": 0.647815,
+    "tulsa_opponent_adjusted_rz_td_probability": 0.639243,
+    "army_fg_projected_make": 0.746834,
+    "tulsa_fg_projected_make": 0.768329,
+    "source_verified_clock_active": true,
+    "nonoffensive_turnover_td_active": true
+  },
+  "adverse_distribution": {
+    "army_scoring_stall_share": 0.2376,
+    "tulsa_margin_during_army_scoring_stall": 14.048,
+    "tulsa_scoring_stall_share": 0.2612,
+    "army_margin_during_tulsa_scoring_stall": 18.263,
+    "army_two_more_turnovers_share": 0.1442,
+    "tulsa_margin_during_army_two_more_turnovers": 5.599,
+    "tulsa_two_more_turnovers_share": 0.0878,
+    "army_margin_during_tulsa_two_more_turnovers": 10.333,
+    "slow_possessions_share": 0.245,
+    "army_margin_during_slow_possessions": 3.592
+  },
+  "market": {
+    "observed_tulsa_spread": -1.5,
+    "total": 53.5,
+    "army_moneyline_plus": 100,
+    "tulsa_moneyline_minus": 120,
+    "source": "https://www.actionnetwork.com/ncaaf/army-black-knights-vs-tulsa-golden-hurricane-prediction-pick-odds-ncaaf-friday-october-23",
+    "draftkings_split_source": "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/",
+    "draftkings_army_spread_handle": 0.61,
+    "draftkings_tulsa_ml_handle": 0.87,
+    "earlier_circa_split_source": "https://wiseguyteam.com/cfb-betting-splits",
+    "earlier_circa_tulsa_spread_handle": 0.62,
+    "earlier_circa_tulsa_ml_handle": 1,
+    "independent_projection_source": "https://havoc.football/games/520?tab=injuries",
+    "independent_havoc_tulsa_projected_margin": 1.3,
+    "independent_havoc_tulsa_win_raw": 0.53,
+    "line_open_conflict": "Opening line differs across provider data; movement toward Tulsa broadly reported; no independently normalized book-by-book opener captured"
+  },
+  "judgment": {
+    "ats_side": "Army +1.5",
+    "group": "C",
+    "confidence_out_of_10": 5.7,
+    "representative_score": "Army 27 Tulsa 24",
+    "lower_grade_reason": "Unchanged marginal raw 58.86% ATS edge, missing game-day official personnel report, mismatch with market and Havoc Tulsa by 1.3, Tulsa recently prepared for Navy/Rice option, Army missing significant trailing-game rushing resilience history, potential short-field turnovers",
+    "total": "Pass",
+    "raw_cover_probabilities_not_calibrated": true
+  },
+  "guardrails": {
+    "original_pregame_record_preserved": true,
+    "baseline_unchanged": true,
+    "one_challenger": true,
+    "target_game_final_not_used": true,
+    "source_24h_embargo": true
+  }
+}
