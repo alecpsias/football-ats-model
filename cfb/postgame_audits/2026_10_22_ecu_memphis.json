@@ -1,0 +1,150 @@
+{
+  "schema": "cfb_postgame_frozen_forecast_audit_v1",
+  "fixture": {
+    "game_id": "401862807",
+    "date_local": "2026-10-22",
+    "away": "East Carolina",
+    "home": "Memphis",
+    "regulation": {
+      "home": 34,
+      "away": 34
+    },
+    "overtime": {
+      "home": 7,
+      "away": 0
+    },
+    "final": {
+      "home": 41,
+      "away": 34
+    },
+    "home_final_margin": 7,
+    "total": 75
+  },
+  "verified_sources": {
+    "official_boxscore": "https://d38tcz7gi4rwly.cloudfront.net/sports/football/stats/2026/east-carolina/boxscore/20061",
+    "conference_boxscore": "https://theamerican.org/boxscore.aspx?id=7ltyipP022aUJKmSgYVs3wXi7up73ghniwD5ElWyd07J7BNseBaMQePf0fY%2F3yUPYisLZcn5VgSLeeDJL1GqKQmkZ%2BtXTiHWNgO7jpx6OVtVLV59xEDvnF0uOAaBiL03ApBYXHnb4OwQY62rCTRHN0mrLBj944eoFzJ6Idt7keQ%3D&path=football",
+    "memphis_game_recap": "https://gotigersgo.com/news/2026/10/22/football-tigers-overcome-second-half-deficit-in-41-34-overtime-win-over-east-carolina",
+    "observed_close_spread": "https://theoddsgap.com/odds/college-football/east-carolina-pirates-vs-memphis-tigers/2026-10-22"
+  },
+  "frozen_pregame": {
+    "repo_sha": "59b1d5a6996ef4d7cf9659e5d59d14511bf6aef3",
+    "github_run_id": 39866606601,
+    "github_artifact_id": 12464636669,
+    "github_run_url": "https://github.com/alecpsias/football-ats-model/actions/runs/39866606601",
+    "generated_at_utc": "2026-10-22T22:40:30.745410+00:00",
+    "snapshot_at_utc": "2026-10-22T22:40:29.242707+00:00",
+    "kickoff_utc": "2026-10-22T23:30:00+00:00",
+    "seed": 401862807,
+    "simulations": 5000,
+    "baseline": {
+      "home": 31.094,
+      "away": 23.282,
+      "home_margin": 7.812,
+      "total": 54.375,
+      "raw_home_win_probability": 0.7044
+    },
+    "build16": {
+      "home": 27.005,
+      "away": 22.178,
+      "home_margin": 4.827,
+      "total": 49.182,
+      "raw_home_win_probability": 0.607,
+      "raw_away_cover_at_plus_10_5": 0.6258,
+      "raw_away_cover_at_plus_9_5": 0.5962,
+      "regulation_ties_in_5000_draws": 158,
+      "scoring_attribution_status": "UNVERIFIED_SCORING_ATTRIBUTION_LEGACY_BUILD16"
+    },
+    "historical_model_code_is_frozen": true,
+    "morning_20261023_new_chain_and_fg_features_not_in_frozen_pregame": true
+  },
+  "observed": {
+    "ecu": {
+      "yards": 421,
+      "passing_yards": 260,
+      "rushing_yards": 161,
+      "rushes": 38,
+      "first_downs": 22,
+      "third_down": "5/17",
+      "fourth_down": "2/2",
+      "redzone_scores": "6/7",
+      "turnovers": 3,
+      "field_goals": "4/4",
+      "sacks_allowed": 4
+    },
+    "memphis": {
+      "yards": 484,
+      "passing_yards": 320,
+      "rushing_yards": 164,
+      "rushes": 37,
+      "first_downs": 24,
+      "third_down": "4/15",
+      "fourth_down": "2/2",
+      "redzone_scores": "6/6",
+      "turnovers": 1,
+      "field_goals": "2/2",
+      "sacks_allowed": 1
+    }
+  },
+  "scored_at_spread": {
+    "home_spread": -10.5,
+    "away_cover": true,
+    "home_cover": false,
+    "ats_actual_margin_to_spread": -3.5,
+    "market_quote_verified_externally": true,
+    "prospective_model_ats_direction_correct": true,
+    "calibrated_cover_probability": false
+  },
+  "deltas": {
+    "actual_minus_baseline_margin": -0.812,
+    "actual_minus_build16_margin": 2.173,
+    "absolute_margin_error_baseline": 0.812,
+    "absolute_margin_error_build16": 2.173,
+    "actual_minus_baseline_total": 20.625,
+    "actual_minus_build16_total": 25.818,
+    "actual_minus_build16_memphis_score": 13.995,
+    "actual_minus_build16_ecu_score": 11.822,
+    "regulation_home_margin": 0,
+    "ot_home_margin": 7
+  },
+  "evidence_based_failure_modes": [
+    {
+      "mechanism": "HIGH_SCORING_BOTH_TEAMS",
+      "grounding": "Five Memphis TD after halftime including overtime; six total successful FG and four successful 4th down conversions",
+      "diagnosis": "Build16 49.182 total vs actual 75, including seven OT points"
+    },
+    {
+      "mechanism": "HIGH_VALUE_SHORT_FIELD_SPECIAL_TEAMS_RECOVERY",
+      "grounding": "ECU muffed punt recovered by Memphis at ECU 28, 4-play touchdown; no return TD",
+      "diagnosis": "Need separate source-verified muffed-punt possession pathway; not an interception or defensive score"
+    },
+    {
+      "mechanism": "QB_REPLACEMENT",
+      "grounding": "ECU Emory Williams 5/13 61 yards, Mitch Griffis 14/26 199 yards 1 TD 2 INT",
+      "diagnosis": "Frozen pregame QB depth was documented, no endogenous midgame replacement scoring mixture"
+    },
+    {
+      "mechanism": "FOURTH_DOWN_UPPER_TAIL",
+      "grounding": "Each team converted 2/2 fourth downs; tying ECU fourth-and-9 TD in fourth quarter",
+      "diagnosis": "Existing fourth-down model modifies mean PPD, but not explicit conditional 4th-down scoring event"
+    },
+    {
+      "mechanism": "QUARTERBACK_RUSHING_VS_PASSING_COUPLING",
+      "grounding": "Stokes 3 pass TD plus 2 rushing TD, including late and overtime touchdowns",
+      "diagnosis": "Study distribution of pass explosiveness and QB red-zone run finish jointly"
+    }
+  ],
+  "code_changes_from_this_audit": [
+    {
+      "commit": "688e72fedf3fdaacf5580d4cf42949be95d339ff",
+      "effect": "Added regulation versus overtime score diagnostics; no change to simulated scoring distribution"
+    }
+  ],
+  "constraints": {
+    "no_target_game_outcomes_in_pregame_backtest": true,
+    "standalone_unfitted_additional_effects_must_not_be_fabricated": true,
+    "base_model_preserved": true,
+    "one_evolving_challenger": true,
+    "required_simulations": 5000
+  },
+  "status": "AUDITED_SNAPSHOT_LOCKED_MODEL_DID_NOT_MATCH_TOTAL; ATS_DIRECTION_CORRECT"
+}
