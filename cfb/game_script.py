@@ -165,6 +165,16 @@ def simulate_script(home_projection, away_projection, home_history, away_history
         if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or abs(value)>bound:
             raise ValueError('Invalid scenario '+name)
     h,a=validate_projection(home_projection,'home'),validate_projection(away_projection,'away')
+    kick_evidence=(mechanisms.get('redzone_kicking') if mechanisms is not None else None)
+    field_goals=None
+    if kick_evidence:
+        from cfb.redzone_kicking import gross_up_for_misses, draw_missed_field_goals
+        field_goals={side: (kick_evidence.get(side) or {}).get('field_goals')
+                     for side in ('home','away')}
+        # Preserve the net projected PPD after FG makes become stochastic.
+        # Without this normalizer, the same misses would be deducted twice.
+        h=gross_up_for_misses(h,field_goals['home'])
+        a=gross_up_for_misses(a,field_goals['away'])
     if spread_home is not None:
         if isinstance(spread_home,bool) or not isinstance(spread_home,(int,float)) or not math.isfinite(spread_home) or abs(spread_home)>100:raise ValueError('Invalid spread')
     if total is not None:
@@ -174,6 +184,7 @@ def simulate_script(home_projection, away_projection, home_history, away_history
             raise ValueError('Invalid Build16 mechanism evidence')
     evidence=profile(home_history,away_history,home_projection,away_projection)
     rng=np.random.default_rng(seed)
+    kick_rng=np.random.default_rng(seed ^ 0xF651A42)
     n=int(runs)
     tempo=float(np.clip((h['expected_drives']+a['expected_drives'])/2+tempo_shift,6,19))
     draws=np.clip(np.rint(rng.normal(tempo,evidence['shared_drives_sd'],n)).astype(int),6,19)
@@ -189,6 +200,7 @@ def simulate_script(home_projection, away_projection, home_history, away_history
     to_a=beta_prop(a,evidence['away_turnover_beta_concentration'])
     hs=np.zeros(n,dtype=np.int32); ass=np.zeros(n,dtype=np.int32)
     turnovers_h=np.zeros(n,dtype=np.int16);turnovers_a=np.zeros(n,dtype=np.int16)
+    missed_fg_h=np.zeros(n,dtype=np.int16);missed_fg_a=np.zeros(n,dtype=np.int16)
     # Independent event RNG: the two coupled variants share identical seed
     # for the base drive model, while rare return outcomes are reproducible.
     return_rng=np.random.default_rng(seed ^ 0xF2F2A11)
@@ -350,6 +362,11 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                             trailing_rush_resilience_ppd('home',hs-ass),
                             short_h,mask,sustain_config['home'],sustain_factor['home'],
                             rush_chain_extra_ppd=rush_home_ppd_shift)
+                        if field_goals is not None:
+                            pts,miss=draw_missed_field_goals(
+                                pts,field_goals['home'],kick_rng)
+                            missed_fg_h+=miss.astype(np.int16)
+                            chain_score=chain_score & (pts>0)
                         elapsed_sec+=(verified_duration('home',pts,to,exp_td,mask)
                             if clock_pools is not None else np.where(mask,base_sec*
                             duration_multiplier(pts,to,exp_td),0.))
@@ -359,6 +376,10 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                     else:
                         pts,to=_regulation_draw(h,rng,prop,latent_h+global_env+rush_home_ppd_shift+
                             trailing_rush_resilience_ppd('home',hs-ass),short_h,mask)
+                        if field_goals is not None:
+                            pts,miss=draw_missed_field_goals(
+                                pts,field_goals['home'],kick_rng)
+                            missed_fg_h+=miss.astype(np.int16)
                     hs+=pts;turnovers_h+=to.astype(np.int16)
                     short_h=np.where(mask,0.,short_h)
                     # A defensive return TD happens ON this turnover, not as
@@ -382,6 +403,11 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                             trailing_rush_resilience_ppd('away',ass-hs),
                             short_a,mask,sustain_config['away'],sustain_factor['away'],
                             rush_chain_extra_ppd=rush_away_ppd_shift)
+                        if field_goals is not None:
+                            pts,miss=draw_missed_field_goals(
+                                pts,field_goals['away'],kick_rng)
+                            missed_fg_a+=miss.astype(np.int16)
+                            chain_score=chain_score & (pts>0)
                         elapsed_sec+=(verified_duration('away',pts,to,exp_td,mask)
                             if clock_pools is not None else np.where(mask,base_sec*
                             duration_multiplier(pts,to,exp_td),0.))
@@ -391,6 +417,10 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                     else:
                         pts,to=_regulation_draw(a,rng,prop,latent_a+global_env+rush_away_ppd_shift+
                             trailing_rush_resilience_ppd('away',ass-hs),short_a,mask)
+                        if field_goals is not None:
+                            pts,miss=draw_missed_field_goals(
+                                pts,field_goals['away'],kick_rng)
+                            missed_fg_a+=miss.astype(np.int16)
                     ass+=pts;turnovers_a+=to.astype(np.int16)
                     short_a=np.where(mask,0.,short_a)
                     td_return=(to & (return_rng.random(n)<
@@ -426,7 +456,8 @@ def simulate_script(home_projection, away_projection, home_history, away_history
     regulation_margin=hs.astype(float)-ass
     reg_ties=int(np.count_nonzero(hs==ass))
     if allow_overtime:
-        ot=_resolve_overtime(h,a,dict(CFB_RULES),rng,hs,ass)
+        ot=_resolve_overtime(h,a,dict(CFB_RULES),rng,hs,ass,
+                             field_goals=field_goals,kick_rng=kick_rng)
     else:
         ot={'regulation_ties':reg_ties,'ot1':0,'ot2':0,'ot3_or_later':0,'unresolved_after_limit':reg_ties}
     margin=hs.astype(float)-ass
@@ -501,6 +532,9 @@ def simulate_script(home_projection, away_projection, home_history, away_history
        'defensive_return_tds_counted':int(def_td_home.sum()+def_td_away.sum()),
        'suppressed_shortfield_rewards_counted':int(suppressed_shortfields.sum()),
        'nonoffensive_rate_evidence':return_rates,
+       'simulated_missed_field_goals_regulation_home':round(float(missed_fg_h.mean()),5),
+       'simulated_missed_field_goals_regulation_away':round(float(missed_fg_a.mean()),5),
+       'field_goal_distance_regression_active':field_goals is not None and any(v is not None for v in field_goals.values()),
        'simulated_turnovers_home':round(float(turnovers_h.mean()),3),
        'simulated_turnovers_away':round(float(turnovers_a.mean()),3),
        'simulated_regulation_drives_per_side':round(float((draws-burn.astype(int)).mean()),3),
