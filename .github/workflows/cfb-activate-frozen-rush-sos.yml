@@ -1,0 +1,80 @@
+name: Activate verified 2024 rush SOS coefficients in Build16
+
+on:
+  workflow_run:
+    workflows:
+      - "Publish fixed 2024 rushing SOS fit for standard Build16"
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  install:
+    if: >-
+      ${{ github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.head_branch == 'main' &&
+          github.event.workflow_run.head_repository.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: cfb-verified-2024-fit-${{ github.event.workflow_run.id }}
+          path: cfb_artifacts/frozen_fit
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Reject unverified coefficients and preserve uncalibrated caveat
+        env:
+          TRAINING_RUN_ID: ${{ github.event.workflow_run.id }}
+          TRAINING_COMMIT: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          python - <<'PY'
+          import json,os,math,re
+          from pathlib import Path
+          src=Path('cfb_artifacts/frozen_fit/fit_rush_sos_2024.json')
+          raw=json.loads(src.read_text())
+          model=raw['frozen_model']
+          assert raw['schema']=='cfb_rush_sos_2024_frozen_fit_v1'
+          assert raw['qualified_5000_draw_training_games']==model['training_games']
+          assert model['version']=='cfb-continuous-rush-sos-residual-v1'
+          assert model['training_season']==2024 and model['training_games']>=80
+          assert model['fitted_after_existing_build16_reference'] is True
+          assert model['cross_season_ATS_validated'] is False
+          assert model['promotion_authorized'] is False
+          assert model['no_2025_or_2026_outcomes_in_fit'] is True
+          assert model['training_retrospective_source_timestamps_unverified'] is True
+          assert len(model['coefficients'])==5 and len(model['feature_names'])==5
+          assert all(math.isfinite(float(v)) for v in model['coefficients'])
+          assert model['margin_adjustment_cap_points']==6.0
+          assert re.fullmatch('[a-f0-9]{64}',model['training_game_ids_sha256'])
+          # A user-requested deployment is distinct from a backtested
+          # promotion; preserve FALSE for the latter.
+          model['promoted_into_build16']=True
+          model['user_requested_activation']=True
+          model['source_training_workflow_run_id']=str(os.environ['TRAINING_RUN_ID'])
+          model['source_training_commit']=os.environ['TRAINING_COMMIT']
+          model['activation_policy']='USER_REQUESTED_EXPERIMENTAL_AUTOMATIC_BUILD16'
+          model['holdout_margin_improvement_unverified']=True
+          model['holdout_ATS_accuracy_unverified']=True
+          dest=Path('cfb/frozen_models/continuous_rush_sos_2024.json')
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          dest.write_text(json.dumps(model,sort_keys=True,indent=2)+'\n')
+          print('ACTIVATED_COEFFICIENT_MODEL',json.dumps(model,sort_keys=True))
+          PY
+      - name: Commit frozen artifact to main for every subsequent Build16 prediction
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cfb/frozen_models/continuous_rush_sos_2024.json
+          if git diff --cached --quiet; then
+            echo "Same frozen fit already installed."
+          else
+            git commit -m "Activate user-requested 2024-fitted rush and SOS residual in Build16 (ATS unvalidated)"
+            git push origin HEAD:main
+          fi
