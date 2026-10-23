@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/cfb-rush-sos-activation-smoke.yml'
       - 'cfb/continuous_rush_sos_active.py'
+      - 'cfb/frozen_models/continuous_rush_sos_2024.json'
       - 'cfb/test_cfb_continuous_rush_sos.py'
       - 'cfb/mechanism_build16.py'
 permissions:
@@ -35,4 +36,6 @@ jobs:
           if model is not None:
               assert model['promoted_into_build16'] is True
               assert model['training_season']==2024
+              assert audit['status']=='FROZEN_2024_RESIDUAL_MODEL_LOADED'
+              assert model['holdout_ATS_accuracy_unverified'] is True
           PY
