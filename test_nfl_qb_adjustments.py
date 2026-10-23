@@ -85,7 +85,7 @@ class QBAdjustmentTests(unittest.TestCase):
             self.pbp,self.schedule,self.cutoff))
         changed=x.copy()
         latest=(changed.posteam=="CHI") & (changed.week==3)
-        indexes=changed[latest].index[:18]
+        indexes=changed[latest].index[:14]
         changed.loc[indexes,"qb"]="T.Backup"
         est=qb_effect_for_team(changed,"CHI",{"pass_rate":.55,"plays_per_drive":5.95})
         self.assertEqual(est["status"],"NOT_APPLIED")
