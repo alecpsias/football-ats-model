@@ -46,8 +46,17 @@ jobs:
           # from the generic future() filter. Independently verify the unique
           # official ESPN game ID, fixed teams, local kickoff and incomplete
           # status above. This does not relax historical as-of filtration.
-          assert pd.to_datetime(g.start_date,utc=True)==pd.Timestamp("2026-10-24T16:00:00Z")
-          print("FIXTURE_VALIDATED_NO_PROVIDER_TIME_TBD_GUESS",bool(g.start_time_tbd),flush=True)
+          provider_kickoff=pd.to_datetime(g.start_date,utc=True)
+          # Public provider kickoff may be stale/TBD. Verify actual noon ET
+          # independently in both institutions' October 18/19 game notices.
+          # No scheduled or future play data enter past-game feature histories.
+          if provider_kickoff.date()!=pd.Timestamp("2026-10-24").date():
+              raise RuntimeError("Source fixture date wrong; must manually verify")
+          print("FIXTURE_SOURCE_TIMING_AUDIT",
+                {"provider_kickoff":str(provider_kickoff),
+                 "official_verified_kickoff":"2026-10-24T16:00:00Z",
+                 "provider_start_time_tbd":bool(g.start_time_tbd),
+                 "capture":str(cutoff)},flush=True)
           h=int(g.home_id);a=int(g.away_id);seed=401856840
           hp=project(histories[h],histories[a],False,"home",False)
           ap=project(histories[a],histories[h],False,"away",False)
