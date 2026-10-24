@@ -21,7 +21,9 @@
         "side": "verdict.side",
         "confidence": "verdict.confidence_out_of_10",
         "grade": "verdict.group",
-        "bet_decision": "verdict.bet_status"
+        "bet_decision": "verdict.bet_status",
+        "baseline": "baseline",
+        "challenger": "active_build16"
       }
     },
     {
@@ -42,7 +44,9 @@
         "side": "decision.best_ATS",
         "confidence": "decision.confidence_10",
         "grade": "decision.grade",
-        "bet_decision": "decision.bet_decision"
+        "bet_decision": "decision.bet_decision",
+        "baseline": "simulation.baseline",
+        "challenger": "simulation.updated_Build16"
       }
     },
     {
@@ -63,7 +67,9 @@
         "side": "decision.official_recommendation_at_verifiable_dk_18_5",
         "confidence": "decision.confidence_out_of_10_at_18_5",
         "grade_evidence": "decision.official_recommendation_at_verifiable_dk_18_5",
-        "bet_decision": "decision.official_recommendation_at_verifiable_dk_18_5"
+        "bet_decision": "decision.official_recommendation_at_verifiable_dk_18_5",
+        "baseline": "numerical.baseline",
+        "challenger": "numerical.updated_build16"
       },
       "grade_override": "C"
     },
@@ -85,7 +91,9 @@
         "side": "decision.ats_directional_side",
         "confidence": "decision.confidence_out_of_10",
         "grade": "decision.grade",
-        "bet_decision": "decision.wager_recommendation"
+        "bet_decision": "decision.wager_recommendation",
+        "baseline": "simulation.baseline",
+        "challenger": "simulation.improved_build16"
       },
       "workflow_aliases": [
         ".github/workflows/cfb-indiana-michigan-quick-20261024.yml"
@@ -109,7 +117,9 @@
         "side": "decision.ats_direction_at_auburn_plus_7_5",
         "confidence": "decision.confidence_out_of_10",
         "grade": "decision.grade",
-        "bet_decision": "decision.recommendation"
+        "bet_decision": "decision.recommendation",
+        "baseline": "simulation.baseline",
+        "challenger": "simulation.updated_build16"
       }
     },
     {
@@ -130,7 +140,9 @@
         "side": "decision.directional_ats_side",
         "confidence": "decision.confidence_out_of_10",
         "grade": "decision.grade",
-        "bet_decision": "decision.bet_decision"
+        "bet_decision": "decision.bet_decision",
+        "baseline": "projection_baseline",
+        "challenger": "projection_updated_build16"
       }
     },
     {
@@ -150,7 +162,9 @@
         "draws": "provenance.simulations_per_variant",
         "side": "recommendation.best_ats_side",
         "confidence": "recommendation.confidence_10",
-        "grade": "recommendation.grade"
+        "grade": "recommendation.grade",
+        "baseline": "baseline",
+        "challenger": "build16_updated"
       }
     },
     {
@@ -171,7 +185,9 @@
         "side": "recommendation.directional_ats_side",
         "confidence": "recommendation.confidence_out_of_10",
         "grade": "recommendation.group",
-        "bet_decision": "recommendation.official_bet_decision"
+        "bet_decision": "recommendation.official_bet_decision",
+        "baseline": "frozen_simulations.baseline",
+        "challenger": "frozen_simulations.updated_build16"
       }
     },
     {
@@ -192,7 +208,9 @@
         "side": "output.directional_ats",
         "confidence": "output.confidence_out_of_10",
         "grade": "output.grade",
-        "bet_decision": "output.at_16_5"
+        "bet_decision": "output.at_16_5",
+        "baseline": "model.baseline",
+        "challenger": "model.updated_build16"
       }
     },
     {
@@ -212,7 +230,9 @@
         "draws": "updated_build16.runs",
         "side": "recommendation.best_side",
         "confidence": "recommendation.confidence_out_of_10",
-        "grade": "recommendation.group"
+        "grade": "recommendation.group",
+        "baseline": "original_baseline",
+        "challenger": "updated_build16"
       }
     },
     {
@@ -233,7 +253,9 @@
         "side": "recommendation.best_ats_side",
         "confidence": "recommendation.confidence_out_of_10",
         "grade": "recommendation.grade",
-        "bet_decision": "recommendation.main_bet_condition"
+        "bet_decision": "recommendation.main_bet_condition",
+        "baseline": "simulation.baseline",
+        "challenger": "simulation.active_build16"
       }
     },
     {
@@ -254,7 +276,9 @@
         "side": "ats_concordance_and_decision.directional_pick",
         "confidence": "ats_concordance_and_decision.confidence_out_of_10",
         "grade": "ats_concordance_and_decision.grade",
-        "bet_decision": "ats_concordance_and_decision.recommended_bet"
+        "bet_decision": "ats_concordance_and_decision.recommended_bet",
+        "baseline": "simulation.baseline",
+        "challenger": "simulation.improved_build16"
       }
     },
     {
@@ -265,7 +289,12 @@
       "blob_sha": null,
       "workflow_file": ".github/workflows/cfb-oregon-illinois-20261024.yml",
       "model": "CFB Build16 (baseline preserved)",
-      "evidence": {}
+      "evidence": {},
+      "unresolved_source_artifact": {
+        "run_id": 40107807252,
+        "artifact_id": 12565885092,
+        "type": "verified_5000_simulation_only_no_frozen_ATS_decision"
+      }
     }
   ]
 }
