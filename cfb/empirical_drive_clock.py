@@ -27,7 +27,10 @@ def _category(scrimmage,raw_part):
     td=(scrimmage.pass_td.eq(True)|scrimmage.rush_td.eq(True)) & scrimmage.offense_score_play.eq(True)
     scoring_td=bool(td.any())
     firsts=int(scrimmage.down.eq(1).sum())
-    explosive=bool((scrimmage['pass'].eq(True) & scrimmage.yards_gained.ge(20)).any())
+    # A short two-play rushing touchdown consumes explosive-drive clock,
+    # not a sustained chain's long timing. All labels remain disjoint.
+    explosive=bool(((scrimmage['pass'].eq(True)|scrimmage['rush'].eq(True)) &
+                    scrimmage.yards_gained.ge(20)).any())
     if scoring_td and explosive and firsts<=2:return 'explosive_td'
     if scoring_td:return 'chain_score'
     if 'fg_made' in raw_part and raw_part.fg_made.eq(True).any():return 'chain_score'
