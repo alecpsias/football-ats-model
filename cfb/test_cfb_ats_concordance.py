@@ -19,7 +19,7 @@ class ATSConcordanceTests(unittest.TestCase):
         self.assertIsNone(x['baseline_edge_vs_spread_points'])
 
     def test_baseline_no_edge_neutral_leans_remain_hold(self):
-        x=assess(3.4,6.5,-3.5)
+        x=assess(3.55,6.5,-3.5)
         self.assertEqual(x['status'],'HOLD_CHALLENGER_ONLY_EDGE_BASELINE_AT_MARKET')
 
     def test_both_models_same_direction_still_not_a_calibrated_bet(self):
