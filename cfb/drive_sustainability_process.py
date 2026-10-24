@@ -29,7 +29,9 @@ def parameters(evidence):
                 raise ValueError("Unverified Failure 3 historical input: "+key)
             return float(x)
         chain=checked("chain_share_matched",0.,1.)
-        explosive=checked("short_explosive_pass_td_share_shrunk",0.,1.)
+        explosive=checked("short_explosive_td_share_shrunk" if
+                          "short_explosive_td_share_shrunk" in e
+                          else "short_explosive_pass_td_share_shrunk",0.,1.)
         drives=checked("matched_drives",1.,10000.)
         out[side]={"chain_probability":chain,
                    "explosive_td_share":explosive,
