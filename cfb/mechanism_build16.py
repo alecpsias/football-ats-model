@@ -297,7 +297,7 @@ def _failure2_verified_scoring_histories(home_id,away_id,histories):
 
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None,continuous_rush_sos_enabled=True,coupled_rush_possessions=True,situational_chain_enabled=True,redzone_kicking_enabled=True,joint_drive_enabled=True):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None,continuous_rush_sos_enabled=True,coupled_rush_possessions=True,situational_chain_enabled=True,redzone_kicking_enabled=True,joint_drive_enabled=True,two_way_venue_enabled=True):
     if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
@@ -476,6 +476,20 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
         if not 6<=drives<=19:raise ValueError("Invalid drive count for residual")
         h['_ppd']=float(np.clip(h['_ppd']+residual/(2*drives),.35,5.5))
         a['_ppd']=float(np.clip(a['_ppd']-residual/(2*drives),.35,5.5))
+    # Improvement 1 (Oct 24): opponent-adjusted HOME/AWAY and both offenses'
+    # counterattacking pass/rush/QB routes. This is a bounded RESIDUAL on top
+    # of already matched EPA / league 2.4-point HFA, never a second raw score.
+    if type(two_way_venue_enabled) is not bool:
+        raise ValueError("Two-way/venue Build16 toggle must be boolean")
+    if two_way_venue_enabled:
+        from cfb.two_way_venue import matchup as two_way_venue_matchup
+        two_way_evidence=two_way_venue_matchup(home_id,away_id,histories,neutral)
+        h['_ppd']=float(np.clip(h['_ppd']+two_way_evidence['delta_ppd_home'],.35,5.5))
+        a['_ppd']=float(np.clip(a['_ppd']+two_way_evidence['delta_ppd_away'],.35,5.5))
+    else:
+        two_way_evidence={'status':'DISABLED_FOR_PAIRED_REFERENCE',
+                          'delta_ppd_home':0.,'delta_ppd_away':0.,
+                          'baseline_untouched':True,'ATS_calibrated':False}
     # Never change fixed historical run frequencies, EPA, tempo, or turn-over
     # sources using the fitted margin residual. Only both simulated PPDs move.
     # Failure 3: opponent-specific stable-drive versus explosive-only TD
@@ -616,6 +630,8 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
            situational_chain_evidence is not None and
            situational_chain_evidence.get('active_in_default_build16')),
        'situational_chain_evidence':situational_chain_evidence,
+       'two_way_venue_improvement1':two_way_evidence,
+       'two_way_venue_active_by_default':two_way_venue_enabled,
        'redzone_kicking_active_by_default':redzone_kicking_enabled,
        'redzone_kicking_evidence':redzone_kicking}
     if rush_evidence is not None:
