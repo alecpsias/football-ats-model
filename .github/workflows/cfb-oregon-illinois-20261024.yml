@@ -62,15 +62,15 @@ jobs:
           hp=project(histories[home],histories[away],False,"home",False)
           ap=project(histories[away],histories[home],False,"away",False)
           prices=(8.5,9.5,10.5,11.5)
-          baseline={str(line):simulate(hp,ap,runs=5000,seed=seed,spread_home=-line)
+          baseline={str(line):simulate(hp,ap,runs=5000,seed=seed,spread_home=line)
                     for line in prices}
           fitted=correction(home,away,histories)
           common=dict(runs=5000,seed=seed,
                       failure1_fit_margin_delta=fitted["margin_delta_points"])
-          ref=simulate_build16(home,away,histories,False,spread_home=-9.5,
+          ref=simulate_build16(home,away,histories,False,spread_home=9.5,
                               two_way_venue_enabled=False,**common)
           active={str(line):simulate_build16(home,away,histories,False,
-                            spread_home=-line,two_way_venue_enabled=True,**common)
+                            spread_home=line,two_way_venue_enabled=True,**common)
                   for line in prices}
           if ref.get("simulation") is None or any(z.get("simulation") is None for z in active.values()):
               raise RuntimeError("Projected challenger unavailable")
