@@ -1,0 +1,238 @@
+{
+  "schema": "cfb_postgame_frozen_model_causal_audit_v1",
+  "fixture": {
+    "game_id": "401864525",
+    "date_local": "2026-10-23",
+    "away": "Air Force",
+    "home": "Wyoming",
+    "final": {
+      "air_force": 14,
+      "wyoming": 28
+    },
+    "home_margin": 14,
+    "total": 42
+  },
+  "source": {
+    "frozen_pregame": "cfb/frozen_pregame_audits/2026_10_23_airforce_wyoming.json",
+    "frozen_workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/39998208664",
+    "official_away_box": "https://goairforcefalcons.com/sports/football/stats/2026/wyoming/boxscore/24314",
+    "official_home_box": "https://gowyo.com/boxscore.aspx?id=6928&path=football",
+    "official_away_recap": "https://goairforcefalcons.com/news/2026/10/23/football-air-force-falls-28-14-at-wyoming",
+    "official_home_recap": "https://gowyo.com/news/2026/10/23/football-cowboys-push-win-streak-to-three-with-28-14-victory-over-air-force.aspx",
+    "earlier_pre_game_hughes_signal": "https://gowyo.com/news/2026/10/17/football-tyler-hughes-dazzles-as-the-cowboys-defeat-the-huskies-41-23.aspx"
+  },
+  "frozen_pregame": {
+    "run_date_utc": "2026-10-23T17:49:44.542910+00:00",
+    "source_captured_utc": "2026-10-23T17:49:43.552825+00:00",
+    "simulations": 5000,
+    "seed": 401864525,
+    "baseline": {
+      "air_force": 24.218,
+      "wyoming": 20.954,
+      "air_force_margin": 3.264,
+      "total": 45.172
+    },
+    "challenger": {
+      "air_force": 24.959,
+      "wyoming": 17.602,
+      "air_force_margin": 7.357,
+      "total": 42.562,
+      "margin_sd": 16.121,
+      "air_force_minus_4_5_raw_cover": 0.59,
+      "air_force_minus_5_5_raw_cover": 0.58
+    },
+    "recommendation": {
+      "side": "Air Force -4.5 (preferred over -5.5)",
+      "group": "C",
+      "confidence": 5.7,
+      "line": "Air Force -5.5 with -4.5 alternate",
+      "line_quote_archive_source_verified": false,
+      "total": "Under 45.5 weaker than ATS"
+    },
+    "observed_modes": {
+      "severe_rush_mismatch_trigger": true,
+      "rush_stress_runs_per_scenario": 5000,
+      "source_verified_empirical_clock": true,
+      "redzone_fg_regression": true,
+      "numerical_personnel_status_override": false,
+      "original_joint_drive_feature_available": false
+    }
+  },
+  "grades": {
+    "ats_direction": "WRONG",
+    "wyoming_plus_5_5_cover": "YES",
+    "wyoming_plus_4_5_cover": "YES",
+    "air_force_minus_4_5_spread_error_points": 18.5,
+    "air_force_minus_5_5_spread_error_points": 19.5,
+    "baseline_margin_abs_error": 17.264,
+    "challenger_margin_abs_error": 21.357,
+    "challenger_margin_worsening_vs_baseline": 4.093,
+    "baseline_total_abs_error": 3.172,
+    "challenger_total_abs_error": 0.562,
+    "challenger_air_force_score_error_pred_minus_actual": 10.959,
+    "challenger_wyoming_score_error_pred_minus_actual": -10.398,
+    "correct_under_45_5_lean": true,
+    "overall_scoring_environment_pred_near_actual": true
+  },
+  "official_game_statistics": {
+    "air_force": {
+      "points": 14,
+      "rush_attempts": 63,
+      "rush_yards": 304,
+      "rush_yards_per_carry": 4.8,
+      "pass_yards": 83,
+      "completions": 8,
+      "pass_attempts": 15,
+      "plays": 78,
+      "total_yards": 387,
+      "yards_per_play": 5,
+      "first_downs": 23,
+      "third_downs": "8/15",
+      "fourth_downs": "2/3",
+      "time_of_possession": "37:45",
+      "redzone_scores": 2,
+      "redzone_chances": 4,
+      "turnovers_lost": 3,
+      "fumbles_lost": 3,
+      "penalties": 8,
+      "penalty_yards": 65,
+      "fg_made": 2,
+      "fg_attempts": 2,
+      "pass_tds": 1,
+      "rush_tds": 0,
+      "offense_tds": 1
+    },
+    "wyoming": {
+      "points": 28,
+      "rush_attempts": 24,
+      "rush_yards": 188,
+      "rush_yards_per_carry": 7.8,
+      "pass_yards": 113,
+      "completions": 10,
+      "pass_attempts": 17,
+      "plays": 41,
+      "total_yards": 301,
+      "yards_per_play": 7.3,
+      "first_downs": 13,
+      "third_downs": "2/6",
+      "fourth_downs": "1/1",
+      "time_of_possession": "22:15",
+      "redzone_scores": 3,
+      "redzone_chances": 4,
+      "turnovers_lost": 0,
+      "fumbles_lost": 0,
+      "penalties": 4,
+      "penalty_yards": 25,
+      "fg_made": 0,
+      "fg_attempts": 1,
+      "pass_tds": 2,
+      "rush_tds": 2,
+      "offense_tds": 4
+    }
+  },
+  "observed_game_script": [
+    {
+      "event": "Wyoming Hughes rush TD 68 yards on the second offensive play, 50 seconds into the game",
+      "causal": "Wyoming explosive QB rush tail dominates raw volume"
+    },
+    {
+      "event": "Medders lost fumble on first Air Force possession; Wyoming got short field but missed FG",
+      "causal": "Turnover field position does not always score; do not attribute 7 automatic points"
+    },
+    {
+      "event": "Air Force two second-quarter drives ended in 37 and 46 yard FGs after significant gains were negated by penalties",
+      "causal": "Chain sustainability plus discipline prevented TD finishing"
+    },
+    {
+      "event": "Wyoming scored two second-quarter TD on 11 play 75 yard and 7 play 75 yard drives; 21-6 halftime",
+      "causal": "Efficient rush/pass QB offense despite fewer attempts"
+    },
+    {
+      "event": "Air Force Medders 15-play 75-yard third-quarter TD drive consuming 8:07; 2-point conversion; score 21-14",
+      "causal": "Rushing volume did generate sustained chains"
+    },
+    {
+      "event": "Medders injury near end third quarter; Josh Johnson and Howard Fisher played thereafter",
+      "causal": "Unpredictable in-game QB exit raises adverse-script uncertainty, not grounds to restore pregame personnel fitting"
+    },
+    {
+      "event": "Josh Johnson fumble after Falcons reached Wyoming 10; turnover ended 15 play, 53 yard possession at Wyoming 19",
+      "causal": "Turnover in high-value field position, not additional opponent score"
+    },
+    {
+      "event": "Johnson lost another fumble on 4th-and-2 near Air Force 49; Wyoming scored 49-yard touchdown drive",
+      "causal": "Turnover short field consumed real next possession, not independent defensive TD"
+    },
+    {
+      "event": "Air Force drove Wyoming 16 on last series but clock ended with no points",
+      "causal": "Down-distance, penalties, QB depth and end-regulation clock linked"
+    }
+  ],
+  "causal_diagnostics": [
+    {
+      "code": "WRONG_RUSHING_CONTROL_TO_MARGIN",
+      "finding": "Air Force won rushing yards by 116, attempts by 39 and TOP by 15:30 but lost 14; its one TD came on pass and none on rush",
+      "reason": "Opponent-specific rush superiority is NOT equivalent to scoring margin; need dynamic scoring conversion and turnover-tail coupling"
+    },
+    {
+      "code": "OPPONENT_QB_RUSH_HIGH_TAIL",
+      "finding": "Wyoming QB Tyler Hughes ran 146 yards on 12 attempts including 68 yard TD and threw 2 TDs; he had rushed 183 yards and scored 4 rushing TD vs NIU Oct17",
+      "reason": "Recent opponent QB threat was visible pregame, severe-rushing advantage was effectively one-sided"
+    },
+    {
+      "code": "TURNOVER_CORRELATED_ADVERSE_SCRIPT",
+      "finding": "Air Force lost 3 fumbles vs zero Wyoming (two by replacement QB Johnson) after pregame 554-play fumble-free streak",
+      "reason": "Regression must allow nonzero fumble risk from historically perfect run; correlate turnover tails with drive state/late disruptions when supported"
+    },
+    {
+      "code": "SCORING_OPPORTUNITY_FINISH",
+      "finding": "Air Force had 23 first downs, 78 snaps and 2/4 redzone scoring; Wyoming 13 first downs,41 snaps and 3/4 redzone, plus one 68-yard rush TD",
+      "reason": "Model materially over credited rushing possession volume instead of opportunity-specific points"
+    },
+    {
+      "code": "PENALTY_AND_CLOCK_CHAIN",
+      "finding": "Air Force 8 penalties 65 yards and erased would-be early first downs and later TD opportunity; final possession expired",
+      "reason": "Include penalty reversals and chain distribution, not merely aggregate yards or clock"
+    },
+    {
+      "code": "MARKET_BASELINE_CONFLICT",
+      "finding": "Baseline Air Force fair -3.264 versus market Air Force -5.5; challenger -7.357; pregame note large split on Wyoming",
+      "reason": "Group C 5.7 already signaled uncertainty; future ATS decision rules should explicitly test baseline-vs-market conflict and market provenance"
+    }
+  ],
+  "implementation": {
+    "baseline_changed": false,
+    "nfl_changed": false,
+    "personnel_rollback_preserved": true,
+    "new_after_game_source_route": {
+      "description": "Source-observed short explosive rushing touchdowns now counted in existing disjoint explosive-score route and empirical timing classification; pass-only fallback for insufficient rush-TD labels",
+      "files": [
+        "cfb/sustainability.py",
+        "cfb/drive_sustainability_process.py",
+        "cfb/empirical_drive_clock.py",
+        "cfb/test_cfb_explosive_rush_tds.py"
+      ],
+      "status": "CODE_COMMITTED_REGRESSION_PENDING_AT_AUDIT_CREATION",
+      "target_game_used_in_pregame_training": false,
+      "new_scoring_bonus_added": false,
+      "after_game_effect_retroactively_credited": false,
+      "trained_ats_probability": false
+    },
+    "additional_not_yet_implemented": [
+      "Risk gating for strong opposing dual-threat QB rush counterattack conditional on opponent quality",
+      "Explicit fumble tail sensitivity by rush scheme and correlated game-state, with offense-specific recovery priors",
+      "Penalty-negated first-down/Td expectation from verified past plays",
+      "Possession scoring opportunity finishing by red zone and yard line",
+      "Adverse script standardization when model and baseline differ relative to price"
+    ],
+    "five_thousand_simulation_new_postgame_replay_claimed": false
+  },
+  "integrity": {
+    "original_frozen_predictions_never_modified": true,
+    "actual_target_stats_not_in_original_prediction": true,
+    "mechanism_correction_uses_prior_source_features_at_future_pregame_cutoffs": true,
+    "actual_margin_abs_error_units_points": true,
+    "no_counterfactual_score_claims": true,
+    "market_quote_not_native_archive_source": true
+  }
+}
