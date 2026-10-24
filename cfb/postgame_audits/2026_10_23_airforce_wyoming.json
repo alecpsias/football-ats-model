@@ -212,11 +212,12 @@
         "cfb/empirical_drive_clock.py",
         "cfb/test_cfb_explosive_rush_tds.py"
       ],
-      "status": "CODE_COMMITTED_REGRESSION_PENDING_AT_AUDIT_CREATION",
+      "status": "CODE_COMMITTED_FULL_CFB_REGRESSION_364_TESTS_PASSED_AT_40092112655",
       "target_game_used_in_pregame_training": false,
       "new_scoring_bonus_added": false,
       "after_game_effect_retroactively_credited": false,
-      "trained_ats_probability": false
+      "trained_ats_probability": false,
+      "ci_url": "https://github.com/alecpsias/football-ats-model/actions/runs/40092112655"
     },
     "additional_not_yet_implemented": [
       "Risk gating for strong opposing dual-threat QB rush counterattack conditional on opponent quality",
@@ -225,7 +226,26 @@
       "Possession scoring opportunity finishing by red zone and yard line",
       "Adverse script standardization when model and baseline differ relative to price"
     ],
-    "five_thousand_simulation_new_postgame_replay_claimed": false
+    "five_thousand_simulation_new_postgame_replay_claimed": false,
+    "preexisting_joint_drive_paired_evidence": {
+      "status": "COMPLETED_PREVIOUS_REVISION_NOT_THE_NEW_EXPLOSIVE_RUSH_ROUTE",
+      "source_run": "https://github.com/alecpsias/football-ats-model/actions/runs/40091020175",
+      "season_2025": {
+        "games": 117,
+        "reference_margin_mae": 14.4683,
+        "candidate_margin_mae": 14.6028,
+        "reference_total_mae": 11.9988,
+        "candidate_total_mae": 12.5919
+      },
+      "season_2026": {
+        "games": 98,
+        "reference_margin_mae": 12.0834,
+        "candidate_margin_mae": 12.1848,
+        "reference_total_mae": 10.9261,
+        "candidate_total_mae": 11.2466
+      },
+      "interpretation": "The previous source-matched joint-drive sampler worsened historical MAEs and must not be claimed as an established accuracy improvement. Independent validation of the new rushing explosive TD route is still needed."
+    }
   },
   "integrity": {
     "original_frozen_predictions_never_modified": true,
