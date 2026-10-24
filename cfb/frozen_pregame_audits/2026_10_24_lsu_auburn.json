@@ -1,0 +1,163 @@
+{
+  "schema": "cfb_2026_10_24_frozen_pregame_5000_ats_build16_v1",
+  "fixture": {
+    "game_id": "401856728",
+    "date_local": "2026-10-24",
+    "away": "LSU",
+    "home": "Auburn",
+    "scheduled_kickoff_utc": "2026-10-24T16:00:00+00:00"
+  },
+  "provenance": {
+    "capture_utc": "2026-10-24T13:22:57.706139+00:00",
+    "workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40097867147",
+    "head_sha": "f633bbb1101254372cc5b859403d1c28e1cd10c7",
+    "baseline_unchanged": true,
+    "cfb_one_challenger": true,
+    "no_nfl_changes": true,
+    "personnel_model_rolled_back": true,
+    "previous_games_only": true,
+    "retrospective_after_kickoff_not_used": true
+  },
+  "simulation": {
+    "seed": 401856728,
+    "simulations_each": 5000,
+    "baseline": {
+      "lsu": 29.308,
+      "auburn": 23.998,
+      "lsu_margin": 5.31,
+      "total": 53.306,
+      "auburn_plus_7_5_cover_raw": 0.5644
+    },
+    "previous_build16": {
+      "lsu": 28.28,
+      "auburn": 20.232,
+      "lsu_margin": 8.049,
+      "total": 48.512,
+      "auburn_plus_7_5_cover_raw": 0.483
+    },
+    "updated_build16": {
+      "lsu": 29.142,
+      "auburn": 21.946,
+      "lsu_margin": 7.195,
+      "total": 51.088,
+      "lsu_win_raw": 0.66,
+      "auburn_plus_7_5_cover_raw": 0.506,
+      "lsu_minus_7_5_cover_raw": 0.494,
+      "margin_sd": 18.026,
+      "margin_p10_p50_p90_from_auburn_perspective": [
+        -30,
+        -7,
+        17
+      ],
+      "joint_drive_active": true,
+      "verified_empirical_clock_active": true,
+      "redzone_fg_distance_regression_active": true
+    },
+    "score_scenario": "LSU 29 Auburn 22",
+    "ats_probabilities_raw_not_calibrated": true
+  },
+  "new_improvement1": {
+    "source_status": "ACTIVE_SOURCE_INCREMENTAL_TWO_WAY_VENUE",
+    "route_active": true,
+    "venue_active": true,
+    "home_ppd_adjustment": 0.20068434,
+    "away_ppd_adjustment": 0.09670552,
+    "net_lsu_margin_reduction_vs_previous": 0.854,
+    "home_venue_ppd": 0.2,
+    "away_venue_ppd": 0.09738986,
+    "home_component_at_limit": true,
+    "all_four_venue_subcomponents_qualified": true,
+    "historical_games_venue_auburn_home": 3,
+    "historical_games_venue_auburn_away": 2,
+    "historical_games_venue_lsu_home": 4,
+    "historical_games_venue_lsu_away": 2,
+    "unfitted_and_not_ATS_calibrated": true,
+    "player_availability_not_numerically_applied": true,
+    "model_compared_to_frozen_previous_challenger": true,
+    "historical_paired_2025_margin_MAE_prior": 13.5757,
+    "historical_paired_2025_margin_MAE_new": 13.7962,
+    "historical_paired_2026_margin_MAE_prior": 14.7714,
+    "historical_paired_2026_margin_MAE_new": 14.7187
+  },
+  "observed_pre_game_opponent_quality": {
+    "lsu_off_epa": 0.257,
+    "auburn_def_epa_allowed": 0.02,
+    "auburn_off_epa": 0.098,
+    "lsu_def_epa_allowed": -0.118,
+    "lsu_off_success": 0.519,
+    "auburn_def_success_allowed": 0.404,
+    "auburn_off_success": 0.413,
+    "lsu_def_success_allowed": 0.34,
+    "source": "https://collegefootballdata.com/games/401856728/preview"
+  },
+  "pre_game_market": {
+    "quotes_not_in_native_archived_source": true,
+    "dk_lsu_spread": -7,
+    "dk_lsu_price_american": -115,
+    "dk_auburn_spread": 7,
+    "dk_auburn_price_american": -105,
+    "other_books_lsu_spread": -7.5,
+    "other_books_auburn_spread": 7.5,
+    "other_books_price_approximately": -110,
+    "total": 51.5,
+    "dk_lsu_spread_tickets_fraction": 0.49,
+    "dk_lsu_spread_handle_fraction": 0.68,
+    "circa_third_party_lsu_tickets_fraction": 0.65,
+    "circa_third_party_lsu_handle_fraction": 0.3,
+    "source": "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/",
+    "secondhand_circa_source": "https://wiseguyteam.com/cfb-betting-splits",
+    "misaligned_timestamps": true
+  },
+  "risk_notes": {
+    "qb_by_brum_brown": "Byrum Brown 107 rushing vs Tennessee and 115 vs Georgia, Auburn won at Georgia 27-24",
+    "lsu_last_win": "LSU shut out Mississippi State 31-0; Sam Leavitt 31/38, 289 yards, 4 TD; LSU rushed 90 yards",
+    "team_sos": "Raw 40.4 LSU PPG inflated by McNeese and Louisiana Tech; Auburn Georgia win includes three Georgia turnovers",
+    "personnel": "Final SEC reports LSU missing Whit Weeks, Dashawn Spears, Phillip Wright III, Charles Ross II, Richard Anderson; Auburn missing Tai Buster, Hunter Herring, Saint Farrior; star LB Xavier Atkins dismissed, already missed Georgia; reported, NOT numerically fitted"
+  },
+  "scenarios_from_genuine_5000_draws": {
+    "auburn_scoring_stall": {
+      "share": 0.3074,
+      "conditional_mean_lsu": 30.744,
+      "conditional_mean_auburn": 8.824
+    },
+    "lsu_scoring_stall": {
+      "share": 0.2388,
+      "conditional_mean_lsu": 14.025,
+      "conditional_mean_auburn": 24.177
+    },
+    "auburn_two_more_turnovers": {
+      "share": 0.1594,
+      "conditional_mean_lsu": 31.945,
+      "conditional_mean_auburn": 17.944
+    },
+    "lsu_two_more_turnovers": {
+      "share": 0.1708,
+      "conditional_mean_lsu": 24.577,
+      "conditional_mean_auburn": 23.978
+    },
+    "fast_possessions": {
+      "share": 0.1798,
+      "conditional_mean_lsu": 29.37,
+      "conditional_mean_auburn": 21.791
+    }
+  },
+  "conditional_scenarios_overlap": true,
+  "decision": {
+    "lsu_most_likely_winner": true,
+    "market_fair_margin_lsu": 7.195,
+    "ats_direction_at_auburn_plus_7_5": "Auburn +7.5 extremely marginal",
+    "confidence_out_of_10": 5,
+    "grade": "C",
+    "recommendation": "PASS_AUBURN_PLUS_7_5_AT_MINUS_110_AND_AUBURN_PLUS_7_AT_MINUS_105",
+    "reason": "Raw 50.6% Auburn +7.5 cover below break-even 52.38% at -110; at +7 non-push cover cannot be higher than +7.5, and 7-point push matters; venue component only provisional uncalibrated; baseline fair LSU -5.31 vs challenger -7.20.",
+    "total": "PASS_51_5",
+    "half_game": "NOT_STRONGER_THAN_FULL_GAME"
+  },
+  "integrity": {
+    "fixture_postgame_outcome_not_used": true,
+    "source_cutoff_pre_kickoff": true,
+    "simulations_real_5000": true,
+    "market_spread_evidence_external": true,
+    "no_ats_success_claim": true
+  }
+}
