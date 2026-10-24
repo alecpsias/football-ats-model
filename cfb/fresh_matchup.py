@@ -543,6 +543,10 @@ def markdown(report):
             lines.append('These are stress conditions, NOT forecasted scenario probabilities.')
         else:
             lines.append('Required 5,000-draw adverse-script evidence unavailable; ATS confidence withheld.')
+    concordance=report.get('ats_spread_concordance_guard') or {}
+    lines += ['',f"**Baseline–challenger ATS concordance:** {concordance.get('status','UNAVAILABLE')}; "
+               f"model margin gap {concordance.get('challenger_minus_baseline_margin')} points. "
+               "A native, timestamped line is required for verified spread-edge claims."]
     lines += ['',f"**Risk conclusion:** {audit.get('risk_conclusion')}",
            f"Historical games: {report['home']} {report['completed_prior_games_home']}, "
            f"{report['away']} {report['completed_prior_games_away']}",
