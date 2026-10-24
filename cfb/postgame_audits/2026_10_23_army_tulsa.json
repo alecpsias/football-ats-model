@@ -1,0 +1,261 @@
+{
+  "schema": "cfb_postgame_frozen_model_causal_audit_v1",
+  "fixture": {
+    "game_id": "401862808",
+    "date_local": "2026-10-23",
+    "away": "Army",
+    "home": "Tulsa",
+    "final": {
+      "army": 38,
+      "tulsa": 35
+    },
+    "total": 73,
+    "margin_army": 3
+  },
+  "source": {
+    "frozen_forecast": "cfb/frozen_pregame_audits/2026_10_23_army_tulsa.json",
+    "pregame_workflow_run": "https://github.com/alecpsias/football-ats-model/actions/runs/39996327165",
+    "official_away_box": "https://goarmywestpoint.com/sports/football/stats/2026/tulsa/boxscore/20139",
+    "official_home_box": "https://tulsahurricane.com/sports/football/stats/2026/army/boxscore/16254",
+    "official_army_recap": "https://goarmywestpoint.com/news/2026/10/24/jones-50-yard-field-goal-lifts-football-past-tulsa-38-35",
+    "official_tulsa_recap": "https://tulsahurricane.com/news/2026/10/24/football-tulsa-falls-to-army-on-last-second-field-goal-38-35"
+  },
+  "frozen_pregame": {
+    "captured_utc": "2026-10-23T17:36:04.414064+00:00",
+    "five_thousand_simulations": true,
+    "seed": 401862808,
+    "baseline": {
+      "army": 26.157,
+      "tulsa": 25.123,
+      "army_margin": 1.035,
+      "total": 51.28
+    },
+    "challenger": {
+      "army": 27.134,
+      "tulsa": 24.237,
+      "army_margin": 2.897,
+      "total": 51.371,
+      "margin_sd": 17.812,
+      "army_plus_1_5_cover_raw": 0.5886
+    },
+    "decision": {
+      "ats": "Army +1.5",
+      "grade": "B",
+      "confidence_10": 6.2,
+      "pre_game_market_spread": "Tulsa -1.5",
+      "market_quote_archive_verified": false,
+      "lean_total": "Under 54.5 weaker than spread"
+    }
+  },
+  "grade": {
+    "ats_direction": "CORRECT",
+    "ats_cushion_at_plus_1_5": 4.5,
+    "baseline_margin_absolute_error": 1.965,
+    "challenger_margin_absolute_error": 0.103,
+    "baseline_total_absolute_error": 21.72,
+    "challenger_total_absolute_error": 21.629,
+    "challenger_army_points_underforecast": 10.866,
+    "challenger_tulsa_points_underforecast": 10.763,
+    "raw_sim_prob_not_calibrated": true
+  },
+  "official_stats": {
+    "army": {
+      "points": 38,
+      "offense_yards": 384,
+      "plays": 64,
+      "rush_attempts_official": 51,
+      "rush_yards": 275,
+      "rush_ypa": 5.4,
+      "pass_yards": 109,
+      "completions": 8,
+      "pass_attempts": 13,
+      "third": {
+        "converted": 5,
+        "attempts": 14
+      },
+      "fourth": {
+        "converted": 3,
+        "attempts": 4
+      },
+      "possession": "33:34",
+      "redzone": {
+        "scores": 3,
+        "opportunities": 3
+      },
+      "turnovers": 0,
+      "fg": {
+        "made": 3,
+        "attempts": 3,
+        "distances_made": [
+          51,
+          34,
+          50
+        ]
+      },
+      "touchdowns": 4,
+      "offensive_possessions_from_official_drive_chart": 12,
+      "offensive_scoring_drives": 7,
+      "points_per_offensive_possession": 3.166667,
+      "penalties": {
+        "count": 6,
+        "yards": 30
+      },
+      "sacks_allowed": 1
+    },
+    "tulsa": {
+      "points": 35,
+      "offense_yards": 410,
+      "plays": 60,
+      "rush_attempts_official": 26,
+      "rush_yards": 148,
+      "rush_ypa": 5.7,
+      "pass_yards": 262,
+      "completions": 23,
+      "pass_attempts": 34,
+      "third": {
+        "converted": 6,
+        "attempts": 12
+      },
+      "fourth": {
+        "converted": 1,
+        "attempts": 1
+      },
+      "possession": "26:26",
+      "redzone": {
+        "scores": 4,
+        "opportunities": 5
+      },
+      "turnovers": 1,
+      "fg": {
+        "made": 0,
+        "attempts": 1
+      },
+      "touchdowns": 5,
+      "offensive_possessions_from_official_drive_chart": 11,
+      "offensive_scoring_drives": 5,
+      "points_per_offensive_possession": 3.181818,
+      "penalties": {
+        "count": 5,
+        "yards": 30
+      },
+      "sacks_allowed": 2
+    }
+  },
+  "verified_script": [
+    {
+      "quarter": 1,
+      "event": "Army QB Cale Hellums converted fourth-and-1 with a 41-yard touchdown run on opening drive",
+      "causal": "Explosive rushing score and short-yardage fourth-down choice jointly"
+    },
+    {
+      "quarter": 2,
+      "event": "Army sustained 15-play 75-yard 9:51 touchdown drive with fourth-down conversions",
+      "causal": "Rushing chain and possession clock coupling"
+    },
+    {
+      "quarter": 3,
+      "event": "Godspower Nwawuihe 66-yard rushing TD on two-play drive",
+      "causal": "Same rush-heavy opponent mismatch generates short-clock explosive high tail"
+    },
+    {
+      "quarter": 3,
+      "event": "Tulsa scored three unanswered touchdowns from 28-14 deficit to 35-28 lead",
+      "causal": "Tulsa explosive pass/rush capability and Army serial three-and-outs; not captured by a stable rushing-control bonus"
+    },
+    {
+      "quarter": 4,
+      "event": "Tulsa missed a 40-yard field goal; a Tulsa 18-yard TD pass was negated by holding on that drive",
+      "causal": "Scoring finishing + discipline variance, actual missed kick"
+    },
+    {
+      "quarter": 4,
+      "event": "Army recovered a blocked Tulsa punt at Tulsa 13 at 3:52; Army scored on five-play 13-yard drive",
+      "causal": "Non-scoring special teams flip generated a short-field offensive TD; NOT a ST touchdown"
+    },
+    {
+      "quarter": 4,
+      "event": "Army received punt at own 37 with 51 seconds remaining; QB runs advanced ball; Jones 50-yard field goal at expiration",
+      "causal": "Last-second clock, short-yardage rushing, 50-plus-yard kick variance"
+    }
+  ],
+  "model_mechanism_audit": {
+    "original_forecast_2026_10_23_verified_historical_clocks_active": true,
+    "original_forecast_2026_10_23_frozen_rush_screen": "SCREENED_NO_SEVERE_TRIGGER",
+    "original_forecast_numerical_personnel_effect": false,
+    "joint_drive_feature_published_after_frozen_forecast": true,
+    "postgame_replay_with_current_model_performed": false,
+    "actual_pregame_joint_drive_activation_claimed": false,
+    "offensive_score_on_blocked_punt_recovery_not_defensive_or_st_touchdown": true,
+    "field_goal_actual_three_makes_do_not_imply_future_perfect_kicking": true
+  },
+  "failure_analysis": [
+    {
+      "id": "SCORING_LEVEL_TOO_LOW",
+      "evidence": "73 actual points vs Build16 51.371; both teams exceeded forecast by approximately 10.8 points, while Army margin error only 0.103",
+      "lesson": "Separate ATS relative-margin calibration from shared offensive scoring and same-game high-total tail; do not force a postgame points offset"
+    },
+    {
+      "id": "FOURTH_DOWN_SHORT_YARDAGE_RUN_INTERACTION",
+      "evidence": "Army 3/4 fourth downs including two Hellums fourth-and-1 TD rushes; Army third down 5/14",
+      "lesson": "Simulate conversion decisions conditioned on short yardage and score and time rather than using only average chain PPD"
+    },
+    {
+      "id": "BLOCKED_PUNT_FIELD_POSITION",
+      "evidence": "Tim Kloska blocked and recovered punt at Tulsa 13, Army offense subsequently scored 7 points",
+      "lesson": "Model punt block/recovery as rare source-verified transition into next actual short-field possession. Do not create defensive TD, ST TD, or duplicate ordinary opportunity"
+    },
+    {
+      "id": "EXPLOSIVE_VS_SUSTAINED",
+      "evidence": "Army 15-play 9:51 TD and 2-play 66-yard rushing TD within same game; four consecutive Army three-and-outs in second half",
+      "lesson": "Within-game regime/script distribution must allow productive control, short explosive drives, and correlated temporary stalls"
+    },
+    {
+      "id": "KICKING_DISTANCE_REGRESSION",
+      "evidence": "Army made 51, 34, 50 yd FGs; Tulsa missed 40 yd try",
+      "lesson": "Keep attempts conditional on distance and miss probability; no deterministic reproduction of observed perfect kicker"
+    },
+    {
+      "id": "CORRECT_RUSHING_MARGIN_DIRECTION",
+      "evidence": "Army rushed 51/275 and Tulsa 26/148; Army +3 margin against +2.897 Build16",
+      "lesson": "Retain opponent-adjusted rushing advantage; avoid altering margin means based solely on total miss"
+    }
+  ],
+  "forward_research_priority": [
+    {
+      "priority": 1,
+      "id": "SOURCE_VERIFIED_BLOCKED_PUNT_NEXT_FIELD",
+      "status": "IDENTIFIED_NOT_YET_ACTIVATED",
+      "target": "Use raw punt_blocked / is_blocked_punt_turnover and next-drive start field position, conditional only on verified previous games; treat as alternative transition not extra score"
+    },
+    {
+      "priority": 2,
+      "id": "QUALIFIED_FOURTH_DOWN_DECISION_CHAIN",
+      "status": "IDENTIFIED_NOT_YET_ACTIVATED",
+      "target": "Fit down/distance and short-yardage fourth-down choice/success to previously observed games, guard against double counting third-down/rush EPA"
+    },
+    {
+      "priority": 3,
+      "id": "EMPIRICAL_JOINT_DRIVE_AND_SCORING_TAIL_EVALUATION",
+      "status": "JOINT_DRIVE_CODE_MERGED_AFTER_GAME_HISTORICAL_REPLAY_NOT_COMPLETE",
+      "target": "Quantify high-total script mass and scoring opportunity correlation via paired 5000-draw study without motivating fixture leakage"
+    },
+    {
+      "priority": 4,
+      "id": "FG_DISTANCE_REGRESSION",
+      "status": "ALREADY_ACTIVE_PREMATCH",
+      "target": "Maintain realistic source-backed 40/50+ distance misses even after this game's unusual kicking results"
+    }
+  ],
+  "integrity": {
+    "forecast_frozen_before_kickoff": true,
+    "postgame_stats_not_used_in_original_predictions": true,
+    "original_betting_line_quote_not_native_archive_ensured": true,
+    "official_box_third_down_supersedes_third_party_discrepant_counts": true,
+    "old_personnel_feature_remains_rolled_back": true,
+    "baseline_scoring_code_changed_by_audit": false,
+    "challenger_scoring_parameters_changed_by_this_audit": false,
+    "after_game_model_addition_not_retroactively_credited": true,
+    "verified_new_5000_simulation_for_this_audit": false
+  },
+  "note": "No causal decomposition of every point is identified by a single final score. Blocked punt materially changed field position; its exact marginal point value cannot be identified from actual scoring alone."
+}
