@@ -8,7 +8,7 @@ on:
       - 'cfb/test_investigation_gate.py'
       - 'cfb/investigation_registry/**'
       - 'cfb/frozen_pregame_audits/**'
-      - '.github/workflows/cfb-*20261024.yml'
+      - '.github/workflows/cfb-*.yml'
       - '.github/workflows/cfb-mandatory-ranking-gate.yml'
   pull_request:
     paths:
@@ -41,13 +41,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Mandatory October 24 archive completeness check
+      - name: Mandatory all-future-dates archive completeness check
         run: |
-          python -m cfb.investigation_gate --date 2026-10-24 --out cfb_artifacts/2026-10-24-ranking-gate.json
+          python -m cfb.investigation_gate --all-dates-from 2026-10-24 --out cfb_artifacts/all-future-ranking-gate.json
       - name: Preserve diagnostic even if ranking is blocked
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cfb-investigation-ranking-gate-${{ github.run_id }}
-          path: cfb_artifacts/2026-10-24-ranking-gate.json
+          path: cfb_artifacts/all-future-ranking-gate.json
           if-no-files-found: error
