@@ -23,6 +23,7 @@ from cfb.mechanism_build16 import simulate_build16
 from cfb.failure1_shadow import include_prior_game
 from cfb.failure1_learned_shadow import shadow as learned_rushing_shadow, correction as fitted_rush_correction
 from cfb.mandatory_rushing_audit import audit as rushing_audit, gate as rushing_gate
+from cfb.ats_concordance import assess as spread_concordance
 from cfb.market import _date
 from cfb.matchups import matchup_signals
 from cfb.matchup_cycle import _market, postgame as compare_postgame, markdown as legacy_markdown, normalized
@@ -231,6 +232,7 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
         'personnel_adjustment_to_model_points':None,
         'market':{'status':'NO_SOURCE_OBSERVED_PREKICKOFF_SPREAD','ats_research_side':None},
         'mandatory_rushing_audit':None,'rushing_ats_risk_gate':None,
+        'ats_spread_concordance_guard':None,
         'failure1_learned_rush_shadow':None,
         'locked_market_evidence':None,
         'limitations':['Quarterback usage measured from prior games; next-game starters are NOT verified',
@@ -263,6 +265,12 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
         proxy={**result,'simulated_margin_home':sim['mean_margin_home']}
         market=_market(proxy,qmap)
         rush_gate=rushing_gate(rush_screen,challenger,market)
+        # The native as-of quote is optional. If missing, this is explicitly
+        # only a baseline/challenger warning — no inferred external spread.
+        concordance=(spread_concordance(
+             sim['mean_margin_home'],challenger['mean_margin_home'],
+             market.get('home_spread')) if challenger.get('simulation') is not None
+             else None)
         learned_shadow=(learned_rushing_shadow(hid,aid,histories,neutral,
                        runs=runs,seed=int(g.game_id)%(2**32),
                        source_manifest_sha256=manifest_sha)
@@ -280,6 +288,7 @@ def analyze(snapshot, team_a, team_b, game_id=None, *, odds_root=None, runs=5000
                        'matchup_evidence':signals,
                        'mandatory_rushing_audit':rush_screen,
                        'rushing_ats_risk_gate':rush_gate,
+                       'ats_spread_concordance_guard':concordance,
                        'failure1_learned_rush_shadow':learned_shadow,
                        'simulation':sim,
                        'stress_tests':sensitivity(hp,ap,g.game_id),
