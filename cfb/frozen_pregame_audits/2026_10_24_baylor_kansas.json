@@ -1,0 +1,215 @@
+{
+  "schema": "cfb_2026_10_24_baylor_at_kansas_frozen_pregame_5000_v1",
+  "fixture": {
+    "game_id": "401856834",
+    "away": "Baylor",
+    "home": "Kansas",
+    "venue": "David Booth Kansas Memorial Stadium",
+    "scheduled_kickoff_utc": "2026-10-24T17:00:00Z",
+    "scheduled_kickoff_local": "2026-10-24 12:00 CDT",
+    "official_source": "https://kuathletics.com/news/2026/10/18/football-homecoming-vs-baylor-set-for-12-pm-kickoff-on-tnt"
+  },
+  "data_integrity": {
+    "capture_utc": "2026-10-24T15:21:07.144332Z",
+    "git_workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40106552249",
+    "head_sha": "98080c83646af812c33489110a528ede31db8c7a",
+    "workflow_status": "success",
+    "provider_kickoff_metadata": "2026-10-24T04:00:00Z",
+    "provider_kickoff_mismatch_official": true,
+    "provider_date_validated": true,
+    "actual_kickoff_validated_from_schools": true,
+    "snapshot_pre_game": true,
+    "prior_completed_games_baylor": 6,
+    "prior_completed_games_kansas": 6,
+    "target_outcome_excluded": true,
+    "raw_odds_external_only": true,
+    "personnel_roll_back_preserved": true,
+    "baseline_unmodified": true,
+    "single_CFB_challenger": true,
+    "NFL_unchanged": true
+  },
+  "market": {
+    "open_baylor_spread": -1.5,
+    "recent_dk_baylor_spread": -1.5,
+    "dk_baylor_minus_1_5_price_american": 100,
+    "dk_kansas_plus_1_5_price_american": -120,
+    "fanDuel_baylor_spread": -2.5,
+    "fanDuel_baylor_minus_2_5_price_american": -115,
+    "fanDuel_kansas_plus_2_5_price_american": -105,
+    "other_baylor_minus_3_0_seen": true,
+    "total_range": [
+      52.5,
+      53.5
+    ],
+    "dk_baylor_spread_ticket_share": 0.55,
+    "dk_baylor_spread_handle_share": 0.62,
+    "reported_thirdparty_circa_kansas_spread_handle_share": 0.55,
+    "splits_not_synchronous": true,
+    "source_dk": "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/?tb_edate=n7days&tb_eg=87637&tb_emt=Spread",
+    "source_fanduel": "https://www.actionnetwork.com/ncaaf/baylor-bears-vs-kansas-jayhawks-prediction-pick-odds-college-football-saturday-october-24",
+    "source_secondary_circa": "https://wiseguyteam.com/cfb-betting-splits"
+  },
+  "stats": {
+    "baylor": {
+      "season_wins": 4,
+      "season_losses": 2,
+      "points_scored_per_game": 30,
+      "points_allowed_per_game": 14.7,
+      "off_yards": 436.2,
+      "pass_yards": 286,
+      "rush_yards": 150.2,
+      "def_rush_yards": 86.7,
+      "def_pass_yards": 240,
+      "neutral_seconds_per_play": 22.6,
+      "plays_per_game": 81
+    },
+    "kansas": {
+      "season_wins": 2,
+      "season_losses": 4,
+      "points_scored_per_game": 32,
+      "points_allowed_per_game": 24,
+      "off_yards": 449.7,
+      "pass_yards": 242.5,
+      "rush_yards": 207.2,
+      "def_rush_yards": 174.3,
+      "def_pass_yards": 174.3,
+      "neutral_seconds_per_play": 27.5,
+      "plays_per_game": 69
+    },
+    "source": "https://havoc.football/games/548?tab=matchup"
+  },
+  "simulation": {
+    "simulations_per_variant": 5000,
+    "seed": 401856834,
+    "baseline": {
+      "baylor_points": 26.055,
+      "kansas_points": 26.879,
+      "kansas_margin": 0.824,
+      "total": 52.934,
+      "kansas_win_raw": 0.5164,
+      "kansas_cover_plus_1_5": 0.5406,
+      "kansas_cover_plus_2_5": 0.5596,
+      "kansas_cover_plus_3": 0.5596,
+      "push_plus_3": 0.0456,
+      "margin_sd": 15.233
+    },
+    "previous_Build16_without_improvement1": {
+      "baylor_points": 22.828,
+      "kansas_points": 26.198,
+      "kansas_margin": 3.37,
+      "total": 49.025,
+      "kansas_win_raw": 0.5758,
+      "kansas_cover_plus_1_5": 0.591
+    },
+    "updated_Build16": {
+      "baylor_points": 22.713,
+      "kansas_points": 26.096,
+      "kansas_margin": 3.383,
+      "total": 48.809,
+      "kansas_win_raw": 0.578,
+      "kansas_cover_plus_1_5": 0.5962,
+      "kansas_cover_plus_2_5": 0.6114,
+      "kansas_cover_plus_3": 0.6114,
+      "push_plus_3": 0.0358,
+      "margin_sd": 18.238,
+      "home_margin_p10_p50_p90": [
+        -20,
+        4,
+        27
+      ],
+      "empirical_clock_verified": true,
+      "joint_drive_active": true,
+      "redzone_and_fg_distance_regression_active": true,
+      "defensive_return_td_and_special_team_td_separate": true,
+      "unfitted_ATS_cover_probabilities": true
+    }
+  },
+  "improvement1": {
+    "status": "ACTIVE_SOURCE_INCREMENTAL_TWO_WAY_VENUE",
+    "source_adjusted_rush_pass_counterattack_active": true,
+    "qualified_team_specific_venue_effect": false,
+    "reason": "Baylor has insufficient independently supported away venue history",
+    "venue_home_ppd": 0,
+    "venue_away_ppd": 0,
+    "route_ppd_home": -0.0003335,
+    "route_ppd_away": 0.0003335,
+    "updated_vs_previous_kansas_margin_change": 0.013,
+    "not_numerically_injury_adjusted": true,
+    "baseline_unchanged": true
+  },
+  "redzone_fieldgoals": {
+    "kansas_opponent_matched_redzone_td_probability": 0.634444,
+    "baylor_opponent_matched_redzone_td_probability": 0.494986,
+    "kansas_regressed_FG_make": 0.770096,
+    "baylor_regressed_FG_make": 0.763291,
+    "small_sample_independent_regression_not_fit_from_future_data": true
+  },
+  "scenario_from_five_thousand": {
+    "kansas_scoring_stall": {
+      "share": 0.2726,
+      "conditional_baylor_points": 23.773,
+      "conditional_kansas_points": 10.948,
+      "baylor_margin": 12.825
+    },
+    "baylor_scoring_stall": {
+      "share": 0.3004,
+      "conditional_kansas_points": 27.007,
+      "conditional_baylor_points": 9.417,
+      "kansas_margin": 17.59
+    },
+    "kansas_two_more_turnovers": {
+      "share": 0.1634,
+      "conditional_baylor_points": 26.047,
+      "conditional_kansas_points": 21.204,
+      "baylor_margin": 4.842
+    },
+    "baylor_two_more_turnovers": {
+      "share": 0.1662,
+      "conditional_kansas_points": 29.241,
+      "conditional_baylor_points": 18.917,
+      "kansas_margin": 10.324
+    },
+    "scenario_subsets_overlap": true
+  },
+  "opponent_adjusted_external": {
+    "havoc_baylor_margin": 1.4,
+    "tempo_kansas_margin": 3.6,
+    "havoc_predicted_total": 51.6,
+    "tempo_predicted_total": 54.1,
+    "report": "https://havoc.football/games/548?tab=matchup",
+    "other": "https://tempocfb.net/games/2026/8/baylor-at-kansas",
+    "external_reports_not_used_as_build16_model_inputs": true
+  },
+  "concordance_diagnostic": {
+    "baseline_home_margin": 0.824,
+    "challenger_home_margin": 3.383,
+    "home_spread_kansas_plus_1_5": 1.5,
+    "baseline_kansas_edge": 2.324,
+    "challenger_kansas_edge": 4.883,
+    "models_market_side_same": true,
+    "material_margin_disagreement": true,
+    "live_native_spread_quote_not_attested": true,
+    "automatic_bet_recommendation": false
+  },
+  "decision": {
+    "predicted_winner": "Kansas",
+    "central_score": "Kansas 26 Baylor 23",
+    "best_ATS": "Kansas +2.5",
+    "expected_quote": "FanDuel +2.5 (-105)",
+    "alternative": "Kansas +1.5 (-120), downgrade to weak lean/pass given price",
+    "at_plus_3": "Prefer Kansas +3 if verified at reasonable price",
+    "grade": "B",
+    "confidence_10": 6.1,
+    "bet_decision": "Conditional Kansas +2.5 at -105 or better; verify current quote",
+    "total": "PASS",
+    "half_market": "No stronger edge confirmed",
+    "reason": "Both frozen model versions support Kansas plus points; countervailing elite Baylor pressure and low offensive finishing, with imperfect cover calibration. External matchup models mixed."
+  },
+  "integrity": {
+    "no_postgame_final_score_used": true,
+    "all_means_original_pre_kickoff": true,
+    "strict_prior_game_history": true,
+    "actual_5000_simulations": true,
+    "not_hindsight_corrected": true
+  }
+}
