@@ -59,12 +59,12 @@ def _game_record(root, date, entry):
         raise ValueError("Unsafe or non-standard frozen audit path")
     if not name.startswith("cfb/frozen_pregame_audits/" + date.replace("-", "_") + "_"):
         raise ValueError("Audit filename belongs to different game date")
-    pinned = entry.get("blob_sha")
-    if not isinstance(pinned, str) or not HEX40.fullmatch(pinned):
-        raise ValueError("Missing immutable Git blob pin")
     path = root / name
     if not path.is_file():
         raise ValueError("Registered audit is missing")
+    pinned = entry.get("blob_sha")
+    if not isinstance(pinned, str) or not HEX40.fullmatch(pinned):
+        raise ValueError("Missing immutable Git blob pin")
     raw = path.read_bytes()
     if _blob_sha(raw) != pinned:
         raise ValueError("Frozen audit bytes differ from registered Git blob")
@@ -99,9 +99,13 @@ def _game_record(root, date, entry):
         phrase = _get(data, mapping["grade_evidence"])
         if grade not in GRADE or not isinstance(phrase, str) or not re.search(r"\b" + grade + r"-grade\b", phrase, re.I):
             raise ValueError("Unsubstantiated conditional grade override")
-    decision = _get(data, mapping["bet_decision"])
-    if not isinstance(decision, str) or not decision.strip():
-        raise ValueError("Missing wager/pass decision")
+    if mapping.get("bet_decision"):
+        decision = _get(data, mapping["bet_decision"])
+        if not isinstance(decision, str) or not decision.strip():
+            raise ValueError("Invalid wager/pass decision evidence")
+    else:
+        # Directional predictions remain in rankings, but do not become wagers.
+        decision = "NO_EXPLICIT_WAGER_DECISION_IN_FROZEN_RECORD"
     return {
         "game_id": game_id, "away": entry["away"], "home": entry["home"],
         "ats_selection": side.strip(), "grade": grade,
@@ -148,6 +152,13 @@ def audit_day(root, date, registry_path=None):
             workflows.add(workflow)
             if not (root / workflow).is_file():
                 errors.append(identifier + ": referenced workflow file missing")
+        for alias in entry.get("workflow_aliases", []):
+            if alias in workflows or not isinstance(alias, str) or not re.fullmatch(r"\.github/workflows/cfb-[a-z0-9-]+-20\d{6}\.yml", alias):
+                errors.append(identifier + ": invalid/duplicate workflow alias")
+            else:
+                workflows.add(alias)
+                if not (root / alias).is_file():
+                    errors.append(identifier + ": referenced workflow alias missing")
         try:
             rows.append(_game_record(root, date, entry))
         except (ValueError, TypeError, KeyError, json.JSONDecodeError, OSError) as exc:
@@ -158,6 +169,10 @@ def audit_day(root, date, registry_path=None):
                    for p in (root / "cfb" / "frozen_pregame_audits").glob(date.replace("-", "_") + "_*.json")}
     for extra in sorted(known_files - paths):
         errors.append("Unregistered frozen pregame audit: " + extra)
+    dated_suffix = "-" + date.replace("-", "") + ".yml"
+    discovered = {".github/workflows/" + p.name for p in (root / ".github" / "workflows").glob("cfb-*" + dated_suffix)}
+    for extra in sorted(discovered - workflows):
+        errors.append("Dated CFB investigation workflow not registered: " + extra)
     if not doc["entries"]:
         errors.append("Empty registry cannot certify a complete slate")
     rows.sort(key=lambda r: (-r["confidence_10"], {"A": 0, "B": 1, "C": 2}[r["grade"]],
