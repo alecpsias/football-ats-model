@@ -83,6 +83,14 @@ def _game_record(root, date, entry):
     draws = _get(data, mapping["draws"])
     if type(draws) is not int or draws != 5000:
         raise ValueError("Missing actual 5,000-draw simulation evidence")
+    for label in ("baseline", "challenger"):
+        variant = _get(data, mapping[label])
+        if not isinstance(variant, dict) or not variant:
+            raise ValueError("Missing " + label + " projection/simulation")
+        if not any(("margin" in k or "point" in k or "score" in k or
+                    k in ("miami", "cmu", "akron_mean", "kent_mean"))
+                   for k in variant if isinstance(k, str)):
+            raise ValueError("No scoring evidence in " + label + " variant")
     side = _get(data, mapping["side"])
     confidence = _get(data, mapping["confidence"])
     if not isinstance(side, str) or not side.strip():
