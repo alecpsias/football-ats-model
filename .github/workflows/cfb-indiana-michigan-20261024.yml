@@ -1,0 +1,142 @@
+name: CFB Indiana at Michigan Oct 24 2026 frozen Build16 ATS
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/cfb-indiana-michigan-20261024.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pregame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install free CFB dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Verify CFB regression suite including Improvement 1
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
+      - name: Collect only permitted free-source 2026 snapshot
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/indiana_michigan_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/indiana_michigan_snapshot
+      - name: Verify exact fixture, participants and pregame source cutoff
+        run: |
+          python - <<'PY'
+          import os
+          import pandas as pd
+          s=pd.read_parquet('cfb_artifacts/indiana_michigan_snapshot/schedule.parquet')
+          g=s.loc[s.game_id.astype(str).eq('401858496')]
+          if len(g)!=1:raise RuntimeError('Expected one Indiana @ Michigan fixture')
+          g=g.iloc[0]
+          if (str(g.away_team).strip().lower()!='indiana' or
+              str(g.home_team).strip().lower()!='michigan'):
+              raise RuntimeError('Team mapping unexpected: '+str([g.away_team,g.home_team]))
+          if bool(g.completed):raise RuntimeError('Game already completed: refuse retrospective pregame')
+          if pd.to_datetime(g.start_date,utc=True).date()!=pd.Timestamp('2026-10-24').date():
+              raise RuntimeError('Kickoff mismatch')
+          with open(os.environ['GITHUB_ENV'],'a') as env:
+              env.write('GAME_ID=401858496\n')
+          print('PREKICKOFF_VERIFIED',g.game_id,g.away_team,'at',g.home_team,g.start_date)
+          PY
+      - name: Frozen real 5000-draw CFB baseline and Improvement 1 Build16
+        run: |
+          python -m cfb.fresh_matchup --mode pregame \
+            --team-a "Indiana" --team-b "Michigan" --game-id "$GAME_ID" \
+            --snapshot cfb_artifacts/indiana_michigan_snapshot \
+            --odds cfb/_market_disabled --availability-dir cfb/availability \
+            --runs 5000 --github-run-id "$GITHUB_RUN_ID" --git-sha "$GITHUB_SHA" \
+            --out cfb_artifacts/indiana_michigan_pregame.json > cfb_artifacts/indiana_michigan_stdout.log
+          python - <<'PY'
+          import json
+          x=json.load(open('cfb_artifacts/indiana_michigan_pregame.json'))
+          b=x.get('build16_challenger') or {}
+          print('INDIANA_MICHIGAN_FROZEN_PREKICKOFF_5000')
+          print(json.dumps({
+             'status':x.get('status'),'game_id':x.get('game_id'),
+             'home':x.get('home'),'away':x.get('away'),
+             'kickoff':x.get('kickoff_utc'),
+             'snapshot':x.get('source_snapshot_at_utc'),
+             'forecast_at':x.get('prediction_generated_at_utc'),
+             'history_home':x.get('completed_prior_games_home'),
+             'history_away':x.get('completed_prior_games_away'),
+             'baseline':x.get('simulation'),
+             'build16':b.get('simulation'),'build16_status':b.get('status'),
+             'improvement1':b.get('two_way_venue_improvement1'),
+             'fitted_rush':x.get('build16_active_failure1_rushing_correction'),
+             'rushing_audit':x.get('mandatory_rushing_audit'),
+             'rushing_gate':x.get('rushing_ats_risk_gate'),
+             'baseline_challenger_spread_guard':x.get('ats_spread_concordance_guard'),
+             'matchup':x.get('matchup_evidence'),
+             'redzone_kicking':b.get('redzone_kicking_evidence'),
+             'nonoffensive':b.get('failure2_scoring_attribution'),
+             'sustainability':b.get('failure3_sustainability'),
+             'joint_drive':b.get('joint_drive_process'),
+             'missing':x.get('missing_statistical_fields')
+          },indent=2,default=str)[:95000])
+          PY
+      - name: Same-seed 5000-draw cover and Improvement 1 on-off comparison
+        run: |
+          python - <<'PY'
+          import os,json
+          from pathlib import Path
+          import pandas as pd
+          from cfb.pipeline import verify,iso_utc
+          from cfb.fresh_matchup import histories_asof
+          from cfb.failure1_learned_shadow import correction
+          from cfb.mechanism_build16 import simulate_build16
+          root=Path('cfb_artifacts/indiana_michigan_snapshot')
+          cutoff=iso_utc(verify(root)['captured_at_utc'])
+          s=pd.read_parquet(root/'schedule.parquet')
+          p=pd.read_parquet(root/'pbp.parquet')
+          r=pd.read_parquet(root/'roster.parquet')
+          future,_,histories,_=histories_asof(s,p,r,cutoff)
+          g=future.loc[future.game_id.astype(str).eq('401858496')]
+          if len(g)!=1:raise RuntimeError('Target game missing from future fixtures')
+          g=g.iloc[0];h=int(g.home_id);a=int(g.away_id)
+          fit=correction(h,a,histories)
+          common=dict(home_id=h,away_id=a,histories=histories,
+             neutral=bool(g.neutral_site),runs=5000,seed=401858496,
+             failure1_fit_margin_delta=fit['margin_delta_points'])
+          out={'capture':str(cutoff),'game_id':'401858496',
+               'unverified_live_quote_used_only_for_cover_sensitivity':True,
+               'raw_cover_probabilities_not_ATS_calibrated':True,
+               'fitted_rush_correction':fit,
+               'reference_no_improvement1':None,'scenarios':[]}
+          ref=simulate_build16(spread_home=7.5,two_way_venue_enabled=False,**common)
+          if ref.get('simulation') is None:raise RuntimeError('Reference unavailable')
+          out['reference_no_improvement1']=ref['simulation']
+          for line in (6.5,7.0,7.5,8.5):
+              t=simulate_build16(spread_home=line,two_way_venue_enabled=True,**common)
+              if t.get('simulation') is None:raise RuntimeError('Build16 missing at '+str(line))
+              d=t['simulation']
+              if d['simulations']!=5000:raise RuntimeError('Incorrect simulation draws')
+              out['scenarios'].append({
+                  'michigan_spread':line,'indiana_spread':-line,
+                  'indiana_cover_raw':d['away_cover_probability_raw'],
+                  'michigan_cover_raw':d['home_cover_probability_raw'],
+                  'indiana_win_raw':1.-d['home_win_probability_raw'],
+                  'score_indiana':d['mean_score_away'],
+                  'score_michigan':d['mean_score_home'],
+                  'indiana_margin':-d['mean_margin_home'],
+                  'total':d['mean_total'],
+                  'home_margin_percentiles':d['margin_p10_p50_p90'],
+                  'improvement1':t.get('two_way_venue_improvement1'),
+                  'runs':d['simulations']})
+          print('INDIANA_MICHIGAN_EXPLICIT_SPREAD_AND_ABLATION')
+          print(json.dumps(out,indent=2,default=str)[:65000])
+          Path('cfb_artifacts/indiana_michigan_ats_5000.json').write_text(json.dumps(out,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cfb-indiana-michigan-frozen-${{ github.run_id }}
+          path: |
+            cfb_artifacts/indiana_michigan_pregame.json
+            cfb_artifacts/indiana_michigan_pregame.md
+            cfb_artifacts/indiana_michigan_stdout.log
+            cfb_artifacts/indiana_michigan_ats_5000.json
+          if-no-files-found: warn
