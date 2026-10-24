@@ -1,0 +1,187 @@
+{
+  "schema": "cfb_frozen_pregame_build16_5000_v1",
+  "fixture": {
+    "game_id": "401858270",
+    "date_local": "2026-10-24",
+    "away": "California",
+    "home": "SMU",
+    "venue": "Gerald J. Ford Stadium",
+    "kickoff_utc": "2026-10-24T16:00:00+00:00"
+  },
+  "provenance": {
+    "snapshot_capture_utc": "2026-10-24T14:18:06.906411+00:00",
+    "workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40101856831",
+    "workflow_result": "success",
+    "workflow_commit": "bf064e5d0b7ec7737d1cb3d671c820a1af851a5e",
+    "source_provider_game_id": "401858270",
+    "training_games_california": 7,
+    "training_games_smu": 6,
+    "strict_pre_kickoff": true,
+    "free_only_public_source": true
+  },
+  "numerical": {
+    "runs_per_variant": 5000,
+    "seed": 401858270,
+    "baseline": {
+      "california": 22.935,
+      "smu": 30.298,
+      "smu_margin": 7.363,
+      "total": 53.233,
+      "smu_win_probability_raw": 0.6886,
+      "cal_plus_18_5_cover_raw": 0.7762,
+      "cal_plus_19_5_cover_raw": 0.7858
+    },
+    "previous_build16_without_improvement1": {
+      "california": 20.148,
+      "smu": 30.073,
+      "smu_margin": 9.925,
+      "total": 50.221,
+      "smu_win_probability_raw": 0.7066,
+      "cal_plus_18_5_cover_raw": 0.6872
+    },
+    "updated_build16": {
+      "california": 20.459,
+      "smu": 28.524,
+      "smu_margin": 8.065,
+      "total": 48.983,
+      "smu_win_probability_raw": 0.6724,
+      "cal_plus_18_5_cover_raw": 0.725,
+      "cal_plus_19_5_cover_raw": 0.7334,
+      "margin_sd": 17.755,
+      "home_margin_p10_p50_p90": [
+        -16,
+        8,
+        31
+      ],
+      "true_verified_empirical_clock": true,
+      "joint_drive": true,
+      "nonoffensive_defensive_scoring_separate": true,
+      "regressed_fg_distance_and_redzone": true,
+      "raw_probabilities_not_calibrated": true
+    }
+  },
+  "improvement1": {
+    "status": "ACTIVE_SOURCE_INCREMENTAL_TWO_WAY_VENUE",
+    "home_off_and_def_venue_qualified": true,
+    "away_off_and_def_venue_qualified": true,
+    "source_pass_rush_counterattack_active": true,
+    "smu_venue_ppd": -0.15038885,
+    "cal_venue_ppd": 0.00470264,
+    "incremental_margin_shift_toward_california": 1.86,
+    "personnel_numeric_not_reactivated": true,
+    "baseline_untouched": true,
+    "provisional_coefficients_unfitted": true
+  },
+  "frozen_qualitative_stats": {
+    "cal_points_for": 23.9,
+    "smu_points_for": 32.7,
+    "cal_points_allowed": 27.7,
+    "smu_points_allowed": 21.3,
+    "cal_rushing_yards_for": 90.3,
+    "smu_rushing_yards_for": 141.5,
+    "cal_rush_yards_allowed": 181.4,
+    "smu_rush_yards_allowed": 138.2,
+    "cal_pass_yards_for": 288.1,
+    "smu_pass_yards_for": 329.3,
+    "cal_off_epa_per_play": -0.02,
+    "smu_off_epa_per_play": 0.207,
+    "cal_off_success": 0.384,
+    "smu_off_success": 0.482,
+    "cal_def_allowed_success": 0.381,
+    "smu_def_allowed_success": 0.377,
+    "cal_off_points_per_opportunity": 2.59,
+    "smu_off_points_per_opportunity": 3.66,
+    "cal_off_havoc_allowed": 0.179,
+    "smu_off_havoc_allowed": 0.134,
+    "cal_pass_down_success": 0.269,
+    "smu_pass_down_success": 0.366,
+    "smu_def_third_down_allowed": 0.26506024096385544,
+    "opponent_quality_context": "Independent Havoc opponent adjusted model reports SMU pass vs Cal pass defense +6.3 model-specific points; Cal pass vs SMU pass D +5.6 points in SMU's favor; Cal rush vs SMU defense +3.5 for SMU; SMU run vs Cal run D +3.1 for SMU. These are Havoc model impact not added to Build16."
+  },
+  "market": {
+    "dk_smu_spread": -18.5,
+    "dk_price_smu": -112,
+    "dk_cal_spread": 18.5,
+    "dk_price_cal": -108,
+    "some_reported_cal_spread": 19.5,
+    "cal_19_5_current_availability_not_verified": true,
+    "total": 55.5,
+    "opened_spread_approx_smu": -17.5,
+    "draftkings_spread_tickets_smu_pct": 66,
+    "draftkings_spread_handle_smu_pct": 53,
+    "third_party_reported_circa_spread_handle_smu_pct": 56,
+    "third_party_reported_circa_spread_handle_cal_pct": 44,
+    "circa_moneyline_cal_pct_secondhand": 97,
+    "native_timestamped_odds_archive": false,
+    "sources": [
+      "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/",
+      "https://wiseguyteam.com/cfb-betting-splits",
+      "https://havoc.football/games/547",
+      "https://oddslisting.com/matchups/cfb-401858270"
+    ]
+  },
+  "availability_context": {
+    "cal_RB_Adam_Mohammed_out": true,
+    "cal_RB_Carter_Vargas_out": true,
+    "cal_WR_Ian_Strong_upgraded_probable_friday": true,
+    "cal_WR_Cooper_Perry_Jordan_King_Mark_Hamper_doubtful_friday": true,
+    "smu_RB_Dramekco_Green_out": true,
+    "smu_S_Tyren_Polley_Jr_out": true,
+    "numerical_personnel_impact_not_fitted": true
+  },
+  "other_ratings": {
+    "havoc_smu_margin": 16.2,
+    "tempo_smu_margin": 20.5,
+    "spplus_neutral_smu_rating_delta": 19.1,
+    "market_moneyline_smu_minus_1100_implied_prob_uncorrected": 0.9167,
+    "model_smu_win_only": 0.6724,
+    "miscalibration_red_flag": true
+  },
+  "scenario_distributions": {
+    "cal_scoring_stall": {
+      "subset_share": 0.2822,
+      "conditional_score_smu": 29.602,
+      "conditional_score_cal": 7.64,
+      "conditional_margin_smu": 21.962
+    },
+    "smu_scoring_stall": {
+      "subset_share": 0.2546,
+      "conditional_score_smu": 12.819,
+      "conditional_score_cal": 21.338,
+      "conditional_margin_cal": 8.519
+    },
+    "cal_two_more_turnovers": {
+      "subset_share": 0.1516,
+      "conditional_margin_smu": 14.513
+    },
+    "smu_two_more_turnovers": {
+      "subset_share": 0.1608,
+      "conditional_margin_smu": 3.481
+    },
+    "runaway_clock_trigger": {
+      "subset_share": 0.0684,
+      "conditional_margin_smu": 19.363
+    },
+    "scenarios_overlap": true,
+    "not_independent_calibrated_probabilities": true
+  },
+  "decision": {
+    "predicted_outright_winner": "SMU",
+    "model_center_score": "SMU 29 California 20",
+    "preferred_ats_side": "California +19.5 if genuinely available at acceptable price; California +18.5 weaker",
+    "official_recommendation_at_verifiable_dk_18_5": "Cal +18.5 lean; C-grade, caution",
+    "grade_at_19_5": "B borderline",
+    "confidence_out_of_10_at_19_5": 6,
+    "confidence_out_of_10_at_18_5": 5.7,
+    "betting_total": "PASS",
+    "caveats": "Strong SMU passing vs Cal recent offensive struggles and Cal RB/WR absences; independent model/market moneyline significantly higher SMU win probability; likely Build16 compresses mismatch; raw 72-73% cover not interpreted as real."
+  },
+  "integrity": {
+    "one_cfb_challenger": true,
+    "nfl_separate": true,
+    "no_target_final_known": true,
+    "no_injuries_numeric": true,
+    "baseline_preserved": true,
+    "game_stat_cutoff_prior_games_only": true
+  }
+}
