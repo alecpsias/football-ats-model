@@ -39,7 +39,7 @@ def mean_epa(records, kind):
     return total(records, kind + '_sum') / count if count else None
 
 
-def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays=None, home_id=None):
+def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays=None, home_id=None, neutral_site=None):
     """Read observed PBP per game without accessing future fixtures."""
     off = plays.loc[plays.pos_team_id.eq(team)]
     opp = plays.loc[plays.pos_team_id.eq(opponent)]
@@ -192,6 +192,9 @@ def observed_game(plays, team, opponent, points, conceded, qb_ids, special_plays
             'nonoffensive_points':attribution['nonoffensive_points'][attack_side] if verified else None,
             'opponent_nonoffensive_points':attribution['nonoffensive_points'][defense_side] if verified else None,
             'opponent_id':int(opponent),
+            'venue':('neutral' if neutral_site is True else
+                ('home' if int(team)==int(home_id) else 'away')
+                if neutral_site is False and home_id is not None else None),
             'mechanism':observe_game_context(plays,team,opponent),
             'disruption_off':observed_disruption(plays,team),
             'disruption_def':observed_disruption(plays,opponent),
@@ -326,9 +329,11 @@ def replay(snapshot, out, runs=1500, min_games=3):
             if plays is None:
                 continue
             h=observed_game(plays,home,away,g.home_points,g.away_points,qb_ids.get(home,set()),
-                            special_plays=raw_by_game.get(g.game_id),home_id=home)
+                            special_plays=raw_by_game.get(g.game_id),home_id=home,
+                            neutral_site=(bool(g.neutral_site) if pd.notna(g.neutral_site) else None))
             a=observed_game(plays,away,home,g.away_points,g.home_points,qb_ids.get(away,set()),
-                            special_plays=raw_by_game.get(g.game_id),home_id=home)
+                            special_plays=raw_by_game.get(g.game_id),home_id=home,
+                            neutral_site=(bool(g.neutral_site) if pd.notna(g.neutral_site) else None))
             if h is None or a is None:
                 continue
             if len(history[home])>=min_games and len(history[away])>=min_games:
