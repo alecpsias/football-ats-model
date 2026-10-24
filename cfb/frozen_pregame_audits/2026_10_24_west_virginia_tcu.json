@@ -1,0 +1,175 @@
+{
+  "schema": "cfb_2026_10_24_wvu_tcu_frozen_pregame_v1",
+  "fixture": {
+    "game_id": "401856841",
+    "date": "2026-10-24",
+    "home": "TCU",
+    "away": "West Virginia",
+    "venue": "Amon G. Carter Stadium",
+    "kickoff_utc": "2026-10-24T16:00:00Z"
+  },
+  "provenance": {
+    "snapshot_utc": "2026-10-24T14:43:38.220753Z",
+    "workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40103766580",
+    "workflow_status": "completed_success",
+    "git_sha": "8e8928ef9854f4584b26b50cd73825b5f3da5090",
+    "history_wvu_games": 7,
+    "history_tcu_games": 6,
+    "source": "SportsDataverse free Parquet with as-of 24h completed-game guard",
+    "target_game_in_history": false
+  },
+  "market": {
+    "opening_tcu_spread": -7,
+    "current_reference_tcu_spread": -10.5,
+    "alternate_lines_tcu_minus": [
+      8.5,
+      9.5
+    ],
+    "draftkings_wvu_plus_10_5_price": -112,
+    "draftkings_tcu_minus_10_5_price": -108,
+    "total_current": 57.5,
+    "third_party_circa_tcu_spread_handle": 0.98,
+    "third_party_circa_under_total_handle": 0.99,
+    "draftkings_wvu_spread_handle": 0.65,
+    "market_source_native_timestamp_book_verified": false,
+    "dk_source": "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/",
+    "sharp_secondhand": "https://wiseguyteam.com/cfb-betting-splits"
+  },
+  "historical_team_stats": {
+    "wvu": {
+      "ppg": 37.6,
+      "allowed_ppg": 34,
+      "rush_off_yards": 272.4,
+      "pass_off_yards": 224.7,
+      "rush_def_yards": 173.7,
+      "pass_def_yards": 310.1,
+      "off_total_yards": 497.1
+    },
+    "tcu": {
+      "ppg": 24,
+      "allowed_ppg": 12.2,
+      "rush_off_yards": 110,
+      "pass_off_yards": 282.3,
+      "rush_def_yards": 92,
+      "pass_def_yards": 172.2,
+      "off_total_yards": 392.3
+    },
+    "stat_source": "https://wvusports.com/news/2026/10/24/football-countdown-to-kickoff-mountaineers-horned-frogs-tangle-today-in-fort-worth"
+  },
+  "simulation": {
+    "draws_each": 5000,
+    "seed": 401856841,
+    "baseline": {
+      "wvu_points": 24.394,
+      "tcu_points": 29.507,
+      "tcu_margin": 5.113,
+      "total": 53.901,
+      "tcu_win_raw": 0.6364,
+      "wvu_cover_8_5_raw": 0.5936,
+      "wvu_cover_9_5_raw": 0.613,
+      "wvu_cover_10_5_raw": 0.6454
+    },
+    "previous_build16": {
+      "wvu_points": 21.138,
+      "tcu_points": 26.051,
+      "tcu_margin": 4.913,
+      "total": 47.188,
+      "tcu_win_raw": 0.6074,
+      "wvu_cover_9_5_raw": 0.5838
+    },
+    "active_build16": {
+      "wvu_points": 21.007,
+      "tcu_points": 26.128,
+      "tcu_margin": 5.121,
+      "total": 47.134,
+      "tcu_win_raw": 0.6118,
+      "margin_sd": 17.378,
+      "margin_p10_p50_p90_home": [
+        -17,
+        5,
+        28
+      ],
+      "wvu_cover_8_5_raw": 0.5764,
+      "wvu_cover_9_5_raw": 0.5918,
+      "wvu_cover_10_5_raw": 0.628,
+      "simulated_regulation_drives_each": 12.094,
+      "verified_empirical_clock_active": true,
+      "joint_drive_active": true,
+      "fg_distance_regression_active": true,
+      "turnover_return_td_and_special_td_distinct": true
+    }
+  },
+  "matchup_adverse_script": {
+    "tcu_pass_vs_wvu_pass_defense": "TCU opponent-adjusted passing advantage strongest unit edge",
+    "wvu_early_down_rushing_vs_tcu": "Nearly balanced opponent adjusted, despite raw averages",
+    "wvu_qb_hawkins_jr_rushing_yd": 749,
+    "wvu_qb_hawkins_jr_rushing_td": 14,
+    "wvu_rb_cam_cook_rush_yards": 833,
+    "tcu_qb_jaden_craig_pass_yards": 1694,
+    "tcu_qb_jaden_craig_pass_tds": 10,
+    "tcu_rb_jeremy_payne_doubtful": true,
+    "wvu_defensive_secondary_absences": true,
+    "personnel_effects_not_numerically_fitted": true,
+    "source": "https://havoc.football/games/553"
+  },
+  "improvement1": {
+    "version": "cfb-build16-two-way-venue-v1",
+    "active": true,
+    "two_way_pass_rush_active": true,
+    "independent_opponent_adjusted_venue_qualified": false,
+    "venue_not_active_reason": "West Virginia insufficient away venue opponent-independent observations",
+    "home_ppd_increment": 0.00072473,
+    "away_ppd_increment": -0.00072473,
+    "delta_margin_points_vs_old": 0.208,
+    "baseline_unchanged": true,
+    "personnel_rollback_still_active": true
+  },
+  "other_systems": {
+    "havoc_tcu_margin": 14.7,
+    "SP_plus_tcu_margin": 13.5,
+    "FPI_tcu_margin": 11.8,
+    "not_recalculated_from_our_engine": true,
+    "model_conflict_with_market_and_external_ratings": true,
+    "source": "https://newsespn.pages.dev/college-football/story/_/id/50249679/connelly-week-8-preview-ole-miss-texas"
+  },
+  "risk_scenarios": {
+    "wvu_offense_stall_share": 0.334,
+    "conditional_tcu_margin": -0.18,
+    "conditional_tcu_points": 12.145,
+    "conditional_wvu_points": 21.685,
+    "tcu_offense_stall_share": 0.294,
+    "conditional_wvu_margin": 9.54,
+    "wvu_two_more_turnovers_share": 0.1036,
+    "tcu_two_more_turnovers_share": 0.1698,
+    "scenarios_overlap": true,
+    "conditionals_not_independent_probabilities": true
+  },
+  "total_context": {
+    "market_total": 57.5,
+    "baseline_projected": 53.901,
+    "build16_projected": 47.134,
+    "model_total_distribution_at_market_not_ran": true,
+    "total_betting_decision": "PASS_UNCALIBRATED_DIFF_FROM_BASELINE"
+  },
+  "recommendation": {
+    "winner": "TCU",
+    "most_likely_score": "TCU 26 - West Virginia 21",
+    "best_ats_side": "West Virginia +10.5",
+    "alternate": "West Virginia +9.5 weak",
+    "grade": "B",
+    "confidence_out_of_10": 6,
+    "at_wvu_plus_8_5": "Group C or PASS",
+    "main_bet_condition": "Only if +10.5 near -112 or better; account for conflicting independent power projections",
+    "total": "PASS",
+    "no_halftime_recommendation": true
+  },
+  "validation_integrity": {
+    "played_after_snapshot": true,
+    "actual_result_not_in_pregame": true,
+    "raw_ats_probabilities_not_calibrated": true,
+    "one_challenger_only": true,
+    "baseline_not_modified": true,
+    "official_top_of_possession_box_not_verified": true,
+    "source_captures_before_kickoff": true
+  }
+}
