@@ -215,16 +215,50 @@ def audit_game(root, date, game_id, registry_path=None):
         base["errors"].append(str(exc))
     return base
 
+
+def audit_all_dates(root, from_date):
+    """Discover all dated matchup workflows from the cutoff onward.
+
+    A future matchup workflow without a registered slate is a hard failure.
+    """
+    root = Path(root)
+    if not re.fullmatch(r"20\\d{2}-\\d{2}-\\d{2}", from_date):
+        raise ValueError("Invalid from-date")
+    dates = set()
+    for path in (root / ".github" / "workflows").glob("cfb-*.yml"):
+        match = re.search(r"-(20\\d{6})\\.yml$", path.name)
+        if match:
+            d = match.group(1)
+            date = d[:4] + "-" + d[4:6] + "-" + d[6:]
+            if date >= from_date:
+                dates.add(date)
+    for path in (root / "cfb" / "investigation_registry").glob("20??-??-??.json"):
+        if path.stem >= from_date:
+            dates.add(path.stem)
+    reports = {day: audit_day(root, day) for day in sorted(dates)}
+    errors = [{"date": day, "errors": result["errors"]}
+              for day, result in reports.items() if result["status"] != "PASS"]
+    return {"status": "BLOCKED" if errors else "PASS", "from_date": from_date,
+            "dates_checked": len(reports), "reports": reports, "errors": errors,
+            "note": "Every dated CFB matchup workflow since cutoff needs a complete frozen registry"}
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--date", required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--date")
+    mode.add_argument("--all-dates-from", help="Scan future workflow dates; fail if any slate unregistered")
     parser.add_argument("--root", default=".")
     parser.add_argument("--registry")
     parser.add_argument("--game-id", help="Single-matchup pregame/postgame archival retrieval gate")
     parser.add_argument("--out", default="cfb_artifacts/investigation_ranking_gate.json")
     args = parser.parse_args()
-    result = (audit_game(args.root, args.date, args.game_id, args.registry)
-              if args.game_id else audit_day(args.root, args.date, args.registry))
+    if args.all_dates_from:
+        if args.game_id or args.registry:
+            parser.error("--all-dates-from cannot be combined with --game-id or --registry")
+        result = audit_all_dates(args.root, args.all_dates_from)
+    else:
+        result = (audit_game(args.root, args.date, args.game_id, args.registry)
+                  if args.game_id else audit_day(args.root, args.date, args.registry))
     output = Path(args.out)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
