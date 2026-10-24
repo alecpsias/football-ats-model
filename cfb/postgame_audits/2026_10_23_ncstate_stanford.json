@@ -300,7 +300,7 @@
   ],
   "model_change": {
     "implemented_decision_rule": {
-      "status": "COMMITTED_TO_MAIN_PENDING_AUTOMATED_TEST_VERIFICATION_AT_CAPTURE",
+      "status": "COMMITTED_TO_MAIN_AND_TESTED_370_CFB_REGRESSION_TESTS_PASS",
       "files": [
         "cfb/ats_concordance.py",
         "cfb/fresh_matchup.py",
@@ -314,7 +314,14 @@
         "hypothetically_with_native_price": "HOLD_CONFLICTING_BASELINE_CHALLENGER_SPREAD_SIDES"
       },
       "quote_limitation": "Original frozen market was obtained externally rather than timestamp-verifiable native quote; counterfactual not a claim original engine produced this hold.",
-      "historical_validation_of_betting_outcomes": false
+      "historical_validation_of_betting_outcomes": false,
+      "verified_run": "https://github.com/alecpsias/football-ats-model/actions/runs/40093439682",
+      "test_results": {
+        "full_cfb_suite": 370,
+        "passed": 370,
+        "failed": 0,
+        "prior_test_fixture_corrected_before_green_run": true
+      }
     },
     "frozen_predictions_unchanged": true,
     "baseline_numerics_unchanged": true,
