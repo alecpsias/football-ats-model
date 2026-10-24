@@ -81,9 +81,11 @@ def histories_asof(schedule, pbp, roster, cutoff):
         if part is None or pd.isna(g.home_points) or pd.isna(g.away_points):continue
         hid,aid=int(g.home_id),int(g.away_id)
         h=observed_game(part,hid,aid,g.home_points,g.away_points,qb_ids.get(hid,set()),
-                        special_plays=raw_by_game.get(g.game_id),home_id=hid)
+                        special_plays=raw_by_game.get(g.game_id),home_id=hid,
+                        neutral_site=(bool(g.neutral_site) if pd.notna(g.neutral_site) else None))
         a=observed_game(part,aid,hid,g.away_points,g.home_points,qb_ids.get(aid,set()),
-                        special_plays=raw_by_game.get(g.game_id),home_id=hid)
+                        special_plays=raw_by_game.get(g.game_id),home_id=hid,
+                        neutral_site=(bool(g.neutral_site) if pd.notna(g.neutral_site) else None))
         if h is None or a is None:continue
         include_prior_game(h,a,part,hid,aid)
         # Carry verified *previous-game* early-down, third-down distance, and
