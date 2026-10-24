@@ -23,7 +23,8 @@ class TestMandatoryRankingGate(unittest.TestCase):
             "fixture": {"game_id": "401999999", "away": "Sample", "home": "Team",
                         "kickoff_utc": "2026-10-24T19:00:00Z"},
             "provenance": {"snapshot_utc": "2026-10-24T16:00:00Z"},
-            "simulation": {"draws_each": 5000},
+            "simulation": {"draws_each": 5000, "baseline": {"home_margin": 3.2},
+                           "challenger": {"home_margin": 3.7}},
             "decision": {"ats_side": "Sample +5.5", "grade": "B",
                          "confidence": 6.2, "bet": "Conditional lean"},
         }
@@ -35,7 +36,8 @@ class TestMandatoryRankingGate(unittest.TestCase):
             "evidence": {
                 "game_id": "fixture.game_id", "away": "fixture.away", "home": "fixture.home",
                 "captured_at": "provenance.snapshot_utc", "kickoff": "fixture.kickoff_utc",
-                "draws": "simulation.draws_each", "side": "decision.ats_side",
+                "draws": "simulation.draws_each", "baseline": "simulation.baseline",
+                "challenger": "simulation.challenger", "side": "decision.ats_side",
                 "grade": "decision.grade", "confidence": "decision.confidence",
                 "bet_decision": "decision.bet",
             },
@@ -79,6 +81,11 @@ class TestMandatoryRankingGate(unittest.TestCase):
 
     def test_missing_simulation_draws_blocks(self):
         self.data["simulation"]["draws_each"] = 4999
+        self.save()
+        self.assertEqual(self.run_gate()["status"], "BLOCKED")
+
+    def test_missing_challenger_projection_blocks(self):
+        self.data["simulation"]["challenger"] = {}
         self.save()
         self.assertEqual(self.run_gate()["status"], "BLOCKED")
 
