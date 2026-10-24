@@ -56,9 +56,9 @@ jobs:
              two_way_venue_enabled=True,**args)
           if reference.get("simulation") is None or challenger.get("simulation") is None:
               raise RuntimeError("Build16 unavailable")
-          d={"fixture":"401856840","capture_utc":str(cutoff),"training_games_indiana":len(histories[a]),
-             "training_games_michigan":len(histories[h]),
-             "market_spread_research_auburn_plus":7.5,
+          d={"fixture":"401856840","capture_utc":str(cutoff),"training_games_texas_tech":len(histories[a]),
+             "training_games_cincinnati":len(histories[h]),
+             "market_spread_research_cincinnati_plus":11.5,
              "seed":seed,"runs_each":5000,"baseline":baseline,
              "reference_previous_build16":reference["simulation"],
              "improved_build16":challenger["simulation"],
