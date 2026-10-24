@@ -1,0 +1,182 @@
+{
+  "schema": "cfb_frozen_pregame_2026_10_24_5000_v1",
+  "fixture": {
+    "game_id": "401866450",
+    "away": "Western Michigan",
+    "home": "Toledo",
+    "kickoff_utc": "2026-10-24T16:00:00Z",
+    "venue": "Glass Bowl",
+    "season": "2026"
+  },
+  "provenance": {
+    "snapshot_utc": "2026-10-24T14:53:42.635469Z",
+    "workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40104503848",
+    "workflow_success": true,
+    "initial_commit": "2b459ea72122d6fa3a080a6a83e07ededb8ac79b",
+    "history_prior_games_wmu": 7,
+    "history_prior_games_toledo": 7,
+    "source": "SportsDataverse public CFB schedule, play-by-play and rosters",
+    "strictly_previous_completed_games": true,
+    "not_postgame_reconstruction": true
+  },
+  "market": {
+    "opening_toledo_spread_provider_variance": "-1.5 to -3.5 reported from different books",
+    "fanduel_home": -2.5,
+    "fanduel_toledo_price_american": -118,
+    "betmgm_home": -3,
+    "betmgm_toledo_price_american": -115,
+    "draftkings_home": -3,
+    "draftkings_toledo_price_american": -102,
+    "other_book_home": -3.5,
+    "other_price_american": -106,
+    "total": 47.5,
+    "dk_handle_toledo_spread_fraction": 0.57,
+    "dk_tickets_toledo_spread_fraction": 0.48,
+    "third_party_circa_wmu_spread_handle_fraction": 0.66,
+    "sharp_thirdparty_snapshot_asof": "2026-10-23T17:50:00-04:00",
+    "price_url": "https://www.fanduel.com/research/western-michigan-vs-toledo-prediction-college-football-picks-odds-and-best-bets-today",
+    "dk_splits_url": "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/",
+    "circa_secondary_url": "https://wiseguyteam.com/cfb-betting-splits",
+    "native_book_timestamp_verified": false
+  },
+  "published_pregame_stats": {
+    "wmu": {
+      "ppg": 25,
+      "allowed_ppg": 16.9,
+      "off_yards": 322.3,
+      "pass_yards": 157.6,
+      "rush_yards": 164.7,
+      "def_rush_yards": 144.9,
+      "def_pass_yards": 191.4,
+      "penalty_yards": 45,
+      "rush_leader_jalen_buckley_yards": 542,
+      "rush_leader_tds": 7,
+      "qb_broc_lowry_yards": 1044,
+      "qb_pass_tds": 8,
+      "qb_interceptions": 1
+    },
+    "toledo": {
+      "ppg": 36.3,
+      "allowed_ppg": 23.6,
+      "off_yards": 459,
+      "pass_yards": 273.4,
+      "rush_yards": 185.6,
+      "def_rush_yards": 125.4,
+      "def_pass_yards": 196.6,
+      "penalty_yards": 76,
+      "qb_john_alan_richter_yards": 1853,
+      "qb_pass_tds": 14,
+      "qb_interceptions": 1,
+      "receiving_leader_adjatay_dabbs_yards": 468,
+      "receiving_leader_tds": 5
+    },
+    "source": "https://newsespn.pages.dev/college-football/preview/_/gameId/401866450"
+  },
+  "simulation": {
+    "runs_each": 5000,
+    "seed": 401866450,
+    "baseline": {
+      "wmu_points": 23.005,
+      "toledo_points": 26.562,
+      "toledo_margin": 3.557,
+      "total": 49.567,
+      "toledo_win_raw": 0.6048,
+      "toledo_minus_2_5_cover_raw": 0.5642,
+      "toledo_minus_3_5_cover_raw": 0.5152
+    },
+    "previous_build16": {
+      "wmu_points": 20.19,
+      "toledo_points": 26.133,
+      "toledo_margin": 5.943,
+      "total": 46.323,
+      "toledo_win_raw": 0.633,
+      "toledo_minus_2_5_cover_raw": 0.606
+    },
+    "improved_build16": {
+      "wmu_points": 22.014,
+      "toledo_points": 25.753,
+      "toledo_margin": 3.739,
+      "total": 47.768,
+      "toledo_win_raw": 0.5832,
+      "margin_standard_deviation": 17.276,
+      "toledo_minus_2_5_cover_raw": 0.5532,
+      "toledo_minus_3_5_cover_raw": 0.5142,
+      "toledo_minus_3_0_cover_raw_inferred": 0.5142,
+      "toledo_minus_3_0_push_raw_inferred": 0.039,
+      "toledo_minus_3_0_loss_raw_inferred": 0.4468,
+      "inferred_from_identical_seed_margin_samples_at_half_point_spreads": true,
+      "verified_empirical_drive_clock_active": true,
+      "joint_drive_active": true,
+      "field_goal_distance_regression_active": true,
+      "nonoffensive_tds_separate": true
+    },
+    "probabilities_are_RAW_UNCALIBRATED": true
+  },
+  "improvement1": {
+    "status": "ACTIVE_SOURCE_INCREMENTAL_TWO_WAY_VENUE",
+    "two_way_matchup_active": true,
+    "venue_active": true,
+    "all_four_venue_subcomponents_qualified": true,
+    "venue_ppd_home": -0.02035485,
+    "venue_ppd_away": 0.16894551,
+    "total_ppd_home": -0.01989411,
+    "total_ppd_away": 0.16848477,
+    "change_toledo_margin_vs_previous_build16": -2.204,
+    "coefficients_have_not_shown_stable_historical_ats_improvement": true,
+    "numerical_personnel_not_reactivated": true,
+    "baseline_untouched": true
+  },
+  "opponent_adjusted_factors": {
+    "havoc_toledo_pass_edge_points": 4.8,
+    "havoc_tledo_run_vs_wmu_d_edge_points_to_wmu": 3.4,
+    "havoc_wmu_run_vs_tledo_d_edge_points_toledo": 2.4,
+    "havoc_model_tledo_margin": 5.6,
+    "sp_plus_model_tledo_margin": 5.7,
+    "epa_ols_model_toledo_margin": 7.8,
+    "normal_home_field_already_accounted_in_build16": true,
+    "independent_external_sources_not_reused_as_build16_inputs": true
+  },
+  "pregame_risk": {
+    "toledo_rico_bond_wr_questionable": true,
+    "toledo_c_smith_rb_questionable": true,
+    "toledo_t_kelleher_te_out": true,
+    "wmu_publicly_listed_injuries": "none, not a certification",
+    "weather_no_material_effect_expected": true,
+    "source": "https://www.covers.com/sport/football/ncaaf/matchup/378553"
+  },
+  "scripts": {
+    "wmu_scoring_stall": {
+      "raw_simulated_share": 0.2848,
+      "conditional_toledo_points": 27.282,
+      "conditional_wmu_points": 9.252,
+      "conditional_margin_toledo": 18.03
+    },
+    "toledo_scoring_stall": {
+      "raw_simulated_share": 0.2682,
+      "conditional_toledo_points": 11.611,
+      "conditional_wmu_points": 23.966,
+      "conditional_margin_wmu": 12.354
+    },
+    "wmu_two_more_turnovers": {
+      "raw_simulated_share": 0.0708,
+      "conditional_toledo_margin": 13.085
+    },
+    "toledo_two_more_turnovers": {
+      "raw_simulated_share": 0.12,
+      "conditional_toledo_margin": -3.983
+    },
+    "overlapping_conditions": true
+  },
+  "ats_concordance_and_decision": {
+    "baseline_and_challenger_ats_side_at_toledo_minus_3": "Toledo but <2 points margin edge; hold per existing concordance risk gate",
+    "directional_pick": "Toledo -3 (-102) slightly preferred on accessible DK snapshot",
+    "grade": "C",
+    "confidence_out_of_10": 5.6,
+    "recommended_bet": "PASS",
+    "rationale": "Build16 raw Toledo -2.5 cover 55.32% vs -118 54.13% break-even, and small 1.24 point model edge; -3 at -102 includes ~3.9% push; -3.5 raw 51.42% approximately break-even. Model venue adjustment shifts fair line more than two points with unsettled accuracy.",
+    "projected_score": "Toledo 26 Western Michigan 22",
+    "total": "PASS at 47.5; baseline 49.57 and Build16 47.77",
+    "half_or_second_half": "NONE stronger than full-game",
+    "no_after_game_results_used": true
+  }
+}
