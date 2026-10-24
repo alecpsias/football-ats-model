@@ -86,7 +86,10 @@
         "confidence": "decision.confidence_out_of_10",
         "grade": "decision.grade",
         "bet_decision": "decision.wager_recommendation"
-      }
+      },
+      "workflow_aliases": [
+        ".github/workflows/cfb-indiana-michigan-quick-20261024.yml"
+      ]
     },
     {
       "game_id": "401856728",
@@ -139,7 +142,7 @@
       "workflow_file": ".github/workflows/cfb-pitt-miami-20261024.yml",
       "model": "CFB Build16 (baseline preserved)",
       "evidence": {
-        "game_id": "game.game_id",
+        "game_id": "game.id",
         "away": "game.away",
         "home": "game.home",
         "captured_at": "provenance.snapshot_utc",
@@ -147,8 +150,7 @@
         "draws": "provenance.simulations_per_variant",
         "side": "recommendation.best_ats_side",
         "confidence": "recommendation.confidence_10",
-        "grade": "recommendation.grade",
-        "bet_decision": "recommendation.qualifier"
+        "grade": "recommendation.grade"
       }
     },
     {
@@ -160,7 +162,7 @@
       "workflow_file": ".github/workflows/cfb-rice-fau-20261024.yml",
       "model": "CFB Build16 (baseline preserved)",
       "evidence": {
-        "game_id": "game.game_id",
+        "game_id": "game.id",
         "away": "game.away",
         "home": "game.home",
         "captured_at": "provenance.snapshot_utc",
@@ -210,8 +212,7 @@
         "draws": "updated_build16.runs",
         "side": "recommendation.best_side",
         "confidence": "recommendation.confidence_out_of_10",
-        "grade": "recommendation.group",
-        "bet_decision": "recommendation.also_lean"
+        "grade": "recommendation.group"
       }
     },
     {
