@@ -1,0 +1,139 @@
+{
+  "schema": "frozen_cfb_pregame_actual_5000_v1",
+  "fixture": {
+    "game_id": "401856840",
+    "home": "Cincinnati",
+    "away": "Texas Tech",
+    "kickoff_utc": "2026-10-24T16:00:00+00:00",
+    "home_site": "Nippert Stadium"
+  },
+  "provenance": {
+    "snapshot_utc": "2026-10-24T13:45:38.245230+00:00",
+    "workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40099502316",
+    "status": "SUCCESS",
+    "team_prior_games": {
+      "Cincinnati": 6,
+      "Texas Tech": 6
+    },
+    "provider_scheduled_kickoff_inconsistent": true,
+    "official_verified_kickoff_sources": [
+      "https://gobearcats.com/news/2026/10/18/cincinnati-footballs-week-8-matchup-vs-texas-tech-set-for-1200-pm-et-kickoff-on-fs1",
+      "https://texastech.com/news/2026/10/19/football-no-8-red-raiders-look-to-stay-unbeaten-at-cincinnati"
+    ]
+  },
+  "original_baseline": {
+    "runs": 5000,
+    "seed": 401856840,
+    "texas_tech_points": 29.676,
+    "cincinnati_points": 27.593,
+    "texas_tech_margin": 2.083,
+    "total": 57.269,
+    "cincinnati_plus_10_5_cover_raw": 0.7152,
+    "cincinnati_plus_11_5_cover_raw": 0.741
+  },
+  "previous_build16_without_improvement1": {
+    "runs": 5000,
+    "seed": 401856840,
+    "texas_tech_points": 24.283,
+    "cincinnati_points": 23.265,
+    "texas_tech_margin": 1.018,
+    "total": 47.548,
+    "cincinnati_plus_10_5_cover_raw": 0.7096
+  },
+  "updated_build16": {
+    "runs": 5000,
+    "seed": 401856840,
+    "texas_tech_points": 22.564,
+    "cincinnati_points": 22.41,
+    "texas_tech_margin": 0.155,
+    "total": 44.974,
+    "texas_tech_win_probability_raw": 0.5136,
+    "cincinnati_plus_10_5_cover_raw": 0.7302,
+    "cincinnati_plus_11_5_cover_raw": 0.7526,
+    "margin_standard_deviation": 16.586,
+    "verified_clock_active": true,
+    "joint_drive_active": true,
+    "fg_distance_regression_active": true,
+    "defensive_and_special_td_separate": true
+  },
+  "improvement1": {
+    "status": "ACTIVE_SOURCE_INCREMENTAL_TWO_WAY_VENUE",
+    "venue_active": true,
+    "opp_pass_rush_counterattack_active": true,
+    "venue_ppd_home": -0.09188473,
+    "venue_ppd_away": -0.2,
+    "lsu": null,
+    "texas_tech_margin_drop_from_prior_build16": 0.863,
+    "away_venue_capped_at_provisional_limit": true,
+    "personnel_rollback_respected": true,
+    "unfitted_coefficients": true
+  },
+  "matchup_notes": {
+    "tech_2026_points_for_per_game": 37.8,
+    "tech_points_allowed": 17.7,
+    "cincinnati_points_for": 35.2,
+    "cincinnati_points_allowed": 26.8,
+    "tech_rush_yards_allowed": 82,
+    "cincinnati_rushing_yards_per_game": 231.2,
+    "tech_pass_yards_allowed": 281.8,
+    "adjusted_offensive_epa_tech": 0.16,
+    "adjusted_offensive_epa_cincinnati": 0.19,
+    "adjusted_defensive_epa_allowed_tech": 0.03,
+    "adjusted_defensive_epa_allowed_cincinnati": 0.17
+  },
+  "verified_market_external": {
+    "cincinnati_spreads": [
+      10.5,
+      11.5
+    ],
+    "approx_price_at_both": -110,
+    "total": 56.5,
+    "native_time_attested_quote": false,
+    "source_10_5": "https://www.foxsports.com/stories/college-football/texas-tech-vs-cincinnati-prediction-odds-picks-college-football-week-8",
+    "source_11_5": "https://bleacherreport.com/game/texas-tech-football-vs-cincinnati-bearcats-football-2026-10-24-11-00"
+  },
+  "scenario_diagnostics": {
+    "cincinnati_scoring_stall": {
+      "subset_share": 0.337,
+      "average_margin_tech": 13.169
+    },
+    "texas_tech_scoring_stall": {
+      "subset_share": 0.2876,
+      "average_margin_cincinnati": 12.8
+    },
+    "cincinnati_two_more_turnovers": {
+      "subset_share": 0.1026,
+      "average_margin_tech": 7.655
+    },
+    "texas_tech_two_more_turnovers": {
+      "subset_share": 0.1358,
+      "average_margin_cincinnati": 5.966
+    },
+    "subsets_overlap": true
+  },
+  "warnings": [
+    "Raw simulation cover probabilities are NOT ATS calibrated",
+    "Updated Build16 projected total 44.97 vs market 56.5, large unresolved scoring calibration concern",
+    "Independent external models favor Texas Tech by approximately 9.8 to 14; model disagreement lowers confidence",
+    "Venue component hit provisional -0.20 PPD cap for away team",
+    "Historical joint-drive paired checks previously worsened MAE; two-way venue paired validation mixed"
+  ],
+  "recommendation": {
+    "best_side": "Cincinnati +11.5",
+    "also_lean": "Cincinnati +10.5",
+    "confidence_out_of_10": 6.3,
+    "group": "B",
+    "central_score": "Texas Tech 23 Cincinnati 22",
+    "predicted_straight_up_winner": "Texas Tech by narrowest margin",
+    "total_recommendation": "PASS",
+    "ATS_model_confidence_not_a_calibrated_probability": true
+  },
+  "integrity": {
+    "only_prior_games": true,
+    "snapshot_pre_kickoff": true,
+    "no_target_outcome_used": true,
+    "baseline_unchanged": true,
+    "one_CFB_challenger": true,
+    "numerical_personnel_adjustment_not_reactivated": true
+  }
+}
