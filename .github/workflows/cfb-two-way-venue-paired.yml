@@ -1,0 +1,52 @@
+name: CFB Build16 Improvement 1 paired replay
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cfb/two_way_venue_paired.py'
+      - '.github/workflows/cfb-two-way-venue-paired.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  paired:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Collect free 2025 source
+        run: |
+          python -m cfb.pipeline collect --season 2025 --out venue_validation/2025
+          python -m cfb.pipeline verify --snapshot venue_validation/2025
+      - name: Paired earlier-season 2025 real 5000-draw comparisons
+        run: |
+          python -u -m cfb.two_way_venue_paired --season 2025 --max-games 80 --snapshot venue_validation/2025 --out venue_validation/paired2025.json
+      - name: Collect free 2026 source
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out venue_validation/2026
+          python -m cfb.pipeline verify --snapshot venue_validation/2026
+      - name: Paired 2026 real 5000-draw comparisons
+        run: |
+          python -u -m cfb.two_way_venue_paired --season 2026 --max-games 80 --snapshot venue_validation/2026 --out venue_validation/paired2026.json
+      - name: Check no hindsight ATS claims or additional model
+        run: |
+          python - <<'PY'
+          import json
+          for season in (2025,2026):
+              d=json.load(open(f'venue_validation/paired{season}.json'))
+              assert d["year"]==season
+              assert d["same_seed_simulations_each"]==5000
+              assert d["historical_ATS_accuracy"] is None
+              assert d["baseline_unmodified"] and d["one_challenger"]
+              print("PAIRED",season,d["overall_metrics"],"venue active",d["venue_active_games"])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build16-two-way-venue-paired-${{ github.run_id }}
+          path: venue_validation/paired*.json
+          if-no-files-found: warn
