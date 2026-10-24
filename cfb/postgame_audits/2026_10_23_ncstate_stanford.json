@@ -1,0 +1,339 @@
+{
+  "schema": "cfb_postgame_frozen_model_causal_audit_v1",
+  "fixture": {
+    "game_id": "401858272",
+    "local_date": "2026-10-23",
+    "away": "NC State",
+    "home": "Stanford",
+    "final": {
+      "nc_state": 28,
+      "stanford": 31
+    },
+    "actual_margin_nc_state": -3,
+    "total": 59
+  },
+  "provenance": {
+    "frozen_file": "cfb/frozen_pregame_audits/2026_10_23_ncstate_stanford.json",
+    "frozen_workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40001520869",
+    "original_snapshot_captured_utc": "2026-10-23T18:13:54.791720+00:00",
+    "original_generated_utc": "2026-10-23T18:13:55.881840+00:00",
+    "original_commit": "136a92163fe711b2036d3cffd7fc89f310c21366",
+    "source_game_id": "401858272",
+    "official_box": "https://gopack.com/sports/football/stats/2026/stanford/boxscore/24543",
+    "official_stanford_recap": "https://gostanford.com/news/2026/10/24/stanford-improves-to-4-1-at-home-with-late-night-win-over-nc-state",
+    "official_nc_state_recap": "https://d1qkubt1nbt8w1.cloudfront.net/news/2026/10/24/football-wolfpack-unable-to-get-past-stanford",
+    "acc_recap": "https://admin.theacc.com/news/2026/10/24/football-davis-warrens-4-td-passes-lead-stanford-to-a-31-28-win-over-nc-state.aspx"
+  },
+  "frozen_pregame": {
+    "simulations_per_model": 5000,
+    "seed": 401858272,
+    "baseline": {
+      "nc_state": 31.48,
+      "stanford": 25.017,
+      "nc_state_margin": 6.462,
+      "total": 56.497
+    },
+    "challenger": {
+      "nc_state": 32.59,
+      "stanford": 23.721,
+      "nc_state_margin": 8.869,
+      "total": 56.311,
+      "margin_sd": 19.286,
+      "at_minus_6_5_nc_state_raw_cover_probability": 0.5658,
+      "at_minus_5_5": 0.589,
+      "at_minus_7_5": 0.526
+    },
+    "original_decision": {
+      "ats_side": "NC State -6.5",
+      "grade": "C",
+      "confidence_out_of_10": 5.5,
+      "preferred_spread": -6.5,
+      "model_fair_spread": -8.9,
+      "baseline_fair_spread": -6.5,
+      "market_quote_in_native_archive_verified": false,
+      "market_source_asof_2026_10_23": "https://collegefootballdata.com/games/401858272/preview",
+      "alternate_market_circa_stanford_spread_handle": 0.69,
+      "circa_timestamp_source_not_native_attested": true,
+      "total_pick": "PASS"
+    },
+    "matchup_prior": {
+      "matched_rushing_sos_epa_stanford_minus_nc_state": -0.21813193053017782,
+      "severe_mismatch_screen": true,
+      "stress_detailed_runs_per_scenario": 5000,
+      "nc_state_matched_early_rush_success": 0.427993,
+      "stanford_matched_early_rush_success": 0.389242,
+      "nc_state_rz_td_probability": 0.67243,
+      "stanford_rz_td_probability": 0.557018
+    },
+    "personnel_roll_back": {
+      "nc_state_rb_duke_scott_out": true,
+      "nc_state_receiver_jojo_trader_out": true,
+      "nc_state_offensive_line_absences": true,
+      "numerically_applied": false
+    }
+  },
+  "grading": {
+    "directional_ats": "WRONG",
+    "stanford_plus_6_5_covers": true,
+    "cover_cushion_on_stanford_plus_6_5": 9.5,
+    "model_spread_points_shortfall_nc_state_at_minus_6_5": 9.5,
+    "baseline_margin_absolute_error": 9.462,
+    "challenger_margin_absolute_error": 11.869,
+    "challenger_margin_error_worse_than_baseline": 2.407,
+    "baseline_total_absolute_error": 2.503,
+    "challenger_total_absolute_error": 2.689,
+    "challenger_nc_state_score_overshoot": 4.59,
+    "challenger_stanford_score_undershoot": 7.279,
+    "baseline_nc_state_score_overshoot": 3.48,
+    "baseline_stanford_score_undershoot": 5.983,
+    "raw_cover_frequency_uncalibrated": true
+  },
+  "official_game_stats": {
+    "nc_state": {
+      "points": 28,
+      "offensive_yards": 381,
+      "offensive_plays": 64,
+      "yards_per_play": 6,
+      "rush_attempts": 33,
+      "rush_yards": 125,
+      "rush_ypa": 3.8,
+      "pass_yards": 256,
+      "pass_completions": 17,
+      "pass_attempts": 31,
+      "pass_tds": 2,
+      "rush_tds": 2,
+      "interceptions": 0,
+      "fumbles_lost": 0,
+      "first_downs": 21,
+      "third_down": "8/14",
+      "fourth_down": "1/1",
+      "red_zone": "3/3",
+      "red_zone_touchdowns": 3,
+      "top": "29:59",
+      "penalties": 6,
+      "penalty_yards": 55,
+      "sacks_allowed": 2,
+      "punts": 5,
+      "scoring_offensive_drives": 4,
+      "offensive_drive_chart_rows": 10,
+      "points_per_offensive_drive_chart_row": 2.8
+    },
+    "stanford": {
+      "points": 31,
+      "offensive_yards": 477,
+      "offensive_plays": 70,
+      "yards_per_play": 6.8,
+      "rush_attempts": 33,
+      "rush_yards": 174,
+      "rush_ypa": 5.3,
+      "pass_yards": 303,
+      "pass_completions": 22,
+      "pass_attempts": 37,
+      "pass_tds": 4,
+      "rush_tds": 0,
+      "interceptions": 0,
+      "fumbles_lost": 0,
+      "first_downs": 27,
+      "third_down": "5/13",
+      "fourth_down": "2/3",
+      "red_zone": "4/4",
+      "red_zone_touchdowns": 3,
+      "top": "30:01",
+      "penalties": 6,
+      "penalty_yards": 55,
+      "sacks_allowed": 1,
+      "punts": 3,
+      "fg_attempted": 1,
+      "fg_made": 1,
+      "scoring_offensive_drives": 5,
+      "offensive_drive_chart_rows": 10,
+      "points_per_offensive_drive_chart_row": 3.1
+    }
+  },
+  "scoring_mechanism": {
+    "nc_state_total_offensive_tds": 4,
+    "stanford_total_offensive_tds": 4,
+    "nc_state_field_goals_made": 0,
+    "stanford_field_goals_made": 1,
+    "turnovers_total": 0,
+    "defensive_tds_total": 0,
+    "special_teams_tds_total": 0,
+    "stanford_long_field_td_drives": [
+      {
+        "start": "own 16",
+        "yards": 84,
+        "plays": 11,
+        "elapsed": "4:20"
+      },
+      {
+        "start": "own 14",
+        "yards": 86,
+        "plays": 9,
+        "elapsed": "4:46"
+      },
+      {
+        "start": "own 10",
+        "yards": 90,
+        "plays": 7,
+        "elapsed": "1:29"
+      },
+      {
+        "start": "own 16",
+        "yards": 84,
+        "plays": 8,
+        "elapsed": "3:34"
+      }
+    ],
+    "nc_state_long_field_td_drives": [
+      {
+        "start": "own 26",
+        "yards": 74,
+        "plays": 4,
+        "elapsed": "1:23"
+      },
+      {
+        "start": "own 26",
+        "yards": 74,
+        "plays": 7,
+        "elapsed": "3:53"
+      },
+      {
+        "start": "own 14",
+        "yards": 86,
+        "plays": 18,
+        "elapsed": "9:25"
+      },
+      {
+        "start": "own 11",
+        "yards": 89,
+        "plays": 14,
+        "elapsed": "3:07"
+      }
+    ],
+    "explanatory_limits": "Exact counterfactual points lost to a penalty or fourth-down play are unknowable."
+  },
+  "chronology": [
+    {
+      "event": "Stanford Warren opened with 84-yard and 86-yard touchdown drives",
+      "score_stanford_nc_state": "14-0",
+      "causal": "Efficient home offensive passing and sustained first downs, not short fields"
+    },
+    {
+      "event": "NC State Bailey 58-yard TD pass and Wilson 2-yard rush TD",
+      "score_stanford_nc_state": "14-14",
+      "causal": "Both offenses demonstrated real scoring capability"
+    },
+    {
+      "event": "Stanford 90 yards in 1:29 late Q2 for Warren 26-yard TD to High",
+      "score_stanford_nc_state": "21-14",
+      "causal": "Explosive+efficient long-field response before halftime"
+    },
+    {
+      "event": "NC State third-quarter opening drive TD erased by offensive pass interference; eventually punted",
+      "score_stanford_nc_state": "21-14",
+      "causal": "High leverage offensive penalty, do not treat erasure as automatic 7-point difference"
+    },
+    {
+      "event": "Stanford Warren fourth-and-4 to Brown TD to finish another 84-yard drive",
+      "score_stanford_nc_state": "28-14",
+      "causal": "Critical fourth down conversion, offensive conversion chain"
+    },
+    {
+      "event": "NC State 18-play 86-yard 9:25 TD drive",
+      "score_stanford_nc_state": "28-21",
+      "causal": "Offense produced clock-consuming score but not strong margin advantage"
+    },
+    {
+      "event": "Stanford 12-play 52-yard FG drive",
+      "score_stanford_nc_state": "31-21",
+      "causal": "Fifth scoring possession created actual three-point separation"
+    },
+    {
+      "event": "NC State 14-play 89-yard TD drive; Stanford recovered onside kick",
+      "score_stanford_nc_state": "31-28",
+      "causal": "Late score reduced margin after Stanford established 10 point cushion"
+    }
+  ],
+  "causal_errors": [
+    {
+      "id": "RUSH_MATCHUP_DIRECTION_WRONG",
+      "severity": "HIGH",
+      "evidence": "Frozen severe NC rushing advantage; official rushing Stanford 174 on 33 vs NC State 125 on 33; 5.3 vs 3.8 ypc",
+      "model_action": "Opposing capable home rushing unit and opponent adjusted game-specific rush variance should influence severity/ATS stress; do not assume big prior rush EPA always replicates"
+    },
+    {
+      "id": "STANFORD_OFFENSIVE_LONG_FIELD_SUSTAINABILITY_UNDERVALUED",
+      "severity": "HIGH",
+      "evidence": "Stanford scored TDs on 84,86,90,84-yard possessions plus FG from 52 yard series; pregame expected 23.721, scored31",
+      "model_action": "Represent scenario where weak-looking opponent gets repeated long-field first-down chains while maintaining QB pass efficiency; avoid conflating these with turnover short field or special teams TD"
+    },
+    {
+      "id": "BASELINE_PRICE_VS_CHALLENGER_DISCORDANCE",
+      "severity": "HIGH",
+      "evidence": "Baseline NC State fair -6.462, source-observed market NC State -6.5, Build16 fair -8.869; 2.407 incremental challenger-only advantage. External bookmaker quote not in native time-attested archive.",
+      "model_action": "Require explicit risk hold when source verified line has baseline almost exactly market and challenger alone crosses cover threshold; preserve scoring means"
+    },
+    {
+      "id": "NO_TURNOVERS_DID_NOT_EXPLAIN_UPSET",
+      "severity": "MEDIUM",
+      "evidence": "Neither team interception or fumble lost, neither team defensive/ST touchdown; equal 4 TD each",
+      "model_action": "Do not attribute outcome to turnover variance or new non-offensive touchdown model"
+    },
+    {
+      "id": "HOME_VS_AWAY_CONTEXT",
+      "severity": "MEDIUM",
+      "evidence": "Stanford was 4-1 home and 0-3 road after game; prior away losses unusually severe but opponent quality major confounder",
+      "model_action": "Check pregame venue effects with opponent-quality context, no fitted numeric increase solely from this result"
+    },
+    {
+      "id": "PENALTY_AND_FOURTH_DOWN_POINTS",
+      "severity": "MEDIUM",
+      "evidence": "NC State TD negated on opening third-quarter drive; Stanford fourth-and-4 TD converted",
+      "model_action": "Potentially consequential leverage, but not deterministic posthoc TD counterfactual"
+    },
+    {
+      "id": "PERSONNEL_USER_ROLLBACK_RESPECTED",
+      "severity": "MEDIUM",
+      "evidence": "Pregame NC State RB Duke Scott and multiple linemen out, not fitted numerically",
+      "model_action": "Do not silently restore rejected personnel model or invent offsets"
+    }
+  ],
+  "model_change": {
+    "implemented_decision_rule": {
+      "status": "COMMITTED_TO_MAIN_PENDING_AUTOMATED_TEST_VERIFICATION_AT_CAPTURE",
+      "files": [
+        "cfb/ats_concordance.py",
+        "cfb/fresh_matchup.py",
+        "cfb/test_cfb_ats_concordance.py"
+      ],
+      "description": "New risk gate distinguishes cases where challenger alone has margin edge against a verified market spread while baseline is neutral or opposite; no numerical scoring rewrite or hindsight feature.",
+      "pregame_counterfactual_at_nc_state_minus_6_5": {
+        "stanford_home_spread": 6.5,
+        "baseline_home_edge_points": 0.038,
+        "challenger_home_edge_points": -2.369,
+        "hypothetically_with_native_price": "HOLD_CONFLICTING_BASELINE_CHALLENGER_SPREAD_SIDES"
+      },
+      "quote_limitation": "Original frozen market was obtained externally rather than timestamp-verifiable native quote; counterfactual not a claim original engine produced this hold.",
+      "historical_validation_of_betting_outcomes": false
+    },
+    "frozen_predictions_unchanged": true,
+    "baseline_numerics_unchanged": true,
+    "build16_scoring_means_unchanged": true,
+    "previously_rolled_back_personnel_remains_disabled": true,
+    "new_5000_simulation_not_performed": true,
+    "future_research_priorities": [
+      "Opponent-adjusted venue decomposition with SOS guard before any HFA score correction",
+      "Opposing-team joint pass/rush high-tail script despite unfavourable earlier sample; fit using earlier seasons",
+      "Fourth-and-medium conversion/terminal TD versus incomplete field goal possession treatment",
+      "Penalty-negated touchdown / key conversion probability using original play events without claiming exact points lost"
+    ]
+  },
+  "integrity": {
+    "frozen_fixtures_not_replayed_as_new_pregame": true,
+    "target_game_final_not_used_for_original_projection": true,
+    "market_quote_verification_conservative": true,
+    "margin_error_based_on_nc_state_sign": true,
+    "postgame_action_not_retroactively_credited": true,
+    "ATS_probabilities_uncalibrated": true
+  }
+}
