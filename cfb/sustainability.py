@@ -1,4 +1,4 @@
-"""Failure 3: drive sustainability versus isolated long-pass scoring.
+"""Failure 3: drive sustainability versus isolated explosive scoring.
 
 Only observed earlier-game *scrimmage drives* enter matchups. Explosive TDs
 remain possible; a bounded incremental correction recognizes that isolated
@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 import numpy as np
 
-VERSION='cfb-failure3-sustainability-v1'
+VERSION='cfb-failure3-sustainability-v2-rush-td-route'
 # Hypothetical reference levels. Must be independently calibrated before
 # promotion to an ATS confidence model.
 PRIOR_CHAIN=.42  # Explicit structural benchmark: >=3 first-down series/drive
@@ -42,7 +42,8 @@ def observed(plays,team,opponent):
         if x.empty:return {'status':'NO_SCRIMMAGE_PLAYS'}
         rec={'drives':0,'sustained':0,'low_chain_non_td':0,
              'early_success':0,'early_plays':0,'touchdown_drives':0,
-             'short_explosive_pass_tds':0,'pass_explosive_plays':0,
+             'short_explosive_pass_tds':0,'short_explosive_rush_tds':0,
+             'short_explosive_tds':0,'pass_explosive_plays':0,
              'pass_plays':0}
         for _,d in x.groupby('drive_id',sort=False):
             rec['drives']+=1
@@ -55,8 +56,15 @@ def observed(plays,team,opponent):
                        (d.yards_gained.astype(float)>=20))
             rec['pass_explosive_plays']+=int(explosive.sum())
             rec['pass_plays']+=int(d['pass'].eq(True).sum())
-            if td and first_series<=2 and bool(explosive.any()):
-                rec['short_explosive_pass_tds']+=1
+            # One explosive touchdown *route* per short scoring drive.
+            # A rush of >=20 yards can finish a two-play drive just as a
+            # long pass can. Do not credit two TDs if both appear on a drive.
+            explosive_rush=d['rush'].eq(True)&d.yards_gained.astype(float).ge(20)
+            if td and first_series<=2:
+                rec['short_explosive_pass_tds']+=int(bool(explosive.any()))
+                rec['short_explosive_rush_tds']+=int(bool(explosive_rush.any()))
+                rec['short_explosive_tds']+=int(bool(explosive.any()|
+                                                     explosive_rush.any()))
             early=d.loc[d.down.isin((1,2))]
             if len(early):
                 threshold=np.where(early.down.eq(1),.5,.7)*early.distance.astype(float)
@@ -72,6 +80,11 @@ def _pooled(rows,side):
     cols=('drives','sustained','low_chain_non_td','early_success','early_plays',
           'touchdown_drives','short_explosive_pass_tds','pass_explosive_plays','pass_plays')
     totals={x:0. for x in cols}
+    # The new combined pass/rush TD route is usable only when historically
+    # measured. Older prior-game rows retain the old pass-only behavior;
+    # absent rushing labels are never interpreted as observed zero runs.
+    totals.update(short_explosive_total_new=0.,short_explosive_tds_den_new=0.,
+                  short_explosive_rush_new=0.,short_explosive_new_games=0.)
     supported=0
     for r in rows:
         o=r.get('sustainability')
@@ -88,6 +101,15 @@ def _pooled(rows,side):
             vals['pass_explosive_plays']>vals['pass_plays']):
             continue
         for k in cols:totals[k]+=vals[k]
+        all_td=vals.get('short_explosive_tds')
+        rush_td=vals.get('short_explosive_rush_tds')
+        if (type(all_td) is int and type(rush_td) is int and
+                0<=all_td<=vals['touchdown_drives'] and
+                0<=rush_td<=all_td):
+            totals['short_explosive_total_new']+=all_td
+            totals['short_explosive_tds_den_new']+=vals['touchdown_drives']
+            totals['short_explosive_rush_new']+=rush_td
+            totals['short_explosive_new_games']+=1
         supported+=1
     if supported<3 or totals['drives']<24 or totals['early_plays']<45:
         return None
@@ -106,8 +128,17 @@ def _match(off,opdef):
             shrink(dd['low_chain_non_td'],dd['drives'],PRIOR_LOW_CHAIN,PRIOR_DRIVES))
     early=.5*(shrink(od['early_success'],od['early_plays'],PRIOR_EARLY_SUCCESS,140.)+
               shrink(dd['early_success'],dd['early_plays'],PRIOR_EARLY_SUCCESS,140.))
-    explosive_td=shrink(od['short_explosive_pass_tds'],od['touchdown_drives'],
-                        PRIOR_EXPLOSIVE_TD,PRIOR_TDS)
+    # Fit the fraction of existing scoring TDs taking an isolated
+    # explosive route (pass OR run), without adding a new scoring bonus.
+    # At least 3 source-complete games and 4 known scoring TDs are needed.
+    new_route=(od['short_explosive_new_games']>=3 and
+               od['short_explosive_tds_den_new']>=4)
+    explosive_td=shrink(
+        od['short_explosive_total_new'] if new_route
+            else od['short_explosive_pass_tds'],
+        od['short_explosive_tds_den_new'] if new_route
+            else od['touchdown_drives'],
+        PRIOR_EXPLOSIVE_TD,PRIOR_TDS)
     reliable=min(od['drives'],dd['drives'])
     weight=reliable/(reliable+PRIOR_DRIVES)
     # A large penalty requires both limited chain production and explosive
@@ -126,7 +157,15 @@ def _match(off,opdef):
         'chain_share_matched':round(chain,6),
         'early_down_success_matched':round(early,6),
         'low_chain_non_td_matched':round(low,6),
-        'short_explosive_pass_td_share_shrunk':round(explosive_td,6),
+        'short_explosive_pass_td_share_shrunk':round(explosive_td,6)
+              if not new_route else round(shrink(
+               od['short_explosive_pass_tds'],od['touchdown_drives'],
+               PRIOR_EXPLOSIVE_TD,PRIOR_TDS),6),
+        'short_explosive_td_share_shrunk':round(explosive_td,6),
+        'explosive_td_route_type':('SOURCE_PASS_AND_RUSH'
+                if new_route else 'PASS_ONLY_LEGACY_MISSING_SOURCE_RUSH'),
+        'observed_short_explosive_rush_tds':int(od['short_explosive_rush_new']),
+        'source_complete_explosive_rush_games':int(od['short_explosive_new_games']),
         'explosive_dependence_excess':round(explosive_excess,6),
         'chain_weakness':round(chain_weak,6),
         'ppd_delta':round(float(correction),6),
