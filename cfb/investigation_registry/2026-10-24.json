@@ -104,7 +104,7 @@
         "away": "fixture.away",
         "home": "fixture.home",
         "captured_at": "provenance.capture_utc",
-        "kickoff": "fixture.kickoff_utc",
+        "kickoff": "fixture.scheduled_kickoff_utc",
         "draws": "simulation.simulations_each",
         "side": "decision.ats_direction_at_auburn_plus_7_5",
         "confidence": "decision.confidence_out_of_10",
