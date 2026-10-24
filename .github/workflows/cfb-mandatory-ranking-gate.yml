@@ -1,0 +1,53 @@
+name: CFB mandatory frozen-investigation ranking gate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cfb/investigation_gate.py'
+      - 'cfb/test_investigation_gate.py'
+      - 'cfb/investigation_registry/**'
+      - 'cfb/frozen_pregame_audits/**'
+      - '.github/workflows/cfb-*20261024.yml'
+      - '.github/workflows/cfb-mandatory-ranking-gate.yml'
+  pull_request:
+    paths:
+      - 'cfb/investigation_gate.py'
+      - 'cfb/test_investigation_gate.py'
+      - 'cfb/investigation_registry/**'
+      - 'cfb/frozen_pregame_audits/**'
+      - '.github/workflows/cfb-*20261024.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Enforce fail-closed ranking tests
+        run: python -m unittest cfb.test_investigation_gate -v
+
+  frozen-slate-reconciliation:
+    needs: gate-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Mandatory October 24 archive completeness check
+        run: |
+          python -m cfb.investigation_gate --date 2026-10-24 --out cfb_artifacts/2026-10-24-ranking-gate.json
+      - name: Preserve diagnostic even if ranking is blocked
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfb-investigation-ranking-gate-${{ github.run_id }}
+          path: cfb_artifacts/2026-10-24-ranking-gate.json
+          if-no-files-found: error
