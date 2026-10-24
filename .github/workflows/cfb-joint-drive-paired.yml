@@ -1,0 +1,53 @@
+name: CFB Build16 joint-drive paired validation
+on:
+  push:
+    branches: [main, cfb-joint-drive-build16-20261023]
+    paths:
+      - 'cfb/joint_drive_paired.py'
+      - '.github/workflows/cfb-joint-drive-paired.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  paired:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Collect verified free 2025 prior-game source
+        run: |
+          python -m cfb.pipeline collect --season 2025 --out joint_validation/2025
+          python -m cfb.pipeline verify --snapshot joint_validation/2025
+      - name: Same-seed 5000-draw 2025 paired evaluation
+        run: |
+          python -u -m cfb.joint_drive_paired --season 2025 --max-games 120 --snapshot joint_validation/2025 --out joint_validation/paired2025.json
+      - name: Collect verified free 2026 prior-game source
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out joint_validation/2026
+          python -m cfb.pipeline verify --snapshot joint_validation/2026
+      - name: Same-seed 5000-draw 2026 paired evaluation
+        run: |
+          python -u -m cfb.joint_drive_paired --season 2026 --max-games 120 --snapshot joint_validation/2026 --out joint_validation/paired2026.json
+      - name: Verify reporting constraints
+        run: |
+          python - <<'PY'
+          import json
+          for y in (2025,2026):
+              a=json.load(open(f'joint_validation/paired{y}.json'))
+              assert a['historical_ATS_accuracy'] is None
+              assert a['duke_virginia_excluded_from_fitting_and_scoring']
+              assert a['baseline_unchanged'] and a['one_challenger']
+              print(y, a['metrics'], a['insufficient'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: build16-joint-drive-paired-${{ github.run_id }}
+          path: joint_validation/paired*.json
+          if-no-files-found: warn
