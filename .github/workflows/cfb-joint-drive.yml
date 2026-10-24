@@ -4,6 +4,9 @@ on:
     branches: [main, cfb-joint-drive-build16-20261023]
     paths:
       - 'cfb/joint_drive_process.py'
+      - 'cfb/sustainability.py'
+      - 'cfb/drive_sustainability_process.py'
+      - 'cfb/test_cfb_explosive_rush_tds.py'
       - 'cfb/empirical_drive_clock.py'
       - 'cfb/game_script.py'
       - 'cfb/mechanism_build16.py'
