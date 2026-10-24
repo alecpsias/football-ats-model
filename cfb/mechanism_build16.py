@@ -297,7 +297,7 @@ def _failure2_verified_scoring_histories(home_id,away_id,histories):
 
 
 
-def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None,continuous_rush_sos_enabled=True,coupled_rush_possessions=True,situational_chain_enabled=True,redzone_kicking_enabled=True):
+def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread_home=None,stress_runs=0,rush_research=None,chain_research=None,mismatch_research=None,failure1_fit_margin_delta=None,failure2_attribution=True,failure3_sustainability=True,failure3_clock_mode='empirical',continuous_rush_sos_residual_delta=None,continuous_rush_sos_enabled=True,coupled_rush_possessions=True,situational_chain_enabled=True,redzone_kicking_enabled=True,joint_drive_enabled=True):
     if sum(v is not None for v in (rush_research,chain_research,mismatch_research,failure1_fit_margin_delta))>1:
         raise ValueError('Only one within-challenger ablation at a time')
     if type(stress_runs) is not int or not (stress_runs==0 or 100<=stress_runs<=10000):
@@ -533,6 +533,23 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
          coupled_config is not None and sustainability_process is not None
          and failure3_clock_mode=='empirical')
     coupled_evidence['clock_effect_requires_verified_source_clocks']=True
+    # One joint empirical drive-time/rush/pass process inside the existing
+    # Build16 challenger. No new score bonus: Build16 owns score outcomes.
+    # Fail closed if source clocks or paired prior-drive observations are absent.
+    if type(joint_drive_enabled) is not bool:
+        raise ValueError('Joint drive toggle must be boolean')
+    joint_evidence={'status':'DISABLED_FOR_PAIRED_REFERENCE','ATS_calibrated':False}
+    joint_config=None
+    if joint_drive_enabled and sustainability_process is not None and (
+            clock_evidence.get('status')=='ACTIVE_VERIFIED_SOURCE_DRIVE_CLOCKS'):
+        from cfb.joint_drive_process import matchup_joint_drives
+        joint_evidence=matchup_joint_drives(home_id,away_id,histories)
+        if joint_evidence['status']=='ACTIVE_SOURCE_JOINT_DRIVE_BOOTSTRAP':
+            joint_config=joint_evidence
+    elif joint_drive_enabled:
+        joint_evidence={'status':'UNVERIFIED_SOURCE_CLOCK_FALLBACK',
+                        'ATS_calibrated':False}
+
     # One, and only one, challenger: Build15 scoring + Build14 script + B16
     # state-dependent play selection and turnover-location field starts.
     out=simulate_script(h,a,histories[home_id],histories[away_id],runs=runs,seed=seed,
@@ -550,6 +567,7 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
                           'failure3_score_process':sustainability_process,
                           'failure3_clock_pools':clock_evidence if sustainability_process is not None and failure3_clock_mode=='empirical' else None,
                           'coupled_rush_chain':coupled_config,
+                          'joint_drive':joint_config,
                           'redzone_kicking':redzone_kicking})
     stress={}
     if stress_runs:
@@ -571,6 +589,7 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
             'failure3_score_process':sustainability_process,
             'failure3_clock_pools':clock_evidence if sustainability_process is not None and failure3_clock_mode=='empirical' else None,
             'coupled_rush_chain':coupled_config,
+            'joint_drive':joint_config,
             'redzone_kicking':redzone_kicking}
         for label,change in shocks.items():
             r=simulate_script(h,a,histories[home_id],histories[away_id],
@@ -590,6 +609,9 @@ def simulate_build16(home_id,away_id,histories,neutral,*,runs=3000,seed=1,spread
        'failure2_scoring_attribution':scoring_audit,
        'failure3_sustainability':sustain_evidence,
        'coupled_rush_possession_interaction':coupled_evidence,
+       'joint_drive_process':{k:v for k,v in joint_evidence.items()
+                              if k not in ('home','away')},
+       'joint_drive_active_by_default':joint_config is not None,
        'situational_chain_active_by_default':bool(
            situational_chain_evidence is not None and
            situational_chain_evidence.get('active_in_default_build16')),
