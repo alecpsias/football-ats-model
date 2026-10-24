@@ -22,7 +22,7 @@ def rushing_explosive_plays():
             rows.append(dict(pos_team_id=team,drive_id=f'{team}-{d}',
                 game_play_number=k+1, down=1,distance=10,
                 yards_gained=68 if rush_td else 3,
-                rush=True,pass=False,rush_td=rush_td,pass_td=False))
+                rush=True,rush_td=rush_td,pass_td=False,**{'pass':False}))
             k+=1
     return pd.DataFrame(rows)
 
