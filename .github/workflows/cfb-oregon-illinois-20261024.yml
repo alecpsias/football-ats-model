@@ -82,7 +82,7 @@ jobs:
                    capture_utc=str(capture),prior_games_oregon=len(histories[away]),
                    prior_games_illinois=len(histories[home]),seed=seed,runs_each=5000,
                    quote_source="externally verified current 2026-10-24; not native bookmaker archive",
-                   tested_market_oregon_spreads=[-9.5,-10.5],
+                   tested_market_oregon_spreads=[-8.5,-9.5,-10.5,-11.5],
                    baseline=baseline,previous_Build16=ref["simulation"],
                    updated_Build16={k:v["simulation"] for k,v in active.items()},
                    improvement1=active["9.5"].get("two_way_venue_improvement1"),
