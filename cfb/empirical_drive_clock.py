@@ -56,8 +56,12 @@ def observe(raw,plays,team,opponent,home_id):
     clocks={str(d['drive_id']):d for d in audit['drives']
             if d['clock_verification']=='ELAPSED_AND_ENDPOINTS_AGREE'}
     groups={}
+    # Keep actual rush/pass counts paired with the SAME measured clock and
+    # scoring outcome. These observations may be used only from prior games.
+    joint={}
     for side,tid in (('off',team),('def',opponent)):
         buckets={key:[] for key in LABELS}
+        paired=[]
         scrim=plays.loc[plays.pos_team_id.eq(tid)]
         raw_drive=raw.loc[raw.pos_team_id.eq(tid)]
         for drive_id,g in scrim.groupby('drive_id',sort=False):
@@ -70,13 +74,22 @@ def observe(raw,plays,team,opponent,home_id):
                 continue
             # Require positive actual regulation duration. Zero-clock plays
             # cannot be used to model a normal sequence of possessions.
-            if duration>0:buckets[category].append(int(duration))
+            if duration>0:
+                buckets[category].append(int(duration))
+                rush, pas = clock.get('rush_plays'), clock.get('pass_plays')
+                if (type(rush) is int and type(pas) is int and
+                        0 <= rush <= 30 and 0 <= pas <= 30 and
+                        1 <= rush + pas <= 35):
+                    paired.append({'outcome': category, 'seconds': int(duration),
+                                   'rush_plays': rush, 'pass_plays': pas})
         groups[side]=buckets
+        joint[side]=paired
     n=sum(len(x) for x in groups['off'].values())
     m=sum(len(x) for x in groups['def'].values())
     summary.update({'status':'SOURCE_CLOCK_VERIFIED' if min(n,m)>=4
                          else 'INSUFFICIENT_VERIFIED_CLOCK_DRIVES',
                     'off':groups['off'],'def':groups['def'],
+                    'joint_drives': joint,
                     'observed_offense_drives':n,'observed_opponent_drives':m,
                     'categories':LABELS})
     return summary
