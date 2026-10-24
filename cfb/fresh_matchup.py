@@ -559,7 +559,7 @@ def markdown(report):
            '', '## Current opponent-context team statistics', '',
            f"| Metric | {report['home']} | {report['away']} |",'|---|---:|---:|']
     build16=report.get('build16_challenger') or {}
-    if build16.get('status')=='AVAILABLE_UNFITTED_BUILD16_RESEARCH_ONLY':
+    if build16.get('simulation') is not None:
         lines+=['', '## Build 16 — sole research challenger',
                 f"**Build 16 score:** {report['home']} {build16['mean_score_home']:.1f}, "
                 f"{report['away']} {build16['mean_score_away']:.1f}",
@@ -567,7 +567,21 @@ def markdown(report):
                 f"**10th / median / 90th margin:** {build16['margin_p10_p50_p90']}",
                 'Combines opponent-adjusted integrated scoring, historically variable drive scripts, '
                 'third-down distance, state-dependent pass mix and verified next-drive field starts. '
-                'No fitted coefficients or validated ATS edge.']
+                'Contains previously frozen fitted components and provisional two-way/venue effects; no calibrated ATS edge.']
+        new_match=build16.get('two_way_venue_improvement1') or {}
+        if new_match:
+            v=new_match.get('venue') or {}
+            supported=sum(1 for x in v.values() if isinstance(x,dict)
+                           and x.get('status')=='SOURCE_ADJUSTED_VENUE_CONTRAST')
+            lines += ['','### Improvement 1 — opponent-adjusted two-way and venue',
+                f"Status: {new_match.get('status')}; two-way route PPD home "
+                f"{new_match.get('two_way_margin_route_ppd')}, venue PPD home "
+                f"{new_match.get('venue_delta_ppd_home')}, away "
+                f"{new_match.get('venue_delta_ppd_away')}.",
+                f"Venue source components qualified: {supported}/4; "
+                "missing inputs fail closed. General home advantage already included.",
+                "Historical QB rushing affects only the competing pass/rush route; "
+                "no numerical injury/personnel model. Uncalibrated, bounded residual."]
         for name,item in build16['simulation'].get('scenario_distributions',{}).items():
             lines.append(f"- {name}: {item['share']:.1%} simulated frequency, "
                          f"conditional home margin {item['mean_home_margin']}")
