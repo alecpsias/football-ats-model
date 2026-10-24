@@ -1,0 +1,195 @@
+{
+  "schema": "cfb_2026_10_24_miamioh_cmu_frozen_pregame_5000_v1",
+  "fixture": {
+    "game_id": "401866476",
+    "away": "Miami (OH)",
+    "home": "Central Michigan",
+    "kickoff_utc": "2026-10-24T17:00:00Z",
+    "location": "Kelly/Shorts Stadium, Mount Pleasant",
+    "neutral": false
+  },
+  "pregame_provenance": {
+    "source_snapshot_utc": "2026-10-24T15:11:07.954098Z",
+    "workflow_run": "https://github.com/alecpsias/football-ats-model/actions/runs/40105777778",
+    "workflow_status": "SUCCESS",
+    "initial_commit": "b6d7cb3608e79057563bf5cfd7bceda236541472",
+    "seed": 401866476,
+    "draws_each": 5000,
+    "prior_games_miami": 7,
+    "prior_games_cmu": 7,
+    "target_game_not_in_training_data": true,
+    "model_baseline_unmodified": true,
+    "only_one_CFB_challenger": true
+  },
+  "market_observed_pre_kickoff": {
+    "miami_oh_lines": [
+      -2.5,
+      -3,
+      -3.5
+    ],
+    "current_dk_miami_minus_3_5_price": -110,
+    "current_dk_cmu_plus_3_5_price": -110,
+    "market_total_range": [
+      39.5,
+      40.5
+    ],
+    "open_cmu_favored_approx_1_to_1_5": true,
+    "current_miami_share_tickets_dk": 0.81,
+    "current_miami_share_handle_dk": 0.85,
+    "quote_native_time_attested": false,
+    "source_dk": "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/?itm_content=87637&tb_edate=n30days&tb_eg=87637&tb_emt=Spread&tb_page=2",
+    "source_line": "https://www.actionnetwork.com/ncaaf-game/miami-%28oh%29-redhawks-central-michigan-chippewas/289635"
+  },
+  "projection_baseline": {
+    "miami": 25.595,
+    "cmu": 22.38,
+    "margin_home_cmu": -3.215,
+    "total": 47.975,
+    "miami_win_probability_raw": 0.5868,
+    "cmu_cover_plus_2_5": 0.4516,
+    "cmu_cover_plus_3_0": 0.4516,
+    "cmu_push_plus_3_0": 0.048,
+    "cmu_cover_plus_3_5": 0.4996
+  },
+  "projection_previous_build16": {
+    "miami": 23.523,
+    "cmu": 22.667,
+    "margin_home_cmu": -0.856,
+    "total": 46.19,
+    "cmu_cover_plus_2_5": 0.5062,
+    "cmu_win_raw": 0.4796
+  },
+  "projection_updated_build16": {
+    "miami": 23.097,
+    "cmu": 24.129,
+    "margin_home_cmu": 1.032,
+    "total": 47.227,
+    "cmu_win_raw": 0.5354,
+    "margin_sd": 17.329,
+    "cmu_cover_plus_2_5": 0.565,
+    "cmu_cover_plus_3_0": 0.565,
+    "cmu_push_plus_3_0": 0.0366,
+    "cmu_cover_plus_3_5": 0.6016,
+    "home_margin_p10_p50_p90": [
+      -21,
+      3,
+      24
+    ],
+    "joint_drive_active": true,
+    "source_clock_verified": true,
+    "redzone_and_fg_distance_regression_active": true,
+    "nonoffensive_scoring_separate": true,
+    "ATS_probabilities_not_calibrated": true
+  },
+  "improvement1": {
+    "status": "ACTIVE_SOURCE_INCREMENTAL_TWO_WAY_VENUE",
+    "two_way_pass_rush_active": true,
+    "venue_residual_active": true,
+    "source_qualified_venue_observations_all_four": true,
+    "venue_delta_ppd_cmu": 0.14452895,
+    "venue_delta_ppd_miamioh": 0.01195106,
+    "two_way_route_ppd_home": 0.000234,
+    "net_margin_shift_toward_cmu_vs_previous_build16": 1.888,
+    "coefficients_provisional_and_unfitted": true,
+    "numerical_personnel_model_still_rolled_back": true
+  },
+  "fitted_rush_residual": {
+    "status": "APPLIED_IN_BUILD16_CHALLENGER",
+    "home_margin_adjustment_points": 0.651094,
+    "train_year": 2023,
+    "train_games": 180,
+    "not_ats_calibrated": true
+  },
+  "risk_scenarios": {
+    "cmu_scoring_stall": {
+      "subset_share": 0.266,
+      "mean_miami_points": 24.016,
+      "mean_cmu_points": 9.908
+    },
+    "miami_scoring_stall": {
+      "subset_share": 0.2592,
+      "mean_cmu_points": 24.699,
+      "mean_miami_points": 8.871
+    },
+    "cmu_two_more_turnovers": {
+      "subset_share": 0.1386,
+      "mean_miami_points": 27.177,
+      "mean_cmu_points": 19.433
+    },
+    "miami_two_more_turnovers": {
+      "subset_share": 0.1192,
+      "mean_cmu_points": 27.424,
+      "mean_miami_points": 18.463
+    },
+    "subsets_overlap": true
+  },
+  "pregame_context": {
+    "miami_recent_akron_game": "34-14, 324 rushing yards, four defensive interceptions after one in previous six games",
+    "miami_starting_QB_David_McComb_out_for_season": true,
+    "miami_QB_Caleb_Heavner_current": true,
+    "cmu_QB_Angel_Flores_questionable_concussion": true,
+    "cmu_QB_Flores_prev_WMU_117_rushing_162_passing": true,
+    "cmu_home_record": "3-1",
+    "miami_away_record": "1-2",
+    "personnel_effects_not_numerically_modeled": true,
+    "matched_opponent_adjusted_data": {
+      "cmu_pass_epa": -0.23,
+      "miami_pass_def_allowed_epa": 0.07,
+      "miami_rush_epa": -0.03,
+      "cmu_rush_def_allowed_epa": 0.1,
+      "cmu_neutral_seconds_per_play": 34,
+      "miami_neutral_seconds_per_play": 31.8,
+      "projected_combined_plays_havoc": 115
+    },
+    "external_model_miami_spread_estimates": [
+      -3.3,
+      -6.8
+    ],
+    "sources": [
+      "https://havoc.football/games/546",
+      "https://davidsasser.com/cfb/matchups/401866476",
+      "https://cmuchippewas.com/news/2026/10/21/football-chippewas-host-miami-ohio-on-saturday-at-1-pm-et",
+      "https://miamiredhawks.com/news/2026/10/20/football-redhawks-face-cmu-on-saturday-afternoon"
+    ]
+  },
+  "concordance_guard": {
+    "rule_version": "cfb-ats-baseline-market-concordance-v1",
+    "at_cmu_plus_2_5": {
+      "baseline_edge_home": -0.715,
+      "challenger_edge_home": 3.532,
+      "status": "HOLD_CONFLICTING_BASELINE_CHALLENGER_SPREAD_SIDES"
+    },
+    "at_cmu_plus_3_0": {
+      "baseline_edge_home": -0.215,
+      "challenger_edge_home": 4.032,
+      "status": "HOLD_CONFLICTING_BASELINE_CHALLENGER_SPREAD_SIDES"
+    },
+    "at_cmu_plus_3_5": {
+      "baseline_edge_home": 0.285,
+      "challenger_edge_home": 4.532,
+      "status": "HOLD_CHALLENGER_ONLY_EDGE_BASELINE_AT_MARKET"
+    },
+    "live_native_quote_not_archived": true,
+    "ATS_probabilities_uncalibrated": true,
+    "automatic_bet_recommendation": false
+  },
+  "decision": {
+    "directional_ats_side": "Central Michigan +3.5",
+    "grade": "C",
+    "confidence_out_of_10": 5.5,
+    "bet_decision": "PASS",
+    "reason": "Active Build16 CMU +3.5 raw cover 60.16%, but baseline 49.96%; existing hold guard triggered, line moved 4.5 points against CMU, injury to run-first QB Flores unquantified, opponent-adjusted external ratings Miami favored by 3.3-6.8",
+    "most_likely_model_mean_score": "Central Michigan 24 Miami OH 23",
+    "baseline_score": "Miami OH 26 Central Michigan 22",
+    "total": "PASS despite both simulated means 47-48 vs quoted 39.5-40.5, due sharp under/pace and uncalibrated totals",
+    "full_game_ats_focus": true
+  },
+  "integrity": {
+    "data_capture_before_kickoff": true,
+    "no_target_final_score": true,
+    "real_5000_simulations": true,
+    "no_nfl_model_change": true,
+    "not_hindsight": true,
+    "no_game_day_inactive_list_used": true
+  }
+}
