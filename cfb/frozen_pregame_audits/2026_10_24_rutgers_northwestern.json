@@ -1,0 +1,176 @@
+{
+  "schema": "cfb_frozen_pregame_ats_5000_v1",
+  "fixture": {
+    "game_id": "401858498",
+    "date_local": "2026-10-24",
+    "away": "Rutgers",
+    "home": "Northwestern",
+    "neutral": false,
+    "venue": "Ryan Field",
+    "verified_kickoff_utc": "2026-10-24T16:00:00Z"
+  },
+  "capture": {
+    "captured_utc": "2026-10-24T14:10:22.809422Z",
+    "source": "2026 SportsDataverse release",
+    "workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40101289106",
+    "workflow_result": "success",
+    "target_game_not_completed": true,
+    "source_game_id": "401858498",
+    "prior_games_rutgers": 6,
+    "prior_games_northwestern": 6,
+    "source_banned_target_result": true
+  },
+  "model": {
+    "seed": 401858498,
+    "real_runs_each": 5000,
+    "baseline": {
+      "northwestern": 32.479,
+      "rutgers": 22.927,
+      "margin_northwestern": 9.553,
+      "total": 55.406,
+      "northwestern_win_raw": 0.74,
+      "rutgers_plus_15_5_cover_raw": 0.657,
+      "rutgers_plus_16_5_cover_raw": 0.6752
+    },
+    "previous_build16": {
+      "northwestern": 32.272,
+      "rutgers": 17.854,
+      "margin_northwestern": 14.418,
+      "total": 50.126,
+      "northwestern_win_raw": 0.798,
+      "rutgers_plus_15_5_cover_raw": 0.5248
+    },
+    "updated_build16": {
+      "northwestern": 32.457,
+      "rutgers": 19.119,
+      "margin_northwestern": 13.338,
+      "total": 51.575,
+      "northwestern_win_raw": 0.7768,
+      "rutgers_plus_15_5_cover_raw": 0.5484,
+      "rutgers_plus_16_5_cover_raw": 0.5636,
+      "margin_sd": 17.384,
+      "source_verified_elapsed_drive_clock_active": true,
+      "joint_drive_active": true,
+      "nonoffensive_scoring_separate": true,
+      "fg_distance_regression_active": true,
+      "ats_calibrated": false
+    }
+  },
+  "improvement1": {
+    "status": "ACTIVE_SOURCE_INCREMENTAL_TWO_WAY_VENUE",
+    "two_way_offense_defense_route_active": true,
+    "venue_home_away_active": true,
+    "northwestern_venue_ppd": 0.04355891,
+    "rutgers_venue_ppd": 0.10798254,
+    "delta_northwestern_margin_relative_to_prev_build16": -1.08,
+    "team_venue_observations_min_two_per_side": true,
+    "unfitted_coefficients": true,
+    "numerical_personnel_adjustment_reactivated": false
+  },
+  "matchup_pre_game": {
+    "record_rutgers": "2-4",
+    "record_northwestern": "5-1",
+    "offensive_epa_rutgers": 0.15,
+    "offensive_epa_northwestern": 0.306,
+    "defensive_epa_allowed_rutgers": 0.221,
+    "defensive_epa_allowed_northwestern": 0.055,
+    "rutgers_scoring_avg": 31.2,
+    "northwestern_scoring_avg": 33.5,
+    "rutgers_points_allowed_avg": 31.9,
+    "northwestern_points_allowed_avg": 17,
+    "rutgers_net_turnovers": -5,
+    "northwestern_net_turnovers": 7,
+    "rutgers_pass_yards_game": 265.8,
+    "northwestern_rush_yards_game": 191.5,
+    "rutgers_rush_yards_allowed_game": 202.5,
+    "pass_script_rutgers": "Official 2026-10-17 Maryland box: Dylan Lonergan 23/35 291 3TD 1INT, Duff 9-113-2.",
+    "rush_script_northwestern": "Aidan Chiles dynamic rushing threat; Caleb Komolafe vs Rutgers run defense."
+  },
+  "market_pre_game": {
+    "observed_spreads": [
+      15.5,
+      16.5
+    ],
+    "northwestern_DK": -15.5,
+    "rutgers_DK_price": -108,
+    "northwestern_FD": -16.5,
+    "rutgers_FD_price": -108,
+    "total_around": 58.5,
+    "dk_northwestern_spread_ticket_share": 0.62,
+    "dk_northwestern_spread_handle": 0.84,
+    "third_party_circa_report_opposite_handle_on_rutgers": true,
+    "source_urls": [
+      "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/",
+      "https://sports.yahoo.com/articles/northwestern-vs-rutgers-watch-betting-130033168.html",
+      "https://wiseguyteam.com/cfb-betting-splits"
+    ],
+    "native_quote_archive_verified": false
+  },
+  "independent_ratings": {
+    "havoc_northwestern_spread": 16.4,
+    "havoc_northwestern_win_prob": 0.84,
+    "SP_plus_neutral_rating_diff_northwestern": 16.4,
+    "SP_plus_home_adjusted_external_forecast_northwestern_margin": 18.8,
+    "ESPN_FPI_northwestern_win_prob_external": 0.91,
+    "source_urls": [
+      "https://havoc.football/games/530",
+      "https://www.redshirtanalytics.com/matchups/rutgers-at-northwestern",
+      "https://www.on3.com/sites/the-knight-report/news/espn-fpi-projects-rutgers-footballs-2026-schedule-week-eight/"
+    ],
+    "note": "Higher externally rated Northwestern win probability than Build16 requires lowering ATS recommendation confidence."
+  },
+  "injuries_not_numerically_fitted": {
+    "northwestern_out_11_reported": true,
+    "northwestern_OL_DL_LB_TE_affected": true,
+    "rutgers_out_three_defensive_backs": true,
+    "rutgers_raymond_questionable": true,
+    "team_personnel_rollback_respected": true,
+    "source": "https://sports.yahoo.com/articles/northwestern-vs-rutgers-watch-betting-130033168.html",
+    "rutgers_lonergan_oct17_official_box_active": true,
+    "do_not_use_stale_injury_aggregate_as_proof_out": true
+  },
+  "verified_simulation_scripts": {
+    "rutgers_offense_stall": {
+      "subset_share": 0.2822,
+      "mean_margin_northwestern": 26.974,
+      "score_northwestern": 34.118,
+      "score_rutgers": 7.144
+    },
+    "northwestern_offense_stall": {
+      "subset_share": 0.2008,
+      "mean_margin_northwestern": -5.531,
+      "score_northwestern": 15.082,
+      "score_rutgers": 20.613
+    },
+    "rutgers_two_more_turnovers": {
+      "subset_share": 0.2316,
+      "mean_margin_northwestern": 19.572
+    },
+    "northwestern_two_more_turnovers": {
+      "subset_share": 0.0766,
+      "mean_margin_northwestern": 2.279
+    },
+    "conditions_can_overlap": true
+  },
+  "output": {
+    "directional_ats": "Rutgers +16.5 preferred; Rutgers +15.5 weaker",
+    "grade": "C",
+    "confidence_out_of_10": 5.6,
+    "projected_score": "Northwestern 32 Rutgers 19",
+    "baseline_projection": "Northwestern 32 Rutgers 23",
+    "outright_winner": "Northwestern",
+    "at_16_5": "Marginal Rutgers ATS lean; consider only if actually available at -108 to -110",
+    "at_15_5": "PASS unless market changes",
+    "total": "PASS due build16 51.6 vs baseline55.4 and independent60.8",
+    "major_caveat": "Northwestern materially stronger by independent ratings and most handle; Build16 win odds 77.68% vs market roughly 87-88%; no independent ATS calibration."
+  },
+  "integrity": {
+    "pre_kickoff_source": true,
+    "simulations_real": true,
+    "original_baseline_untouched": true,
+    "single_challenger_updated": true,
+    "personnel_rollback_preserved": true,
+    "not_outcome_known": true,
+    "model_cover_frequencies_are_raw": true
+  }
+}
