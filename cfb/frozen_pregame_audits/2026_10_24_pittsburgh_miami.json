@@ -1,0 +1,111 @@
+{
+  "schema": "frozen_cfb_2026_pitt_miami_5000",
+  "game": {
+    "id": "401858274",
+    "home": "Miami",
+    "away": "Pittsburgh",
+    "kickoff_utc": "2026-10-24T16:00:00Z"
+  },
+  "provenance": {
+    "snapshot_utc": "2026-10-24T13:57:07.613419Z",
+    "workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40100318125",
+    "result": "success",
+    "seed": 401858274,
+    "simulations_per_variant": 5000,
+    "previous_games_only": true,
+    "pitt_previous_games": 7,
+    "miami_previous_games": 6
+  },
+  "baseline": {
+    "miami_points": 32.263,
+    "pitt_points": 23.14,
+    "miami_margin": 9.123,
+    "total": 55.403,
+    "miami_win_raw": 0.7266,
+    "pitt_cover_19_5": 0.7498,
+    "pitt_cover_20_5": 0.7762
+  },
+  "build16_previous": {
+    "miami_points": 27.762,
+    "pitt_points": 19.569,
+    "miami_margin": 8.194,
+    "total": 47.331,
+    "miami_win_raw": 0.6844,
+    "pitt_cover_19_5": 0.7304
+  },
+  "build16_updated": {
+    "miami_points": 29.364,
+    "pitt_points": 21.523,
+    "miami_margin": 7.841,
+    "total": 50.888,
+    "miami_win_raw": 0.665,
+    "pitt_cover_19_5": 0.7314,
+    "pitt_cover_20_5": 0.7524,
+    "margin_sd": 18.161,
+    "mean_regulation_drives_each": 11.9,
+    "source_verified_clocks": true,
+    "joint_drive_active": true,
+    "field_goal_distance_regression": true
+  },
+  "improvement1": {
+    "active": true,
+    "venue_active": true,
+    "pass_rush_competition_active": true,
+    "home_venue_ppd": 0.1950984,
+    "away_venue_ppd": 0.2,
+    "venue_pitt_at_provisional_cap": true,
+    "personnel_rollback_preserved": true,
+    "relative_margin_change": -0.353
+  },
+  "market": {
+    "spread_miami_dk": -19.5,
+    "pitt_dk_price": -105,
+    "spread_miami_fanduel": -20.5,
+    "opening_miami": -23.5,
+    "total": 48.5,
+    "source_urls": [
+      "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/",
+      "https://www.actionnetwork.com/ncaaf-game/pittsburgh-miami-fl-score-odds-october-24-2026/289639"
+    ],
+    "source_timestamp_native_verified": false
+  },
+  "injuries": {
+    "pitt_heintschel_out_season": true,
+    "geriner_reported_start": true,
+    "dailey_expected_play": true,
+    "numerical_personnel_feature_not_used": true,
+    "source": "https://www.on3.com/sites/pitt-sports-news/news/report-pitt-lands-on-starting-qb-vs-no-1-miami/"
+  },
+  "external_checks": {
+    "havoc_miami_margin": 16.2,
+    "havoc_miami_win_prob": 0.84,
+    "sp_plus_home_field_unadjusted_margin": 15.9,
+    "model_outcome_probability_conflicts_with_market": true
+  },
+  "scenarios": {
+    "pitt_scoring_stall_share": 0.3156,
+    "pitt_stall_mean_miami_margin": 21.233,
+    "miami_stall_share": 0.2778,
+    "miami_stall_mean_miami_margin": -7.965,
+    "pitt_two_more_turnovers_share": 0.1844,
+    "pitt_turnover_tail_miami_margin": 13.815,
+    "scenarios_overlap": true
+  },
+  "recommendation": {
+    "best_ats_side": "Pittsburgh +20.5",
+    "alternative": "Pittsburgh +19.5",
+    "grade": "B",
+    "confidence_10": 6.1,
+    "projected_score": "Miami 29 - Pitt 22",
+    "full_game_total": "PASS",
+    "outright_winner": "Miami",
+    "raw_simulation_probabilities_uncalibrated": true,
+    "qualifier": "Huge market/model Miami win probability disagreement and no fitted QB absence; reduce confidence"
+  },
+  "integrity": {
+    "no_final_score_used": true,
+    "baseline_unchanged": true,
+    "single_challenger": true,
+    "source_capture_before_kickoff": true
+  }
+}
