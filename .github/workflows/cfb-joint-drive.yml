@@ -1,0 +1,30 @@
+name: CFB Build16 joint-drive integration tests
+on:
+  push:
+    branches: [main, cfb-joint-drive-build16-20261023]
+    paths:
+      - 'cfb/joint_drive_process.py'
+      - 'cfb/empirical_drive_clock.py'
+      - 'cfb/game_script.py'
+      - 'cfb/mechanism_build16.py'
+      - 'cfb/test_cfb_joint_drive_process.py'
+      - '.github/workflows/cfb-joint-drive.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - name: Joint-drive regression tests
+        run: python -m unittest cfb.test_cfb_joint_drive_process -v
+      - name: Entire CFB regression suite
+        run: python -m unittest discover -s cfb -p 'test_cfb_*.py' -q
