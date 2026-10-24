@@ -1,0 +1,102 @@
+name: CFB Rice at FAU Oct 24 2026 frozen Build16 ATS
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/cfb-rice-fau-20261024.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pregame:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Free CFB dependencies
+        run: python -m pip install -r requirements-cfb.txt
+      - name: Source-verified pre-kickoff 2026 snapshot
+        run: |
+          python -m cfb.pipeline collect --season 2026 --out cfb_artifacts/rice_fau_snapshot
+          python -m cfb.pipeline verify --snapshot cfb_artifacts/rice_fau_snapshot
+      - name: Frozen matchup and 5000-draw baseline, previous and new Build16 at two market lines
+        run: |
+          python -u - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          from cfb.pipeline import iso_utc,verify
+          from cfb.fresh_matchup import histories_asof
+          from cfb.research_backtest import project
+          from cfb.engine import simulate
+          from cfb.failure1_learned_shadow import correction
+          from cfb.mechanism_build16 import simulate_build16
+
+          root=Path("cfb_artifacts/rice_fau_snapshot")
+          capture=iso_utc(verify(root)["captured_at_utc"])
+          official_kickoff=pd.Timestamp("2026-10-24T16:00:00Z")
+          if capture>=official_kickoff:
+              raise RuntimeError("Refuse non-pregame simulation: post-kickoff snapshot")
+          s=pd.read_parquet(root/"schedule.parquet")
+          p=pd.read_parquet(root/"pbp.parquet")
+          roster=pd.read_parquet(root/"roster.parquet")
+          fixture=s.loc[s.game_id.astype(str).eq("401862809")]
+          if len(fixture)!=1:
+              raise RuntimeError("Missing/duplicate official Rice @ Florida Atlantic game 401862809")
+          g=fixture.iloc[0]
+          from cfb.pipeline import flag
+          if bool(flag(pd.Series([g.completed])).iloc[0]):
+              raise RuntimeError("Target already completed in source")
+          if str(g.away_team)!="Rice" or str(g.home_team) not in ("Florida Atlantic","FAU"):
+              raise RuntimeError("Provider fixture team mapping mismatch: "+str([g.away_team,g.home_team]))
+          provider_start=pd.to_datetime(g.start_date,utc=True)
+          if provider_start.date()!=official_kickoff.date():
+              raise RuntimeError("Conflicting source game date")
+          future,_,histories,eligible=histories_asof(s,p,roster,capture)
+          if any(str(x.get("source_game_id"))=="401862809" for hs in histories.values() for x in hs):
+              raise RuntimeError("Target game data contaminated historic sample")
+          home=int(g.home_id);away=int(g.away_id);seed=401862809
+          hp=project(histories[home],histories[away],False,"home",False)
+          ap=project(histories[away],histories[home],False,"away",False)
+          prices=(7.5,8.5)
+          baseline={str(line):simulate(hp,ap,runs=5000,seed=seed,spread_home=-line)
+                    for line in prices}
+          fitted=correction(home,away,histories)
+          common=dict(runs=5000,seed=seed,
+                      failure1_fit_margin_delta=fitted["margin_delta_points"])
+          ref=simulate_build16(home,away,histories,False,spread_home=-7.5,
+                              two_way_venue_enabled=False,**common)
+          active={str(line):simulate_build16(home,away,histories,False,
+                            spread_home=-line,two_way_venue_enabled=True,**common)
+                  for line in prices}
+          if ref.get("simulation") is None or any(z.get("simulation") is None for z in active.values()):
+              raise RuntimeError("Projected challenger unavailable")
+          if not all(z["simulation"]["simulations"]==5000 for z in active.values()):
+              raise RuntimeError("Not actual 5000 draws per variant")
+          out=dict(game_id="401862809",away=str(g.away_team),home=str(g.home_team),
+                   kickoff_utc=str(official_kickoff),source_provider_kickoff=str(provider_start),
+                   provider_start_time_tbd=bool(g.start_time_tbd),
+                   capture_utc=str(capture),prior_games_rice=len(histories[away]),
+                   prior_games_fau=len(histories[home]),seed=seed,runs_each=5000,
+                   quote_source="externally verified current 2026-10-24; not native bookmaker archive",
+                   tested_market_fau_spreads=[-7.5,-8.5],
+                   baseline=baseline,previous_Build16=ref["simulation"],
+                   updated_Build16={k:v["simulation"] for k,v in active.items()},
+                   improvement1=active["7.5"].get("two_way_venue_improvement1"),
+                   matched_redzone_kicking=active["7.5"].get("redzone_kicking_evidence"),
+                   nonoffensive=active["7.5"].get("failure2_scoring_attribution"),
+                   rush_fitted=fitted,ATS_probabilities_calibrated=False,
+                   personnel_adjustment_reactivated=False)
+          path=Path("cfb_artifacts/rice_fau_frozen_5000.json")
+          path.write_text(json.dumps(out,indent=2,default=str)+"\\n")
+          print("RICE_FAU_FROZEN_5000",json.dumps(out,indent=2,default=str)[:50000],flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rice-fau-frozen-${{ github.run_id }}
+          path: cfb_artifacts/rice_fau_frozen_5000.json
+          if-no-files-found: warn
