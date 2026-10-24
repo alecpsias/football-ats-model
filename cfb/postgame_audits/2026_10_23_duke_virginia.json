@@ -1,0 +1,320 @@
+{
+  "schema": "cfb_postgame_frozen_forecast_audit_v1",
+  "fixture": {
+    "game_id": "401858271",
+    "local_date": "2026-10-23",
+    "home": "Virginia",
+    "away": "Duke",
+    "scheduled_kickoff_utc": "2026-10-23T23:00:00+00:00",
+    "official_score": {
+      "duke": 19,
+      "virginia": 16
+    },
+    "official_quarters": {
+      "duke": [
+        7,
+        0,
+        3,
+        9
+      ],
+      "virginia": [
+        7,
+        6,
+        0,
+        3
+      ]
+    },
+    "home_margin_virginia": -3,
+    "total": 35
+  },
+  "sources": {
+    "official_school_box": "https://goduke.com/sports/football/stats/2026/virginia/boxscore/24828",
+    "official_school_game_center": "https://goduke.com/game-center/24828",
+    "independent_recap": "https://fieldlevelmedia.com/ncaaf/duke-uses-rb-nate-sheppards-td-pass-to-slip-past-virginia/",
+    "locked_original_pregame_file": "cfb/frozen_pregame_audits/2026_10_23_duke_virginia.json",
+    "locked_original_successful_workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/39983208687",
+    "post_personnel_refresh_is_archived_experiment_only": "cfb/frozen_pregame_audits/2026_10_23_duke_virginia_personnel_refresh.json"
+  },
+  "frozen_pregame": {
+    "source_capture_at_utc": "2026-10-23T16:01:37.186981+00:00",
+    "forecast_at_utc": "2026-10-23T16:01:38.548547+00:00",
+    "github_sha": "d56f285f9bf8003a5119cc88675b0c426d6d2e10",
+    "draws_each": 5000,
+    "seed": 401858271,
+    "baseline": {
+      "duke": 23.808,
+      "virginia": 24.579,
+      "duke_margin": -0.771,
+      "total": 48.387
+    },
+    "build16": {
+      "duke": 24.307,
+      "virginia": 23.635,
+      "duke_margin": 0.672,
+      "total": 47.941,
+      "duke_win_raw": 0.5132,
+      "margin_sd": 18.214,
+      "duke_cover_plus2_5_raw": 0.54,
+      "duke_cover_plus1_5_raw": 0.5278,
+      "third_down_chain_active": true,
+      "redzone_fg_regression_active": true,
+      "qualified_clocks_active": true,
+      "severe_rushing_mismatch_triggered": false
+    },
+    "decision": {
+      "ats_side": "Duke +2.5",
+      "group": "C",
+      "confidence_out_of_10": 5.3,
+      "at_duke_plus1_5": "PASS",
+      "total_pick": "PASS",
+      "source_verified_market_minus_virginia_at_2_5_not_close_attested": true
+    }
+  },
+  "observed": {
+    "duke": {
+      "points": 19,
+      "total_yards": 327,
+      "rush_yards": 71,
+      "rushes": 19,
+      "rush_ypc": 3.7,
+      "pass_yards": 256,
+      "passing_completions": 17,
+      "passing_attempts": 31,
+      "passing_tds": 1,
+      "passing_interceptions": 1,
+      "offensive_plays": 50,
+      "first_downs": 16,
+      "third_down_converted": 2,
+      "third_down_attempts": 10,
+      "fourth_down_converted": 0,
+      "fourth_down_attempts": 0,
+      "sacks_allowed": 1,
+      "sack_yards_lost": 4,
+      "time_possession_seconds": 1273,
+      "punts": 6,
+      "penalties": 4,
+      "penalty_yards": 47,
+      "turnovers": 1,
+      "fg_made": 2,
+      "fg_attempted": 2,
+      "pat_made": 1,
+      "pat_attempted": 2,
+      "redzone_scoring_trips": 1,
+      "redzone_trips": 1,
+      "redzone_touchdowns": 0,
+      "first_half_points": 7,
+      "second_half_points": 12
+    },
+    "virginia": {
+      "points": 16,
+      "total_yards": 353,
+      "rush_yards": 195,
+      "rushes": 53,
+      "rush_ypc": 3.7,
+      "pass_yards": 158,
+      "passing_completions": 15,
+      "passing_attempts": 24,
+      "passing_tds": 0,
+      "passing_interceptions": 1,
+      "offensive_plays": 77,
+      "first_downs": 22,
+      "third_down_converted": 5,
+      "third_down_attempts": 17,
+      "fourth_down_converted": 2,
+      "fourth_down_attempts": 3,
+      "sacks_allowed": 5,
+      "sack_yards_lost": 26,
+      "time_possession_seconds": 2327,
+      "punts": 5,
+      "penalties": 3,
+      "penalty_yards": 30,
+      "turnovers": 2,
+      "fg_made": 3,
+      "fg_attempted": 4,
+      "pat_made": 1,
+      "pat_attempted": 1,
+      "redzone_scoring_trips": 4,
+      "redzone_trips": 4,
+      "redzone_touchdowns": 1,
+      "first_half_points": 13,
+      "second_half_points": 3
+    }
+  },
+  "derived": {
+    "duke_actual_margin": 3,
+    "duke_plus_2_5_ats_win": true,
+    "ats_cushion_points_at_duke_plus_2_5": 5.5,
+    "model_ats_prediction_direction_correct": true,
+    "actual_minus_baseline_duke_margin": 3.771,
+    "actual_minus_build16_duke_margin": 2.328,
+    "absolute_margin_error_baseline": 3.771,
+    "absolute_margin_error_build16": 2.328,
+    "actual_minus_baseline_total": -13.387,
+    "actual_minus_build16_total": -12.941,
+    "absolute_total_error_baseline": 13.387,
+    "absolute_total_error_build16": 12.941,
+    "actual_minus_build16_duke_points": -5.307,
+    "actual_minus_build16_virginia_points": -7.635,
+    "duke_share_possession": 0.3536111,
+    "virginia_share_possession": 0.6463889,
+    "virginia_redzone_td_rate": 0.25,
+    "virginia_points_per_redzone_trip": 4,
+    "realized_ypc_equal": true,
+    "net_takeaways_duke_plus1": true
+  },
+  "official_scoring_sequence": [
+    {
+      "quarter": 1,
+      "team": "Duke",
+      "type": "32-yard Nate Sheppard rush touchdown",
+      "score": [
+        7,
+        0
+      ]
+    },
+    {
+      "quarter": 1,
+      "team": "Virginia",
+      "type": "1-yard Jekail Middlebrook rush touchdown",
+      "score": [
+        7,
+        7
+      ]
+    },
+    {
+      "quarter": 2,
+      "team": "Virginia",
+      "type": "21-yard Will Bettridge field goal",
+      "score": [
+        7,
+        10
+      ]
+    },
+    {
+      "quarter": 2,
+      "team": "Virginia",
+      "type": "32-yard Bettridge field goal",
+      "score": [
+        7,
+        13
+      ]
+    },
+    {
+      "quarter": 3,
+      "team": "Duke",
+      "type": "39-yard Gavin Strange field goal",
+      "score": [
+        10,
+        13
+      ]
+    },
+    {
+      "quarter": 4,
+      "team": "Duke",
+      "type": "39-yard Strange field goal",
+      "score": [
+        13,
+        13
+      ]
+    },
+    {
+      "quarter": 4,
+      "team": "Virginia",
+      "type": "30-yard Bettridge field goal at 3:00",
+      "score": [
+        13,
+        16
+      ]
+    },
+    {
+      "quarter": 4,
+      "team": "Duke",
+      "type": "28-yard Nate Sheppard passing TD to Brody Keefe with 1:14 left; PAT missed",
+      "score": [
+        19,
+        16
+      ]
+    }
+  ],
+  "postgame_causal_findings": [
+    {
+      "code": "ATS_DIRECTION_CORRECT_BUT_MEAN_SCORE_INFLATED",
+      "status": "observed",
+      "evidence": "Frozen Duke +0.672 expected vs actual Duke +3, but projected total 47.941 vs actual 35",
+      "implication": "Relative team assessment was reasonable, scoring distribution and dependence overstated. Evaluate persistent low-total residuals across independent games before changing global scoring priors."
+    },
+    {
+      "code": "RUSHING_VOLUME_ASYMMETRY_NOT_RUSH_PER_CARRY_SUPERIORITY",
+      "status": "verified",
+      "evidence": "Virginia 53 carries for 195; Duke 19 for 71; both 3.7 YPC; Virginia 38:47 possession vs Duke 21:13",
+      "implication": "Test offensive balance, possession lengths, third-down stalls and relative rush-attempt distribution, not just rushing efficiency or yard totals; opponent-matched early rushing success in archived refresh nearly identical Duke .394244 vs UVA .394538."
+    },
+    {
+      "code": "RED_ZONE_TD_TO_FG_FINISHING",
+      "status": "verified",
+      "evidence": "Virginia 4-for-4 red-zone scores, 1 TD/3 FG, 4 pts per trip; Duke 1 redzone FG and two touchdowns from beyond redzone",
+      "implication": "Measure joint probability of red-zone entry and TD-vs-FG, distinguish scoring rate from touchdown rate. No fitting on target result."
+    },
+    {
+      "code": "PASS_RUSH_NEGATIVE_PLAYS_CUT_DRIVE_TAIL",
+      "status": "verified",
+      "evidence": "Virginia allowed five sacks and 26 lost yards; Duke one sack, 4 yards; Virginia converted just 5 of 17 third downs",
+      "implication": "Candidate pressure/protection and 3rd-long disruption features should be measured from eligible prior play data, independent of opponent quality."
+    },
+    {
+      "code": "TEMPORARY_IN_GAME_QB_HAND_INJURY",
+      "status": "observed_not_predictable_pregame",
+      "evidence": "Duke QB Walker Eget left after first drive, backup Dan Mahan played rest of first half; Eget returned second half; UVA led 13-7 at half",
+      "implication": "Evaluate distribution-level in-game QB disruption in historical series; no retroactive claim that Eget's injury could be known pregame; do not reactivate rolled-back CFB personnel implementation."
+    },
+    {
+      "code": "LOW_FREQUENCY_SKILL_PLAYER_PASS_TD",
+      "status": "observed_high_leverage_event",
+      "evidence": "Nate Sheppard RB completed 28-yard TD pass to Brody Keefe with 1:14 left, finishing 75-yard drive; missed PAT; UVA ended on fourth-down INT",
+      "implication": "Allow empirical rare skill-position passing tail in game-script research; do not infer common occurrence or tune event rate from single game."
+    },
+    {
+      "code": "TURNOVERS_DID_NOT_CREATE_NONOFFENSIVE_TD",
+      "status": "verified",
+      "evidence": "Both teams threw one interception; Virginia lost one fumble, Duke did not; no defensive or special-teams touchdowns",
+      "implication": "Turnovers and drive-ending 4th-down interception must not double count as defensive points or phantom ensuing possession; status of live final defensive possession."
+    }
+  ],
+  "candidate_research_and_validation": [
+    {
+      "priority": 1,
+      "mechanism": "Joint tempo/drive-volume/efficiency tails",
+      "method": "Replay independent pregame-frozen 2025/2026 holdouts, paired 5000 draws with same seeds; compare margin MAE, total MAE, observed totals low-tail coverage and market ATS calibration; include QB-missed-time diagnostics and no target leakage.",
+      "production_status": "NOT_FITTED_OR_ACTIVATED"
+    },
+    {
+      "priority": 2,
+      "mechanism": "RZ scoring opportunity TD-vs-FG and FG miss co-occurrence",
+      "method": "Separate entry frequency, opponent-adjusted TD conditional on entry, distance-conditioned FG outcomes, and failed third-down/goal-to-go chains; test on historical held-out games and avoid duplicating red-zone regression already active.",
+      "production_status": "EXISTING_COMPONENT_ACTIVE_RECALIBRATION_NOT_YET_TESTED"
+    },
+    {
+      "priority": 3,
+      "mechanism": "Rush-attempt volume shares and pass pressure/sack conditionality",
+      "method": "Use prior-game offense pass/rush play types and pressure/sacks identified from source PBP; compare response to actual rush opportunities and third down against frozen history; run paired 5000 on truly out-of-sample games.",
+      "production_status": "PROPOSED_NO_SUPPORTED_NEW_COEFFICIENT"
+    },
+    {
+      "priority": 4,
+      "mechanism": "Rare skill pass and temporary QB substitution tails",
+      "method": "Quantify occurrence from multi-season observed eligible historical PBP; no game-day injured starter input or personnel code reinstatement; measure tails rather than point-estimate game winner.",
+      "production_status": "PROPOSED_RESEARCH_ONLY"
+    }
+  ],
+  "model_state": {
+    "active_cfb_build16_pre_personnel_rollback_commit": "5078e7ffedef675b54abafead3bb2a28c8ed3560",
+    "baseline_preserved": true,
+    "cfb_personnel_feature_rolled_back": true,
+    "model_scoring_weights_changed_by_this_postmortem": false,
+    "simulation_replay_from_frozen_record_only": true,
+    "not_claimed_calibrated_from_one_game": true,
+    "original_frozen_forecast_not_overwritten": true,
+    "retrospective_score_not_used_as_pregame_input": true
+  },
+  "audit_status": "FINAL_CONFIRMED_FROM_OFFICIAL_DUKE_BOX; ATS_DIRECTION_CORRECT; TOTAL_OVERPREDICTED; CAUSAL_RESEARCH_PRIORITIES_DOCUMENTED"
+}
