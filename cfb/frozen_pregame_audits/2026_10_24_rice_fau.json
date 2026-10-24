@@ -1,0 +1,210 @@
+{
+  "schema": "cfb_frozen_pregame_2026_10_24_5000_v1",
+  "game": {
+    "id": "401862809",
+    "date_local": "2026-10-24",
+    "away": "Rice",
+    "home": "Florida Atlantic",
+    "stadium": "Flagler Credit Union Stadium",
+    "kickoff_utc": "2026-10-24T16:00:00Z"
+  },
+  "provenance": {
+    "snapshot_utc": "2026-10-24T14:27:47.367345+00:00",
+    "workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40102577330",
+    "workflow_status": "SUCCESS",
+    "actual_seed": 401862809,
+    "simulations_per_variant": 5000,
+    "verified_previous_games_rice": 7,
+    "verified_previous_games_fau": 6,
+    "pregame_completed_game_filter": true,
+    "game_outcome_not_used": true
+  },
+  "market": {
+    "opened_fau_spread": -10.5,
+    "dk_current_fau": -8.5,
+    "dk_rice_plus_8_5_price": -112,
+    "other_fau_line": -7.5,
+    "market_total": 53.5,
+    "draftkings_spread_rice_bets_pct": 57,
+    "draftkings_spread_rice_handle_pct": 93,
+    "third_party_reported_circa_spread_fau_handle_pct": 52,
+    "quote_direct_native_timestamp_archive": false,
+    "expected_rice_plus_8_5_breakeven_probability": 0.5283019,
+    "market_no_vig_fau_ml_win_probability_approximately": 0.741,
+    "sources": [
+      "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/",
+      "https://wiseguyteam.com/cfb-betting-splits",
+      "https://www.actionnetwork.com/ncaaf-game/rice-florida-atlantic-score-odds-october-24-2026/289641"
+    ]
+  },
+  "statistical_evidence": {
+    "season_scoring_avg_rice": 17,
+    "season_scoring_avg_fau": 35,
+    "rush_yards_game_rice": 238.9,
+    "rush_yards_allowed_fau": 218.2,
+    "pass_yards_game_fau": 307.3,
+    "pass_yards_allowed_rice": 188.7,
+    "rice_points_per_opportunity": 3.19,
+    "fau_points_per_opportunity": 4.23,
+    "rice_offensive_epa_per_play": -0.01,
+    "fau_offensive_epa_per_play": 0.183,
+    "rice_pass_down_success": 0.218,
+    "fau_pass_down_success": 0.389,
+    "rice_turnover_margin": -6,
+    "fau_turnover_margin": 2,
+    "rice_qb_jacurri_brown_prior_rush_yards": 669,
+    "rice_qb_rush_yards_oct17": 154,
+    "fau_vs_army_previous_week": {
+      "fau_points": 24,
+      "army_points": 56,
+      "army_rush_yards": 479
+    },
+    "fau_vs_navy_sept12": {
+      "fau_points": 38,
+      "navy_points": 30,
+      "navy_rush_yards": 246,
+      "fau_qb_pass_yards": 386,
+      "fau_pass_touchdowns": 5
+    },
+    "external_matchup_projections": [
+      {
+        "model": "Havoc",
+        "fau_margin": 12.7,
+        "projected_score": "FAU 34.2 Rice 21.5"
+      },
+      {
+        "model": "TEMPO",
+        "fau_margin": 11,
+        "projected_score": "FAU 34.3 Rice 23.3"
+      }
+    ],
+    "references": [
+      "https://www.aol.com/articles/aac-matchup-features-florida-atlantic-194314000.html",
+      "https://collegefootballdata.com/games/401862809/preview",
+      "https://havoc.football/games/555?tab=units",
+      "https://tempocfb.net/games/2026/8/rice-at-florida-atlantic",
+      "https://goarmywestpoint.com/game-center/20138",
+      "https://fausports.com/sports/football/stats/2026/navy/boxscore/24581"
+    ]
+  },
+  "frozen_simulations": {
+    "baseline": {
+      "fau_points": 31.83,
+      "rice_points": 22.637,
+      "fau_margin": 9.193,
+      "total": 54.467,
+      "fau_win_probability_raw": 0.737,
+      "rice_plus_7_5_cover_raw": 0.459,
+      "rice_plus_8_5_cover_raw": 0.4802,
+      "margin_sd": 14.426
+    },
+    "previous_build16": {
+      "fau_points": 22.674,
+      "rice_points": 23.467,
+      "fau_margin": -0.793,
+      "total": 46.142,
+      "fau_win_probability_raw": 0.465,
+      "rice_plus_7_5_cover_raw": 0.7074
+    },
+    "updated_build16": {
+      "fau_points": 23.093,
+      "rice_points": 22.927,
+      "fau_margin": 0.166,
+      "total": 46.019,
+      "fau_win_probability_raw": 0.4916,
+      "rice_plus_7_5_cover_raw": 0.6836,
+      "rice_plus_8_5_cover_raw": 0.6972,
+      "margin_sd": 16.814,
+      "joint_drive_active": true,
+      "verified_elapsed_clock_active": true,
+      "fg_distance_regression_active": true,
+      "defensive_return_td_and_special_td_separated": true,
+      "nonoffensive_scoring_only_partially_verified": true
+    },
+    "ats_cover_probabilities_raw_uncalibrated": true
+  },
+  "improvement1": {
+    "source_status": "ACTIVE_SOURCE_INCREMENTAL_TWO_WAY_VENUE",
+    "opponent_specific_two_way_matchup_active": true,
+    "source_qualified_venue_component_active": true,
+    "old_build16_fau_margin": -0.793,
+    "updated_build16_fau_margin": 0.166,
+    "delta_toward_fau": 0.959,
+    "fau_venue_delta_ppd": 0.02497157,
+    "rice_venue_delta_ppd": -0.10214075,
+    "offense_qb_rush_route_rice_qualifying_games": 7,
+    "computed_qb_rush_route_delta_rice_epa": 0.0065866,
+    "rice_matchup_rush_epa": 0.03276,
+    "venue_coefficients_unfitted": true,
+    "baseline_unchanged": true,
+    "personnel_model_rolled_back": true
+  },
+  "ats_concordance": {
+    "rule": "cfb.ats_concordance.assess",
+    "at_fau_minus_8_5": {
+      "baseline_edge_fau": 0.693,
+      "challenger_edge_fau": -8.334,
+      "status": "HOLD_CONFLICTING_BASELINE_CHALLENGER_SPREAD_SIDES"
+    },
+    "at_fau_minus_7_5": {
+      "baseline_edge_fau": 1.693,
+      "challenger_edge_fau": -7.334,
+      "status": "HOLD_CONFLICTING_BASELINE_CHALLENGER_SPREAD_SIDES"
+    },
+    "implementation": "Existing guard, exact market quote not native archived"
+  },
+  "simulated_condition_subsets": {
+    "fau_offense_stall": {
+      "share": 0.319,
+      "conditional_mean_fau_score": 10.197,
+      "conditional_mean_rice_score": 23.833,
+      "conditional_mean_fau_margin": -13.636
+    },
+    "rice_offense_stall": {
+      "share": 0.3268,
+      "conditional_mean_fau_score": 24.644,
+      "conditional_mean_rice_score": 11.289,
+      "conditional_mean_fau_margin": 13.355
+    },
+    "rice_two_more_turnovers": {
+      "share": 0.1102,
+      "mean_fau_margin": 10.368
+    },
+    "fau_two_more_turnovers": {
+      "share": 0.1082,
+      "mean_fau_margin": -5.477
+    },
+    "rice_rushing_control_tail": {
+      "share": 0.2002,
+      "mean_fau_margin": 0.483
+    },
+    "subset_events_overlap": true
+  },
+  "risk": {
+    "high": "Baseline (FAU +9.19) vs challenger (FAU +0.17) margin gap >9 points and ATS sides conflict; external models FAU +11–13; market moneyline FAU ~74% vs challenger FAU ~49%. Expected scoring total 46.0 challenger vs 53.5 market/54.5 baseline shows serious over-compression of passing efficiency and opponent interactions.",
+    "medium": "Rice runs very effectively against FAU weakness but produces only 17 PPG and low third-down pass success; FAU beat Navy 38-30 despite 246 rush yards conceded; Rice turnover tail and away results 0–3; sharp sportsbook splits not unanimous.",
+    "personnel": "Rice WR Ben Grice and Barry Jackson Jr. questionable in public reports; FAU RJ Garcia and Brooks Johnson questionable; none numerically adjusted."
+  },
+  "recommendation": {
+    "directional_ats_side": "Rice +8.5",
+    "if_7_5": "Rice +7.5 directional but less value",
+    "confidence_out_of_10": 5.3,
+    "group": "C",
+    "official_bet_decision": "PASS_AT_BOTH_LINES_BASELINE_VS_CHALLENGER_CONFLICT",
+    "most_likely_winner_assessment": "Florida Atlantic by calibrated external/market context; raw challenger coin-flip not trusted",
+    "baseline_central_score": "FAU 32 Rice 23",
+    "challenger_central_score": "FAU 23 Rice 23",
+    "evidence_balanced_projected_scenario": "Florida Atlantic 31 Rice 24 (illustrative, not a third model)",
+    "total": "PASS 53.5 due 8.5 point baseline/challenger difference",
+    "reason": "Strong Rice QB rush mismatch and DK handle but Rice scoring-conversion weakness + passing deficit; strict baseline–challenger ATS discordance hold."
+  },
+  "integrity": {
+    "frozen_before_kickoff": true,
+    "not_retroactive": true,
+    "one_cfb_challenger": true,
+    "nfl_separate": true,
+    "no_game_day_inactive_list": true,
+    "no_numeric_personnel_assumption": true,
+    "no_historical_spreads_invented": true
+  }
+}
