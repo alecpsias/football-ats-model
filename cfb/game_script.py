@@ -247,7 +247,16 @@ def simulate_script(home_projection, away_projection, home_history, away_history
             or clock_pools.get('status')!='ACTIVE_VERIFIED_SOURCE_DRIVE_CLOCKS'):
         raise ValueError('Unverified Failure3 source clock pools')
     duration_rng=np.random.default_rng(seed ^ 0xC10C3003)
-    def verified_duration(side,points,turnover,explosive,mask):
+    joint_config=(mechanisms.get('joint_drive') if mechanisms is not None else None)
+    if joint_config is not None and (clock_pools is None or
+            joint_config.get('status')!='ACTIVE_SOURCE_JOINT_DRIVE_BOOTSTRAP'):
+        raise ValueError('Joint drives require verified source clocks')
+    joint_rng=np.random.default_rng(seed ^ 0x4D01517)
+    joint_rush={side:np.zeros(n,dtype=np.int32) for side in ('home','away')}
+    joint_pass={side:np.zeros(n,dtype=np.int32) for side in ('home','away')}
+    joint_fallbacks={side:np.zeros(n,dtype=np.int16) for side in ('home','away')}
+    joint_possession_seconds={side:np.zeros(n,dtype=float) for side in ('home','away')}
+    def verified_duration(side,points,turnover,explosive,mask,score_diff):
         """One real source-elapsed duration for each actually scheduled drive.
 
         These four labels are exclusive: explosive TD, other offensive
@@ -259,10 +268,39 @@ def simulate_script(home_projection, away_projection, home_history, away_history
             ('turnover',mask&turnover),
             ('chain_score',mask&~explosive&~turnover&(points>0)),
             ('stalled',mask&~explosive&~turnover&(points==0)))
+        desired=None
+        if joint_config is not None:
+            src=mechanisms[side]
+            neutral=src.get('neutral_pass_rate')
+            by=(src.get('pass_states') or {}).get('by_state')
+            if not isinstance(neutral,(float,int)) or not 0<=neutral<=1:
+                neutral=.5
+            if not isinstance(by,dict) or not all(
+                    isinstance(by.get(k),(float,int)) for k in
+                    ('trailing_9_plus','within_8','leading_9_plus')):
+                by={k:neutral for k in ('trailing_9_plus','within_8','leading_9_plus')}
+            pass_rate=np.where(score_diff<=-9,by['trailing_9_plus'],
+                               np.where(score_diff>=9,by['leading_9_plus'],by['within_8']))
+            desired=np.clip(1.-pass_rate,.05,.95)
+            from cfb.joint_drive_process import sample_joint
         for label,z in category_masks:
-            dur+=sample_seconds(duration_rng,clock_pools[side],label,z)
+            if joint_config is None:
+                dur+=sample_seconds(duration_rng,clock_pools[side],label,z)
+            else:
+                sec,rr,pp,missing=sample_joint(joint_rng,joint_config[side],
+                                                label,z,desired)
+                dur+=sec
+                joint_rush[side][:]+=rr
+                joint_pass[side][:]+=pp
+                joint_fallbacks[side][:]+=missing.astype(np.int16)
+                if np.any(missing):
+                    dur+=sample_seconds(duration_rng,clock_pools[side],label,missing)
         return dur
     elapsed_sec=np.zeros(n,dtype=float)
+    def spend_clock(side,duration):
+        real=np.minimum(duration,np.maximum(0.,3600.-elapsed_sec))
+        joint_possession_seconds[side][:]+=real
+        elapsed_sec[:]+=real
     base_sec=3600./(2.*draws)
     possessions_h=np.zeros(n,dtype=np.int16)
     possessions_a=np.zeros(n,dtype=np.int16)
@@ -362,14 +400,20 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                             trailing_rush_resilience_ppd('home',hs-ass),
                             short_h,mask,sustain_config['home'],sustain_factor['home'],
                             rush_chain_extra_ppd=rush_home_ppd_shift)
+                        clock_points=pts.copy()
                         if field_goals is not None:
                             pts,miss=draw_missed_field_goals(
                                 pts,field_goals['home'],kick_rng)
                             missed_fg_h+=miss.astype(np.int16)
                             chain_score=chain_score & (pts>0)
-                        elapsed_sec+=(verified_duration('home',pts,to,exp_td,mask)
-                            if clock_pools is not None else np.where(mask,base_sec*
-                            duration_multiplier(pts,to,exp_td),0.))
+                        if joint_config is not None:
+                            spend_clock('home',verified_duration(
+                                'home',clock_points,to,exp_td,mask,hs-ass))
+                        else:
+                            elapsed_sec+=(verified_duration(
+                                'home',pts,to,exp_td,mask,hs-ass)
+                                if clock_pools is not None else np.where(mask,base_sec*
+                                duration_multiplier(pts,to,exp_td),0.))
                         explosive_h+=exp_td.astype(np.int16)
                         chain_scores_h+=chain_score.astype(np.int16)
                         possessions_h+=mask.astype(np.int16)
@@ -403,14 +447,20 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                             trailing_rush_resilience_ppd('away',ass-hs),
                             short_a,mask,sustain_config['away'],sustain_factor['away'],
                             rush_chain_extra_ppd=rush_away_ppd_shift)
+                        clock_points=pts.copy()
                         if field_goals is not None:
                             pts,miss=draw_missed_field_goals(
                                 pts,field_goals['away'],kick_rng)
                             missed_fg_a+=miss.astype(np.int16)
                             chain_score=chain_score & (pts>0)
-                        elapsed_sec+=(verified_duration('away',pts,to,exp_td,mask)
-                            if clock_pools is not None else np.where(mask,base_sec*
-                            duration_multiplier(pts,to,exp_td),0.))
+                        if joint_config is not None:
+                            spend_clock('away',verified_duration(
+                                'away',clock_points,to,exp_td,mask,ass-hs))
+                        else:
+                            elapsed_sec+=(verified_duration(
+                                'away',pts,to,exp_td,mask,ass-hs)
+                                if clock_pools is not None else np.where(mask,base_sec*
+                                duration_multiplier(pts,to,exp_td),0.))
                         explosive_a+=exp_td.astype(np.int16)
                         chain_scores_a+=chain_score.astype(np.int16)
                         possessions_a+=mask.astype(np.int16)
@@ -515,6 +565,15 @@ def simulate_script(home_projection, away_projection, home_history, away_history
                                  else 'BOUNDED_UNFITTED_EVENT_DURATION_PROXIES' if sustain_config is not None
                                  else 'OFF'),
        'failure3_source_clock_verified':clock_pools is not None,
+       'joint_drive_active':joint_config is not None,
+       'joint_drive_avg_rush_plays_home':round(float(joint_rush['home'].mean()),3) if joint_config is not None else None,
+       'joint_drive_avg_rush_plays_away':round(float(joint_rush['away'].mean()),3) if joint_config is not None else None,
+       'joint_drive_avg_pass_plays_home':round(float(joint_pass['home'].mean()),3) if joint_config is not None else None,
+       'joint_drive_avg_pass_plays_away':round(float(joint_pass['away'].mean()),3) if joint_config is not None else None,
+       'joint_drive_avg_possession_seconds_home':round(float(joint_possession_seconds['home'].mean()),2) if joint_config is not None else None,
+       'joint_drive_avg_possession_seconds_away':round(float(joint_possession_seconds['away'].mean()),2) if joint_config is not None else None,
+       'joint_drive_fallbacks_home':int(joint_fallbacks['home'].sum()) if joint_config is not None else None,
+       'joint_drive_fallbacks_away':int(joint_fallbacks['away'].sum()) if joint_config is not None else None,
        'coupled_rush_chain_active':rush_chain_state is not None,
        'coupled_rush_chain_mean_signed_ppd_home':(
            round(float(np.mean(rush_home_ppd_shift)),6)
