@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from cfb.investigation_gate import _blob_sha, audit_day
+from cfb.investigation_gate import _blob_sha, audit_day, audit_game, audit_all_dates
 
 
 class TestMandatoryRankingGate(unittest.TestCase):
@@ -117,6 +117,26 @@ class TestMandatoryRankingGate(unittest.TestCase):
         self.assertEqual(r["ranking"][0]["bet_decision"],
                          "NO_EXPLICIT_WAGER_DECISION_IN_FROZEN_RECORD")
 
+
+    def test_single_game_lookup_requires_frozen_pin(self):
+        report = audit_game(self.root, self.DATE, "401999999")
+        self.assertEqual(report["status"], "PASS", report["errors"])
+        self.assertEqual(report["verified_record"]["game_id"], "401999999")
+        self.record.write_text("{}")
+        self.assertEqual(audit_game(self.root, self.DATE, "401999999")["status"], "BLOCKED")
+
+    def test_single_game_lookup_rejects_unregistered_game(self):
+        report = audit_game(self.root, self.DATE, "401000001")
+        self.assertEqual(report["status"], "BLOCKED")
+        self.assertIsNone(report["verified_record"])
+
+    def test_future_workflow_requires_registered_slate(self):
+        future = self.workflow.parent / "cfb-new-team-20261025.yml"
+        future.write_text("name: future\\n")
+        result = audit_all_dates(self.root, self.DATE)
+        self.assertEqual(result["status"], "BLOCKED")
+        self.assertEqual(result["dates_checked"], 2)
+        self.assertEqual(result["reports"]["2026-10-25"]["status"], "BLOCKED")
 
 if __name__ == "__main__":
     unittest.main()
