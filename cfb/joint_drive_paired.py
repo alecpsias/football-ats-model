@@ -114,7 +114,7 @@ def evaluate(snapshot, max_games=120):
         "historical_ATS_accuracy":None,"verified_spreads":0,
         "baseline_unchanged":True,"one_challenger":True,
         "sample_size_requested":max_games,
-        "screen":screen,"insufficient":dict(missing),
+        "screen":screening,"insufficient":dict(missing),
         "metrics":metrics(matched),"games":matched}
 
 
