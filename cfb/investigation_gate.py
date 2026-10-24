@@ -222,11 +222,11 @@ def audit_all_dates(root, from_date):
     A future matchup workflow without a registered slate is a hard failure.
     """
     root = Path(root)
-    if not re.fullmatch(r"20\\d{2}-\\d{2}-\\d{2}", from_date):
+    if not re.fullmatch(r"20\d{2}-\d{2}-\d{2}", from_date):
         raise ValueError("Invalid from-date")
     dates = set()
     for path in (root / ".github" / "workflows").glob("cfb-*.yml"):
-        match = re.search(r"-(20\\d{6})\\.yml$", path.name)
+        match = re.search(r"-(20\d{6})\.yml$", path.name)
         if match:
             d = match.group(1)
             date = d[:4] + "-" + d[4:6] + "-" + d[6:]
