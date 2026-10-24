@@ -1,0 +1,183 @@
+{
+  "schema": "cfb_2026_10_24_frozen_pregame_5000_ats_build16_v1",
+  "fixture": {
+    "game_id": "401858496",
+    "date_local": "2026-10-24",
+    "away": "Indiana",
+    "home": "Michigan",
+    "kickoff_utc": "2026-10-24T16:00:00+00:00",
+    "kickoff_cdt": "2026-10-24 11:00"
+  },
+  "source": {
+    "snapshot_at_utc": "2026-10-24T13:01:13.311221+00:00",
+    "forecast_at_utc": "2026-10-24T13:01:14.749240+00:00",
+    "source_game_id": "401858496",
+    "workflow_run": "https://github.com/alecpsias/football-ats-model/actions/runs/40096303250",
+    "workflow_commit": "8c2578697f1c195acd8d7a37583dfb949e518b79",
+    "independent_replay": "https://github.com/alecpsias/football-ats-model/actions/runs/40096650151",
+    "baseline_unchanged": true,
+    "one_CFB_challenger": true,
+    "NFL_separate": true,
+    "personnel_model_rolled_back": true
+  },
+  "prior_games": {
+    "indiana": 7,
+    "michigan": 6,
+    "embargo": "24 hours after each previous game's kickoff",
+    "target_game_excluded": true
+  },
+  "simulation": {
+    "seed": 401858496,
+    "simulations_each": 5000,
+    "baseline": {
+      "score_indiana": 25.241,
+      "score_michigan": 20.495,
+      "indiana_margin": 4.746,
+      "total": 45.736,
+      "indiana_win_probability_raw": 0.6374,
+      "michigan_plus_7_5_raw_cover": 0.5934,
+      "margin_sd": 13.7
+    },
+    "previous_challenger_reference": {
+      "score_indiana": 24.019,
+      "score_michigan": 17.498,
+      "indiana_margin": 6.521,
+      "total": 41.516,
+      "michigan_plus_7_5_raw_cover": 0.5364
+    },
+    "improved_build16": {
+      "score_indiana": 24.012,
+      "score_michigan": 17.48,
+      "indiana_margin": 6.532,
+      "total": 41.491,
+      "indiana_win_probability_raw": 0.663,
+      "margin_sd": 15.95,
+      "michigan_plus_7_5_raw_cover": 0.5352,
+      "indiana_minus_7_5_raw_cover": 0.4648,
+      "home_margin_p10_p50_p90": [
+        -27,
+        -7,
+        14
+      ],
+      "source_verified_clock_active": true,
+      "joint_drive_active": true,
+      "distance_fg_regression": true,
+      "nonoffensive_scoring_separate": true
+    },
+    "raw_cover_probabilities_are_uncalibrated": true
+  },
+  "spread_sensitivity": {
+    "indiana_minus_6_5": {
+      "indiana_cover": 0.5156,
+      "michigan_cover": 0.4844
+    },
+    "indiana_minus_7": {
+      "indiana_cover": 0.4648,
+      "michigan_cover": 0.4844,
+      "push": 0.0508
+    },
+    "indiana_minus_7_5": {
+      "indiana_cover": 0.4648,
+      "michigan_cover": 0.5352
+    },
+    "indiana_minus_8_5": {
+      "indiana_cover": 0.4508,
+      "michigan_cover": 0.5492
+    }
+  },
+  "evidence": {
+    "matched_rush_success_indiana": 0.377067,
+    "matched_rush_success_michigan": 0.319444,
+    "home_perspective_sos_pass_epa_differential": -0.13386461095077604,
+    "home_perspective_sos_rush_epa_differential": -0.05314160378284469,
+    "rush_mismatch_screen": "SCREENED_NO_SEVERE_TRIGGER",
+    "fitted_2023_rush_residual_home_margin_points": -0.539342,
+    "opponent_matched_redzone_td_probability": {
+      "indiana": 0.633019,
+      "michigan": 0.63864
+    },
+    "FG_distance_adjustments_active": true
+  },
+  "improvement1": {
+    "status": "ACTIVE_SOURCE_INCREMENTAL_TWO_WAY_VENUE",
+    "matched_two_way_counterattack_used": true,
+    "venue_component_active": false,
+    "venue_reason": "Michigan one away game fails qualified independent home/away opponent sample",
+    "original_build16_indiana_margin": 6.521,
+    "with_improvement1_indiana_margin": 6.532,
+    "incremental_margin_points": 0.011,
+    "home_ppd": -0.00011751,
+    "away_ppd": 0.00011751,
+    "indiana_qb_rush_history_not_starting_QB_adjustment": true,
+    "numerical_personnel_reactivated": false,
+    "independent_validation": "Mixed results: 2025 80 games MAE 13.5757 old vs 13.7962 new; 2026 80 games 14.7714 old vs 14.7187 new; not ATS validated",
+    "validation_workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40095800093"
+  },
+  "external_market_observed_before_kickoff": {
+    "current_indiana_spread": -7.5,
+    "current_total": 42.5,
+    "open_line_varies_by_source": "AP Indiana -8.5; Action Network -6; price provenance not standardized",
+    "draftkings_indiana_spread_price_american": -105,
+    "draftkings_michigan_spread_price_american": -115,
+    "draftkings_indiana_spread_bets_percentage": 57,
+    "draftkings_michigan_spread_handle_percentage": 60,
+    "circa_third_party_report_michigan_handle_percentage": 83,
+    "circa_report_published": "2026-10-23 17:50 EDT",
+    "splits_not_synchronously_verified": true,
+    "line_source": "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/",
+    "circa_third_party": "https://wiseguyteam.com/cfb-betting-splits"
+  },
+  "availability_context": {
+    "michigan_qb_tommy_carr_expected_first_start_reported": true,
+    "michigan_bryce_underwood_not_assumed_out": true,
+    "source": "https://www.reuters.com/sports/reports-michigan-set-start-tommy-carr-quarterback--flm-2026-10-21/",
+    "team_reports_from": "https://www.insidethehall.com/2026/10/23/game-preview-iu-football-travels-to-ann-arbor-to-take-on-michigan/",
+    "indiana_reported_out": 0,
+    "michigan_reported_out": 7,
+    "michigan_OL_and_secondary_uncertainty": true,
+    "numerical_effect_applied": false
+  },
+  "decision": {
+    "most_likely_score": "Indiana 24 Michigan 17",
+    "straight_up_winner": "Indiana",
+    "ats_directional_side": "Michigan +7.5",
+    "grade": "C",
+    "confidence_out_of_10": 5.4,
+    "wager_recommendation": "PASS_AT_MICHIGAN_PLUS_7_5_MINUS_115",
+    "reason": "53.52% raw cover vs 53.49% break-even, not calibrated; challenger only 0.968 points of line protection and market sharp-money underdog signals are qualitative",
+    "at_plus_7": "PASS_AT_CURRENT_DOG_PRICE",
+    "total": "PASS_42_5",
+    "no_analyzed_half_bet": true
+  },
+  "scenario_from_verified_5000_draws": {
+    "michigan_scoring_stall": {
+      "condition_share": 0.33,
+      "mean_score_indiana": 24.03,
+      "mean_score_michigan": 6.241
+    },
+    "indiana_scoring_stall": {
+      "condition_share": 0.2786,
+      "mean_score_indiana": 10.347,
+      "mean_score_michigan": 17.873
+    },
+    "michigan_two_more_turnovers": {
+      "condition_share": 0.1422,
+      "mean_score_indiana": 26.775,
+      "mean_score_michigan": 14.225
+    },
+    "indiana_two_more_turnovers": {
+      "condition_share": 0.0954,
+      "mean_score_indiana": 19.484,
+      "mean_score_michigan": 20.434
+    }
+  },
+  "scenario_conditioning_not_independent_events": true,
+  "integrity": {
+    "original_prediction_built_pre_kickoff": true,
+    "outcome_unavailable": true,
+    "not_reconstructed_from_postgame": true,
+    "not_injury_adjusted": true,
+    "model_ats_calibration_unverified": true,
+    "market_quote_external_not_native_attested": true
+  }
+}
