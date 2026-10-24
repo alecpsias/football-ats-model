@@ -82,7 +82,7 @@ jobs:
                    capture_utc=str(capture),prior_games_baylor=len(histories[away]),
                    prior_games_kansas=len(histories[home]),seed=seed,runs_each=5000,
                    quote_source="externally verified current 2026-10-24; not native bookmaker archive",
-                   tested_market_baylor_away_spreads=[-9.5,-10.5],
+                   tested_market_baylor_away_spreads=[-1.5,-2.5,-3.0],
                    baseline=baseline,previous_Build16=ref["simulation"],
                    updated_Build16={k:v["simulation"] for k,v in active.items()},
                    improvement1=active["1.5"].get("two_way_venue_improvement1"),
