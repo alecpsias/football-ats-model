@@ -46,9 +46,9 @@ jobs:
           h=int(g.home_id);a=int(g.away_id);seed=401856840
           hp=project(histories[h],histories[a],False,"home",False)
           ap=project(histories[a],histories[h],False,"away",False)
-          baseline=simulate(hp,ap,runs=5000,seed=seed,spread_home=11.5)
+          baseline=simulate(hp,ap,runs=5000,seed=seed,spread_home=10.5)
           corr=correction(h,a,histories)
-          args=dict(runs=5000,seed=seed,spread_home=11.5,
+          args=dict(runs=5000,seed=seed,spread_home=10.5,
             failure1_fit_margin_delta=corr["margin_delta_points"])
           reference=simulate_build16(h,a,histories,False,
              two_way_venue_enabled=False,**args)
@@ -58,7 +58,7 @@ jobs:
               raise RuntimeError("Build16 unavailable")
           d={"fixture":"401856840","capture_utc":str(cutoff),"training_games_texas_tech":len(histories[a]),
              "training_games_cincinnati":len(histories[h]),
-             "market_spread_research_cincinnati_plus":11.5,
+             "market_spread_research_cincinnati_plus":10.5,
              "seed":seed,"runs_each":5000,"baseline":baseline,
              "reference_previous_build16":reference["simulation"],
              "improved_build16":challenger["simulation"],
