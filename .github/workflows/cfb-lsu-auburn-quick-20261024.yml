@@ -2,7 +2,7 @@ name: CFB LSU Auburn lightweight genuine 5000 paired
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/cfb-indiana-michigan-quick-20261024.yml']
+    paths: ['.github/workflows/cfb-lsu-auburn-quick-20261024.yml']
   workflow_dispatch:
 permissions:
   contents: read
