@@ -1,0 +1,78 @@
+name: CFB LSU Auburn lightweight genuine 5000 paired
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/cfb-indiana-michigan-quick-20261024.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  frozen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r requirements-cfb.txt
+      - run: |
+          python -m cfb.pipeline collect --season 2026 --out quick_lsu_auburn/snapshot
+          python -m cfb.pipeline verify --snapshot quick_lsu_auburn/snapshot
+      - name: As-of historical 5000 baseline and challenger paired scores
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import pandas as pd
+          from cfb.pipeline import iso_utc,verify
+          from cfb.fresh_matchup import histories_asof
+          from cfb.research_backtest import project
+          from cfb.engine import simulate
+          from cfb.failure1_learned_shadow import correction
+          from cfb.mechanism_build16 import simulate_build16
+          root=Path("quick_lsu_auburn/snapshot")
+          cutoff=iso_utc(verify(root)["captured_at_utc"])
+          s=pd.read_parquet(root/"schedule.parquet")
+          p=pd.read_parquet(root/"pbp.parquet")
+          roster=pd.read_parquet(root/"roster.parquet")
+          game=s.loc[s.game_id.astype(str).eq("401856728")]
+          if len(game)!=1 or bool(game.iloc[0].completed) or cutoff>=pd.Timestamp("2026-10-24T16:00:00Z"):
+              raise RuntimeError("Game must be strictly pre-kickoff")
+          g=game.iloc[0]
+          assert str(g.home_team)=="Auburn" and str(g.away_team)=="LSU"
+          future,_,histories,_=histories_asof(s,p,roster,cutoff)
+          if not future.game_id.astype(str).eq("401856728").any():raise ValueError("Not future fixture")
+          h=int(g.home_id);a=int(g.away_id);seed=401856728
+          hp=project(histories[h],histories[a],False,"home",False)
+          ap=project(histories[a],histories[h],False,"away",False)
+          baseline=simulate(hp,ap,runs=5000,seed=seed,spread_home=7.5)
+          corr=correction(h,a,histories)
+          args=dict(runs=5000,seed=seed,spread_home=7.5,
+            failure1_fit_margin_delta=corr["margin_delta_points"])
+          reference=simulate_build16(h,a,histories,False,
+             two_way_venue_enabled=False,**args)
+          challenger=simulate_build16(h,a,histories,False,
+             two_way_venue_enabled=True,**args)
+          if reference.get("simulation") is None or challenger.get("simulation") is None:
+              raise RuntimeError("Build16 unavailable")
+          d={"fixture":"401856728","capture_utc":str(cutoff),"training_games_indiana":len(histories[a]),
+             "training_games_michigan":len(histories[h]),
+             "market_spread_research_auburn_plus":7.5,
+             "seed":seed,"runs_each":5000,"baseline":baseline,
+             "reference_previous_build16":reference["simulation"],
+             "improved_build16":challenger["simulation"],
+             "improvement1":challenger["two_way_venue_improvement1"],
+             "matched_redzone_kicking":challenger.get("redzone_kicking_evidence"),
+             "fitted_rush":corr,"ATS_calibrated":False,
+             "native_timestamped_market_quote":False}
+          dest=Path("quick_lsu_auburn/frozen_5000.json")
+          dest.write_text(json.dumps(d,indent=2,default=str))
+          print("LSU_AUBURN_VERIFIED_5000_MATCHUP",json.dumps(d,indent=2,default=str)[:35000],flush=True)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: indiana-michigan-quick-5000-${{ github.run_id }}
+          path: quick_lsu_auburn/frozen_5000.json
+          if-no-files-found: warn
