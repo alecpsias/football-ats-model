@@ -186,14 +186,45 @@ def audit_day(root, date, registry_path=None):
                      if errors else "Complete ranking from frozen archived records")}
 
 
+
+def audit_game(root, date, game_id, registry_path=None):
+    """Mandatory pregame/postgame retrieval of ONE frozen, registered selection."""
+    root = Path(root)
+    manifest = Path(registry_path) if registry_path else root / "cfb" / "investigation_registry" / (date + ".json")
+    base = {"status": "BLOCKED", "date": date, "game_id": str(game_id),
+            "verified_record": None, "errors": [], "verification": "single-pinned-frozen-ats-v1"}
+    if not manifest.is_file():
+        base["errors"].append("Investigation registry missing: " + str(manifest))
+        return base
+    doc = _read_json(manifest)
+    if doc.get("schema") != SCHEMA or doc.get("date") != date:
+        base["errors"].append("Registry schema/date mismatch")
+        return base
+    matching = [x for x in doc.get("entries", []) if str(x.get("game_id")) == str(game_id)]
+    if len(matching) != 1:
+        base["errors"].append("Game not uniquely registered for requested date")
+        return base
+    e = matching[0]
+    if not (root / e.get("workflow_file", "")).is_file():
+        base["errors"].append("Registered game workflow missing")
+        return base
+    try:
+        base["verified_record"] = _game_record(root, date, e)
+        base["status"] = "PASS"
+    except (ValueError, TypeError, KeyError, json.JSONDecodeError, OSError) as exc:
+        base["errors"].append(str(exc))
+    return base
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--date", required=True)
     parser.add_argument("--root", default=".")
     parser.add_argument("--registry")
+    parser.add_argument("--game-id", help="Single-matchup pregame/postgame archival retrieval gate")
     parser.add_argument("--out", default="cfb_artifacts/investigation_ranking_gate.json")
     args = parser.parse_args()
-    result = audit_day(args.root, args.date, args.registry)
+    result = (audit_game(args.root, args.date, args.game_id, args.registry)
+              if args.game_id else audit_day(args.root, args.date, args.registry))
     output = Path(args.out)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
