@@ -55,9 +55,11 @@ def cohort(snapshot,max_games=120,*,enrich_rush=False):
             plays=by_game.get(g.game_id)
             if plays is None:continue
             h=observed_game(plays,home,away,g.home_points,g.away_points,
-                qb_ids.get(home,set()),special_plays=raw_by_game.get(g.game_id),home_id=home)
+                qb_ids.get(home,set()),special_plays=raw_by_game.get(g.game_id),home_id=home,
+                neutral_site=(bool(g.neutral_site) if pd.notna(g.neutral_site) else None))
             a=observed_game(plays,away,home,g.away_points,g.home_points,
-                qb_ids.get(away,set()),special_plays=raw_by_game.get(g.game_id),home_id=home)
+                qb_ids.get(away,set()),special_plays=raw_by_game.get(g.game_id),home_id=home,
+                neutral_site=(bool(g.neutral_site) if pd.notna(g.neutral_site) else None))
             if h is None or a is None:continue
             # Research cohorts can explicitly request exactly the same raw
             # early-down success / negative-run histories as live pregame
