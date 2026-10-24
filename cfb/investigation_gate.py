@@ -45,7 +45,7 @@ def _when(value):
 
 def _blob_sha(raw):
     # Same content-addressed SHA-1 definition used for Git blobs.
-    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest()
+    return hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\0" + raw).hexdigest()
 
 
 def _normalize_team(name):
@@ -55,7 +55,7 @@ def _normalize_team(name):
 def _game_record(root, date, entry):
     game_id = str(entry["game_id"])
     name = entry["audit_file"]
-    if not re.fullmatch(r"cfb/frozen_pregame_audits/2026_\\d{2}_\\d{2}_[a-z0-9_]+\\.json", name):
+    if not re.fullmatch(r"cfb/frozen_pregame_audits/2026_\d{2}_\d{2}_[a-z0-9_]+\.json", name):
         raise ValueError("Unsafe or non-standard frozen audit path")
     if not name.startswith("cfb/frozen_pregame_audits/" + date.replace("-", "_") + "_"):
         raise ValueError("Audit filename belongs to different game date")
@@ -97,7 +97,7 @@ def _game_record(root, date, entry):
     else:
         grade = entry.get("grade_override")
         phrase = _get(data, mapping["grade_evidence"])
-        if grade not in GRADE or not isinstance(phrase, str) or not re.search(r"\\b" + grade + r"-grade\\b", phrase, re.I):
+        if grade not in GRADE or not isinstance(phrase, str) or not re.search(r"\b" + grade + r"-grade\b", phrase, re.I):
             raise ValueError("Unsubstantiated conditional grade override")
     decision = _get(data, mapping["bet_decision"])
     if not isinstance(decision, str) or not decision.strip():
@@ -115,7 +115,7 @@ def _game_record(root, date, entry):
 
 def audit_day(root, date, registry_path=None):
     root = Path(root)
-    if not re.fullmatch(r"20\\d{2}-\\d{2}-\\d{2}", date):
+    if not re.fullmatch(r"20\d{2}-\d{2}-\d{2}", date):
         raise ValueError("Date must be YYYY-MM-DD")
     manifest = Path(registry_path) if registry_path else root / "cfb" / "investigation_registry" / (date + ".json")
     if not manifest.is_file():
@@ -140,7 +140,7 @@ def audit_day(root, date, registry_path=None):
             errors.append(identifier + ": duplicate audit path")
         paths.add(path)
         workflow = entry.get("workflow_file", "")
-        if not isinstance(workflow, str) or not re.fullmatch(r"\\.github/workflows/cfb-[a-z0-9-]+-20\\d{6}\\.yml", workflow):
+        if not isinstance(workflow, str) or not re.fullmatch(r"\.github/workflows/cfb-[a-z0-9-]+-20\d{6}\.yml", workflow):
             errors.append(identifier + ": missing dated workflow reference")
         else:
             if workflow in workflows:
@@ -181,7 +181,7 @@ def main():
     result = audit_day(args.root, args.date, args.registry)
     output = Path(args.out)
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(json.dumps(result, indent=2) + "\\n", encoding="utf-8")
+    output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, indent=2))
     if result["status"] != "PASS":
         raise SystemExit(2)
