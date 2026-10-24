@@ -1,0 +1,270 @@
+{
+  "schema": "cfb_investigation_registry_v1",
+  "date": "2026-10-24",
+  "source": "Explicit slate investigations reconciled against dated workflow definitions and frozen pregame archives; never infer completeness from audit-file listing alone",
+  "entries": [
+    {
+      "game_id": "401866446",
+      "away": "Akron",
+      "home": "Kent State",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_akron_kent_state.json",
+      "blob_sha": "3b31bd0b66541683310e6211c5a532bdd090535a",
+      "workflow_file": ".github/workflows/cfb-akron-kent-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "fixture.game_id",
+        "away": "fixture.away",
+        "home": "fixture.home",
+        "captured_at": "provenance.snapshot_utc",
+        "kickoff": "fixture.kickoff_utc",
+        "draws": "provenance.simulation_draws_each",
+        "side": "verdict.side",
+        "confidence": "verdict.confidence_out_of_10",
+        "grade": "verdict.group",
+        "bet_decision": "verdict.bet_status"
+      }
+    },
+    {
+      "game_id": "401856834",
+      "away": "Baylor",
+      "home": "Kansas",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_baylor_kansas.json",
+      "blob_sha": "b41862bb2732e86b97e68d5047d0db79ecd70958",
+      "workflow_file": ".github/workflows/cfb-baylor-kansas-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "fixture.game_id",
+        "away": "fixture.away",
+        "home": "fixture.home",
+        "captured_at": "data_integrity.capture_utc",
+        "kickoff": "fixture.scheduled_kickoff_utc",
+        "draws": "simulation.simulations_per_variant",
+        "side": "decision.best_ATS",
+        "confidence": "decision.confidence_10",
+        "grade": "decision.grade",
+        "bet_decision": "decision.bet_decision"
+      }
+    },
+    {
+      "game_id": "401858270",
+      "away": "California",
+      "home": "SMU",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_cal_smu.json",
+      "blob_sha": "23af87c7cc036c1fc8f667986240134a0a8357ba",
+      "workflow_file": ".github/workflows/cfb-cal-smu-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "fixture.game_id",
+        "away": "fixture.away",
+        "home": "fixture.home",
+        "captured_at": "provenance.snapshot_capture_utc",
+        "kickoff": "fixture.kickoff_utc",
+        "draws": "numerical.runs_per_variant",
+        "side": "decision.official_recommendation_at_verifiable_dk_18_5",
+        "confidence": "decision.confidence_out_of_10_at_18_5",
+        "grade_evidence": "decision.official_recommendation_at_verifiable_dk_18_5",
+        "bet_decision": "decision.official_recommendation_at_verifiable_dk_18_5"
+      },
+      "grade_override": "C"
+    },
+    {
+      "game_id": "401858496",
+      "away": "Indiana",
+      "home": "Michigan",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_indiana_michigan.json",
+      "blob_sha": "ca44f48b30bebd449e8ee8c847484824a1b669d9",
+      "workflow_file": ".github/workflows/cfb-indiana-michigan-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "fixture.game_id",
+        "away": "fixture.away",
+        "home": "fixture.home",
+        "captured_at": "source.snapshot_at_utc",
+        "kickoff": "fixture.kickoff_utc",
+        "draws": "simulation.simulations_each",
+        "side": "decision.ats_directional_side",
+        "confidence": "decision.confidence_out_of_10",
+        "grade": "decision.grade",
+        "bet_decision": "decision.wager_recommendation"
+      }
+    },
+    {
+      "game_id": "401856728",
+      "away": "LSU",
+      "home": "Auburn",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_lsu_auburn.json",
+      "blob_sha": "b9c9e9de8e0c02fdd52347244564f3369af143e0",
+      "workflow_file": ".github/workflows/cfb-lsu-auburn-quick-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "fixture.game_id",
+        "away": "fixture.away",
+        "home": "fixture.home",
+        "captured_at": "provenance.capture_utc",
+        "kickoff": "fixture.kickoff_utc",
+        "draws": "simulation.simulations_each",
+        "side": "decision.ats_direction_at_auburn_plus_7_5",
+        "confidence": "decision.confidence_out_of_10",
+        "grade": "decision.grade",
+        "bet_decision": "decision.recommendation"
+      }
+    },
+    {
+      "game_id": "401866476",
+      "away": "Miami (OH)",
+      "home": "Central Michigan",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_miami_oh_central_michigan.json",
+      "blob_sha": "3a922b31c5ac32fa85b67a58c2871e737d715d54",
+      "workflow_file": ".github/workflows/cfb-miamioh-cmu-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "fixture.game_id",
+        "away": "fixture.away",
+        "home": "fixture.home",
+        "captured_at": "pregame_provenance.source_snapshot_utc",
+        "kickoff": "fixture.kickoff_utc",
+        "draws": "pregame_provenance.draws_each",
+        "side": "decision.directional_ats_side",
+        "confidence": "decision.confidence_out_of_10",
+        "grade": "decision.grade",
+        "bet_decision": "decision.bet_decision"
+      }
+    },
+    {
+      "game_id": "401858274",
+      "away": "Pittsburgh",
+      "home": "Miami",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_pittsburgh_miami.json",
+      "blob_sha": "3c088f77230de48e43af7d5a1f07d82b2bc774d1",
+      "workflow_file": ".github/workflows/cfb-pitt-miami-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "game.game_id",
+        "away": "game.away",
+        "home": "game.home",
+        "captured_at": "provenance.snapshot_utc",
+        "kickoff": "game.kickoff_utc",
+        "draws": "provenance.simulations_per_variant",
+        "side": "recommendation.best_ats_side",
+        "confidence": "recommendation.confidence_10",
+        "grade": "recommendation.grade",
+        "bet_decision": "recommendation.qualifier"
+      }
+    },
+    {
+      "game_id": "401862809",
+      "away": "Rice",
+      "home": "Florida Atlantic",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_rice_fau.json",
+      "blob_sha": "d779adcc0625d5ec3d0cea63a6335c5a8be05ebb",
+      "workflow_file": ".github/workflows/cfb-rice-fau-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "game.game_id",
+        "away": "game.away",
+        "home": "game.home",
+        "captured_at": "provenance.snapshot_utc",
+        "kickoff": "game.kickoff_utc",
+        "draws": "provenance.simulations_per_variant",
+        "side": "recommendation.directional_ats_side",
+        "confidence": "recommendation.confidence_out_of_10",
+        "grade": "recommendation.group",
+        "bet_decision": "recommendation.official_bet_decision"
+      }
+    },
+    {
+      "game_id": "401858498",
+      "away": "Rutgers",
+      "home": "Northwestern",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_rutgers_northwestern.json",
+      "blob_sha": "8b9d3e73b1f6eb58c46a0232ef98a84510ae9790",
+      "workflow_file": ".github/workflows/cfb-rutgers-northwestern-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "fixture.game_id",
+        "away": "fixture.away",
+        "home": "fixture.home",
+        "captured_at": "capture.captured_utc",
+        "kickoff": "fixture.verified_kickoff_utc",
+        "draws": "model.real_runs_each",
+        "side": "output.directional_ats",
+        "confidence": "output.confidence_out_of_10",
+        "grade": "output.grade",
+        "bet_decision": "output.at_16_5"
+      }
+    },
+    {
+      "game_id": "401856840",
+      "away": "Texas Tech",
+      "home": "Cincinnati",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_texas_tech_cincinnati.json",
+      "blob_sha": "a7f611a8dcb7e0b168029517410abc4d84b8d3b7",
+      "workflow_file": ".github/workflows/cfb-texas-tech-cincinnati-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "fixture.game_id",
+        "away": "fixture.away",
+        "home": "fixture.home",
+        "captured_at": "provenance.snapshot_utc",
+        "kickoff": "fixture.kickoff_utc",
+        "draws": "updated_build16.runs",
+        "side": "recommendation.best_side",
+        "confidence": "recommendation.confidence_out_of_10",
+        "grade": "recommendation.group",
+        "bet_decision": "recommendation.also_lean"
+      }
+    },
+    {
+      "game_id": "401856841",
+      "away": "West Virginia",
+      "home": "TCU",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_west_virginia_tcu.json",
+      "blob_sha": "aabf7f37112752c4ebec17f578078658b2621158",
+      "workflow_file": ".github/workflows/cfb-wvu-tcu-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "fixture.game_id",
+        "away": "fixture.away",
+        "home": "fixture.home",
+        "captured_at": "provenance.snapshot_utc",
+        "kickoff": "fixture.kickoff_utc",
+        "draws": "simulation.draws_each",
+        "side": "recommendation.best_ats_side",
+        "confidence": "recommendation.confidence_out_of_10",
+        "grade": "recommendation.grade",
+        "bet_decision": "recommendation.main_bet_condition"
+      }
+    },
+    {
+      "game_id": "401866450",
+      "away": "Western Michigan",
+      "home": "Toledo",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_western_michigan_toledo.json",
+      "blob_sha": "bfd18c5dd083e5d2a279aab602adaafd40d6c639",
+      "workflow_file": ".github/workflows/cfb-wmu-toledo-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {
+        "game_id": "fixture.game_id",
+        "away": "fixture.away",
+        "home": "fixture.home",
+        "captured_at": "provenance.snapshot_utc",
+        "kickoff": "fixture.kickoff_utc",
+        "draws": "simulation.runs_each",
+        "side": "ats_concordance_and_decision.directional_pick",
+        "confidence": "ats_concordance_and_decision.confidence_out_of_10",
+        "grade": "ats_concordance_and_decision.grade",
+        "bet_decision": "ats_concordance_and_decision.recommended_bet"
+      }
+    },
+    {
+      "game_id": "401858495",
+      "away": "Oregon",
+      "home": "Illinois",
+      "audit_file": "cfb/frozen_pregame_audits/2026_10_24_oregon_illinois.json",
+      "blob_sha": null,
+      "workflow_file": ".github/workflows/cfb-oregon-illinois-20261024.yml",
+      "model": "CFB Build16 (baseline preserved)",
+      "evidence": {}
+    }
+  ]
+}
