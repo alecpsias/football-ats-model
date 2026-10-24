@@ -42,11 +42,17 @@ jobs:
           g=game.iloc[0]
           assert str(g.home_team)=="Cincinnati" and str(g.away_team)=="Texas Tech"
           future,_,histories,_=histories_asof(s,p,roster,cutoff)
-          if not future.game_id.astype(str).eq("401856840").any():raise ValueError("Not future fixture")
+          # The upstream time-TBD flag sometimes excludes a confirmed game
+          # from the generic future() filter. Independently verify the unique
+          # official ESPN game ID, fixed teams, local kickoff and incomplete
+          # status above. This does not relax historical as-of filtration.
+          assert pd.to_datetime(g.start_date,utc=True)==pd.Timestamp("2026-10-24T16:00:00Z")
+          print("FIXTURE_VALIDATED_NO_PROVIDER_TIME_TBD_GUESS",bool(g.start_time_tbd),flush=True)
           h=int(g.home_id);a=int(g.away_id);seed=401856840
           hp=project(histories[h],histories[a],False,"home",False)
           ap=project(histories[a],histories[h],False,"away",False)
           baseline=simulate(hp,ap,runs=5000,seed=seed,spread_home=10.5)
+          baseline_11_5=simulate(hp,ap,runs=5000,seed=seed,spread_home=11.5)
           corr=correction(h,a,histories)
           args=dict(runs=5000,seed=seed,spread_home=10.5,
             failure1_fit_margin_delta=corr["margin_delta_points"])
@@ -54,25 +60,29 @@ jobs:
              two_way_venue_enabled=False,**args)
           challenger=simulate_build16(h,a,histories,False,
              two_way_venue_enabled=True,**args)
-          if reference.get("simulation") is None or challenger.get("simulation") is None:
+          challenger_11_5=simulate_build16(h,a,histories,False,
+             two_way_venue_enabled=True,**{**args,"spread_home":11.5})
+          if (reference.get("simulation") is None or
+              challenger.get("simulation") is None or challenger_11_5.get("simulation") is None):
               raise RuntimeError("Build16 unavailable")
           d={"fixture":"401856840","capture_utc":str(cutoff),"training_games_texas_tech":len(histories[a]),
              "training_games_cincinnati":len(histories[h]),
-             "market_spread_research_cincinnati_plus":10.5,
-             "seed":seed,"runs_each":5000,"baseline":baseline,
+             "market_spread_research_cincinnati_plus":[10.5,11.5],
+             "seed":seed,"runs_each":5000,"baseline":baseline,"baseline_11_5":baseline_11_5,
              "reference_previous_build16":reference["simulation"],
              "improved_build16":challenger["simulation"],
+             "improved_build16_11_5":challenger_11_5["simulation"],
              "improvement1":challenger["two_way_venue_improvement1"],
              "matched_redzone_kicking":challenger.get("redzone_kicking_evidence"),
              "fitted_rush":corr,"ATS_calibrated":False,
              "native_timestamped_market_quote":False}
           dest=Path("quick_texas_tech_cincinnati/frozen_5000.json")
           dest.write_text(json.dumps(d,indent=2,default=str))
-          print("Texas Tech_AUBURN_VERIFIED_5000_MATCHUP",json.dumps(d,indent=2,default=str)[:35000],flush=True)
+          print("TEXAS_TECH_CINCINNATI_VERIFIED_5000_MATCHUP",json.dumps(d,indent=2,default=str)[:35000],flush=True)
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: indiana-michigan-quick-5000-${{ github.run_id }}
+          name: texas-tech-cincinnati-frozen-5000-${{ github.run_id }}
           path: quick_texas_tech_cincinnati/frozen_5000.json
           if-no-files-found: warn
