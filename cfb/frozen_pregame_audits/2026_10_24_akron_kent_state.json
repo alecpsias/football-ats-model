@@ -1,0 +1,175 @@
+{
+  "schema": "cfb_2026_10_24_akron_kent_pregame_5000",
+  "fixture": {
+    "game_id": "401866446",
+    "home": "Kent State",
+    "away": "Akron",
+    "kickoff_utc": "2026-10-24T17:00:00Z",
+    "home_venue": "Dix Stadium, Kent OH",
+    "official_kickoff_source": "https://kentstatesports.com/news/2026/10/23/football-flashes-look-to-retain-the-wagon-wheel-saturday-at-1-pm-vs-akron"
+  },
+  "provenance": {
+    "snapshot_utc": "2026-10-24T15:03:26.672131Z",
+    "workflow": "https://github.com/alecpsias/football-ats-model/actions/runs/40105213462",
+    "workflow_conclusion": "SUCCESS",
+    "initial_commit": "7c713a15768373ac2d0b5ce2624a8c63478f8193",
+    "history_prior_games_akron": 7,
+    "history_prior_games_kent": 7,
+    "seed": 401866446,
+    "simulation_draws_each": 5000,
+    "no_postgame_data": true
+  },
+  "market": {
+    "reference_kent_spread": -3,
+    "alternative_kent_spreads": [
+      -2.5,
+      -3.5
+    ],
+    "opened_kent_spread": -3.5,
+    "dk_kent_minus_3_price": -105,
+    "dk_akron_plus_3_price": -115,
+    "fanduel_kent_minus_2_5_price": -124,
+    "fanduel_akron_plus_2_5_price": 102,
+    "current_total": 47.5,
+    "prior_total": 43.5,
+    "dk_kent_spread_ticket_percent": 59,
+    "dk_kent_spread_handle_percent": 97,
+    "secondary_circa_akron_spread_handle_percent": 98,
+    "market_quotes_not_native_time_attested": true,
+    "market_sources": [
+      "https://dknetwork.draftkings.com/draftkings-sportsbook-betting-splits/",
+      "https://www.actionnetwork.com/ncaaf/akron-zips-vs-kent-state-golden-flashes-prediction-pick-college-football-odds-saturday-october-24",
+      "https://wiseguyteam.com/cfb-betting-splits"
+    ]
+  },
+  "baseline": {
+    "akron_mean": 24.47,
+    "kent_mean": 24.862,
+    "kent_margin": 0.392,
+    "total": 49.332,
+    "kent_win_raw": 0.5042,
+    "akron_cover_plus_2_5": 0.5342,
+    "akron_cover_plus_3": 0.5342,
+    "push_plus_3": 0.043,
+    "akron_cover_plus_3_5": 0.5772
+  },
+  "previous_build16_no_improvement1": {
+    "akron_mean": 24.198,
+    "kent_mean": 21.527,
+    "kent_margin": -2.67,
+    "total": 45.725,
+    "kent_win_raw": 0.4374,
+    "kent_minus_2_5_cover_raw": 0.4066
+  },
+  "active_build16": {
+    "akron_mean": 22.642,
+    "kent_mean": 22.126,
+    "kent_margin": -0.516,
+    "total": 44.768,
+    "kent_win_raw": 0.4816,
+    "akron_win_raw": 0.5184,
+    "margin_sd": 17.304,
+    "home_p10p50p90": [
+      -23,
+      -1,
+      21
+    ],
+    "akron_cover_plus_2_5": 0.5468,
+    "kent_cover_minus_2_5": 0.4532,
+    "akron_cover_plus_3": 0.5468,
+    "push_plus_3": 0.0378,
+    "kent_cover_minus_3": 0.4154,
+    "akron_cover_plus_3_5": 0.5846,
+    "kent_cover_minus_3_5": 0.4154,
+    "joint_drive_enabled": true,
+    "verified_elapsed_clock": true,
+    "FG_distance_regression": true,
+    "turnover_return_td_and_special_td_separate": true,
+    "scenarios": {
+      "kent_scoring_stall": {
+        "fraction": 0.3418,
+        "conditional_kent_points": 9.925,
+        "conditional_akron_points": 24.099,
+        "conditional_akron_margin": 14.174
+      },
+      "akron_scoring_stall": {
+        "fraction": 0.3166,
+        "conditional_kent_points": 23.509,
+        "conditional_akron_points": 10.338,
+        "conditional_kent_margin": 13.171
+      },
+      "kent_two_more_turnovers": {
+        "fraction": 0.1438,
+        "conditional_akron_margin": 7.103
+      },
+      "akron_two_more_turnovers": {
+        "fraction": 0.1478,
+        "conditional_kent_margin": 7.16
+      }
+    },
+    "scenarios_overlap": true
+  },
+  "improvement1": {
+    "status": "ACTIVE_SOURCE_INCREMENTAL_TWO_WAY_VENUE",
+    "two_way_route_active": true,
+    "team_venue_active": true,
+    "verified_home_away_component_count": 4,
+    "venue_ppd_kent": 0.03372239,
+    "venue_ppd_akron": -0.2,
+    "away_at_provisional_limit": true,
+    "margin_changed_toward_kent_points": 2.154,
+    "unfitted_and_not_independently_ATS_calibrated": true,
+    "numerical_personnel_model_remains_rolled_back": true,
+    "original_baseline_unchanged": true
+  },
+  "opponent_adjusted_independent": {
+    "havoc_kent_fair": -6.2,
+    "havoc_total": 49,
+    "SP_plus_kent_fair": -3.6,
+    "sportsanalysis_kent_fair": -3,
+    "model_disagreement_material": true,
+    "main_interaction": "Kent pass rush versus Akron pass-protection and interception risk",
+    "offensive_epa_Akron": -0.1,
+    "kent": 0.08,
+    "defensive_epa_allowed_Akron": 0.18,
+    "source": "https://havoc.football/games/545"
+  },
+  "pregame_availability": {
+    "akron_qb_broughton_knee_questionable": true,
+    "akron_rbs_chris_gee_out_sean_patrick_questionable": true,
+    "akron_receivers_sivon_riggins_monteiro_out": true,
+    "kent_mason_king_questionable": true,
+    "kent_terik_mulder_questionable": true,
+    "kent_kicker_eli_tucker_out": true,
+    "lineup_not_confirmed": true,
+    "injury_effect_not_in_simulation": true,
+    "source": "https://www.covers.com/sport/football/ncaaf/matchup/378480"
+  },
+  "special_teams": {
+    "akron_kicker_matthew_schramm_made": 5,
+    "attempts": 9,
+    "kent_punter_stoeckel_yards_per_punt": 42.83,
+    "kent_punter_inside20": 11,
+    "source": "https://kentstatesports.com/news/2026/10/23/football-flashes-look-to-retain-the-wagon-wheel-saturday-at-1-pm-vs-akron"
+  },
+  "verdict": {
+    "projected_score": "Akron 23 Kent State 22",
+    "side": "Akron +3",
+    "confidence_out_of_10": 5.7,
+    "group": "C",
+    "bet_status": "LEAN / PASS_AT_MINUS_115_DUE_TO_MODEL_DISAGREEMENT",
+    "preferred_if_real_verified": "Akron +3.5 if a price close to -110 is available",
+    "total": "PASS",
+    "first_half": "not projected stronger than full game",
+    "reason": "Both internal models lean Akron plus points, but external opponent adjusted systems Kent State by 3–6.2 and QB situation uncertainty. Cover frequencies not calibrated."
+  },
+  "integrity": {
+    "simulations_real_5000": true,
+    "target_score_absent": true,
+    "strict_cutoff_applied": true,
+    "projections_frozen_not_a_postgame_reconstruction": true,
+    "one_challenger_only": true,
+    "baseline_untouched": true,
+    "external_quote_not_native_verified": true
+  }
+}
